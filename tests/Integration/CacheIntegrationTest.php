@@ -12,8 +12,6 @@ use Psr\SimpleCache\CacheInterface;
  * Test PSR-16 implementation
  *
  * check @link https://github.com/php-cache/integration-tests
- *
- * @author Laurent LEGAZ <laurent@legaz.eu>
  */
 class CacheIntegrationTest extends SimpleCacheTest
 {

@@ -12,8 +12,6 @@ use Psr\Cache\CacheItemPoolInterface;
  * Test PSR-6 implementation
  *
  * check @link https://github.com/php-cache/integration-tests
- *
- * @author Laurent LEGAZ <laurent@legaz.eu>
  */
 class PoolIntegrationTest extends CachePoolTest
 {
