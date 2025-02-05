@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LLegaz\Cache;
 
 use LLegaz\Redis\RedisAdapter;
+use LLegaz\Redis\RedisClientInterface;
 use Psr\SimpleCache\CacheInterface;
 
 /**
@@ -40,9 +41,16 @@ class RedisCache extends RedisAdapter implements CacheInterface
 
     protected const HASH_DB_PREFIX = 'DEFAULT_Cache_Pool';
 
-    public function __construct()
-    {
-        parent::__construct();
+    public function __construct(
+        string $host = RedisClientInterface::DEFAULTS['host'],
+        int $port = RedisClientInterface::DEFAULTS['port'],
+        ?string $pwd = null,
+        string $scheme = RedisClientInterface::DEFAULTS['scheme'],
+        int $db = RedisClientInterface::DEFAULTS['database'],
+        bool $persistent = false,
+        ?RedisClientInterface $client = null
+    ) {
+        parent::__construct($host, $port, $pwd, $scheme, $db, $persistent, $client);
     }
 
     /**

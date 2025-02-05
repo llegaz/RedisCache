@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace LLegaz\Cache\Tests\Unit;
 
 use LLegaz\Cache\RedisCache as SUT;
-use LLegaz\Redis\Tests\Unit\RedisAdapterTest;
 use LLegaz\Redis\RedisClientInterface;
+use LLegaz\Redis\Tests\Unit\RedisAdapterTest;
 
 /**
  * Test PSR-16 implementation
