@@ -8,6 +8,10 @@ use Cache\IntegrationTests\CachePoolTest;
 use LLegaz\Cache\Pool\CacheEntryPool as SUT;
 use Psr\Cache\CacheItemPoolInterface;
 
+if (!defined('SKIP_INTEGRATION_TESTS')) {
+    define('SKIP_INTEGRATION_TESTS', true);
+}
+
 /**
  * Test PSR-6 implementation
  *
@@ -15,6 +19,24 @@ use Psr\Cache\CacheItemPoolInterface;
  */
 class PoolIntegrationTest extends CachePoolTest
 {
+    public function setupService()
+    {
+        if (SKIP_INTEGRATION_TESTS) {
+            // don't forget that tests are deleoppers' tools (and not only an approval seal)
+            $this->markTestSkipped('INTEGRATION TESTS are skipped by default when executing Units tests only.');
+        }
+        parent::setupService();
+    }
+
+    protected function setUp(): void
+    {
+        if (SKIP_INTEGRATION_TESTS) {
+            // don't forget that tests are deleoppers' tools (and not only an approval seal)
+            $this->markTestSkipped('INTEGRATION TESTS are skipped by default when executing Units tests only.');
+        }
+        parent::setUp();
+    }
+
     public function createCachePool(): CacheItemPoolInterface
     {
         return new SUT();

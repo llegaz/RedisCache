@@ -34,7 +34,8 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "LLegaz\\Cache\\Tests\\": "tests/"
+            "LLegaz\\Cache\\Tests\\": "tests/",
+            "LLegaz\\Redis\\Tests\\": "vendor/llegaz/redis-adapter/tests/"
         }
     },
     "scripts": {
