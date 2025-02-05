@@ -13,11 +13,15 @@ use Psr\SimpleCache\CacheInterface;
  */
 class CacheEntryPool implements CacheItemPoolInterface
 {
-    private SimpleCache $cache;
+    private CacheInterface $cache;
+    private ?string $poolName = null;
 
-    public function __construct(CacheInterface $cache)
+    public function __construct(CacheInterface $cache, ?string $poolName)
     {
         $this->cache = $cache;
+        if ($poolName) {
+            $this->poolName = $poolName;
+        }
     }
 
     public function clear(): bool

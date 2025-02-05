@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace LLegaz\Cache\Tests\Unit;
 
 use LLegaz\Cache\RedisCache as SUT;
+use LLegaz\Redis\Tests\Unit\RedisAdapterTest;
+use LLegaz\Redis\RedisClientInterface;
 
 /**
  * Test PSR-16 implementation
  *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
-class SimpleCacheTest extends \PHPUnit\Framework\TestCase
+class SimpleCacheTest extends RedisAdapterTest
 {
     protected SUT $cache;
 
@@ -25,9 +27,18 @@ class SimpleCacheTest extends \PHPUnit\Framework\TestCase
      */
     protected function setUp(): void
     {
-        /**
-         * @todo mock redis client
-         */
+        parent::setUp();
+
+        $this->cache = new SUT(
+            RedisClientInterface::DEFAULTS['host'],
+            RedisClientInterface::DEFAULTS['port'],
+            null,
+            RedisClientInterface::DEFAULTS['scheme'],
+            RedisClientInterface::DEFAULTS['database'],
+            false,
+            $this->predisClient
+        );
+        $this->assertDefaultContext();
 
     }
 
@@ -112,14 +123,33 @@ class SimpleCacheTest extends \PHPUnit\Framework\TestCase
         $this->assertFalse($this->cache->has($key));
     }
 
-    public function set(string $key, mixed $value, null|int|\DateInterval $ttl = null): bool
+    public function testSet()
     {
+        $key = 'test';
+        $this->assertTrue($this->cache->set($key, 'bbbbbbbbbbbbbbbbbbbb'));
+    }
+
+    /**
+     *
+     * @todo check doc for array (keys => values) and also complete arrays,
+     *       adding more elements, here and there (above)
+     */
+    public function testSetMultiple()
+    {
+        $keys = ['do:exist'];
+        $actual = $this->cache->setMultiple($keys);
+        $this->assertIsString($actual);
+        $this->assertEquals($expected, $actual);
 
     }
 
-    public function setMultiple(iterable $values, null|int|\DateInterval $ttl = null): bool
+    /**
+     * @todo test TTL here
+     */
+    public function testSetWithTtl()
     {
-
+        $key = 'testTTL';
+        $this->assertTrue($this->cache->set($key, 'bbbbbbbbbbbbbbbbbbbb', 1337));
     }
 
 }
