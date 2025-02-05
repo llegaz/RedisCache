@@ -7,6 +7,7 @@ namespace LLegaz\Cache;
 use LLegaz\Redis\RedisAdapter;
 use LLegaz\Redis\RedisClientInterface;
 use Psr\SimpleCache\CacheInterface;
+use Predis\Response\Status;
 
 /**
   * Class RedisCache
@@ -66,9 +67,9 @@ class RedisCache extends RedisAdapter implements CacheInterface
         }
 
         if ($allDBs) {
-            $redisResponse = $this->client->flushAll();
+            $redisResponse = $this->getRedis()->flushAll();
         } else {
-            $redisResponse = $this->client->flushdb();
+            $redisResponse = $this->getRedis()->flushdb();
         }
 
         return ($redisResponse instanceof Status && $redisResponse->getPayload() === 'OK') ? true : false;

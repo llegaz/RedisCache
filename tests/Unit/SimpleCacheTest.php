@@ -7,6 +7,7 @@ namespace LLegaz\Cache\Tests\Unit;
 use LLegaz\Cache\RedisCache as SUT;
 use LLegaz\Redis\RedisClientInterface;
 use LLegaz\Redis\Tests\Unit\RedisAdapterTest;
+use Predis\Response\Status;
 
 /**
  * Test PSR-16 implementation
@@ -50,8 +51,21 @@ class SimpleCacheTest extends RedisAdapterTest
         unset($this->cache);
     }
 
+    public function testClearAll()
+    {
+        $this->predisClient->expects($this->once())
+            ->method('flushall')
+            ->willReturn(new Status('OK'))
+        ;
+        $this->assertTrue($this->cache->clear(true));
+    }
+
     public function testClear()
     {
+        $this->predisClient->expects($this->once())
+            ->method('flushdb')
+            ->willReturn(new Status('OK'))
+        ;
         $this->assertTrue($this->cache->clear());
     }
 
