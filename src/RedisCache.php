@@ -160,6 +160,20 @@ class RedisCache extends RedisAdapter implements CacheInterface
      */
     public function has(string $key): bool
     {
+        $this->checkKeyValidity($key);
+        if (!$this->isConnected()) {
+            $this->throwCLEx();
+        }
+
+        try {
+            $toReturn = true;
+            $redisResponse = $this->getRedis()->exist($key);
+        } catch (\Throwable $t) {
+            $toReturn = false;
+        } finally {
+            return ($redisResponse instanceof Status && $redisResponse->getPayload() === 1) ? $toReturn : false;
+        }
+
 
     }
 
@@ -187,13 +201,21 @@ class RedisCache extends RedisAdapter implements CacheInterface
         if ($ttl instanceof \DateInterval) {
             $ttl = $this->dateIntervalToSeconds($ttl);
         }
-        $redisResponse = $this->getRedis()->set($key, $value);
-        if ($ttl > 0) {
-            $this->getRedis()->expire($key, $ttl);
+
+        /**
+         * @todo maybe enhance this
+         */
+        try {
+            $toReturn = true;
+            $redisResponse = $this->getRedis()->set($key, $value);
+            if ($ttl > 0) {
+                $this->getRedis()->expire($key, $ttl);
+            }
+        } catch (\Throwable $t) {
+            $toReturn = false;
+        } finally {
+            return ($redisResponse instanceof Status && $redisResponse->getPayload() === 'OK') ? $toReturn : false;
         }
-
-        return ($redisResponse instanceof Status && $redisResponse->getPayload() === 'OK') ? true : false;
-
     }
 
     /**
@@ -215,7 +237,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
         if (!$this->isConnected()) {
             $this->throwCLEx();
         }
-        if (!count($values) && !($values instanceof \Traversable)) {
+        if (!count($values) || !($values instanceof \Traversable)) {
             throw new InvalidArgumentException('RedisCache says "Can\'t do shit with those values"');
         }
 
@@ -226,26 +248,33 @@ class RedisCache extends RedisAdapter implements CacheInterface
             $ttl = $this->dateIntervalToSeconds($ttl);
         }
 
-        $options = [
-            'cas'   => true, // Initialize with support for CAS operations
-            'retry' => 3, // Number of retries on aborted transactions, after
-            // which the client bails out with an exception.
-        ];
-        $this->getRedis()->transaction($options, function ($t) use ($values, $ttl) {
-            $t->mset($values);
+        /**
+         * @todo maybe enhance this too
+         */
+        try {
+            $options = [
+                'cas'   => true, // Initialize with support for CAS operations
+                'retry' => 3, // Number of retries on aborted transactions, after
+                // which the client bails out with an exception.
+            ];
+            $this->getRedis()->transaction($options, function ($t) use ($values, $ttl) {
+                $t->mset($values);
 
-            if ($ttl > 0) {
-                foreach ($values as $key => $value) {
-                    $t->expire($key, $ttl);
+                if ($ttl > 0) {
+                    foreach ($values as $key => $value) {
+                        $t->expire($key, $ttl);
+                    }
                 }
-            }
-        });
+            });
+        } catch (\Throwable $t) {
+            return false;
+        }
 
         return true;
     }
 
     /**
-     * 
+     *
      * @param string $key
      * @param mixed $value
      * @return void
@@ -260,7 +289,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
     }
 
     /**
-     * 
+     *
      * @param string $key
      * @return void
      * @throws InvalidArgumentException
