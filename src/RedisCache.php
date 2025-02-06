@@ -62,6 +62,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
      *
      * @param bool $allDBs
      * @return bool True on success and false on failure.
+     * @throws LocalIntegrityException
      */
     public function clear(bool $allDBs = false): bool
     {
@@ -69,14 +70,22 @@ class RedisCache extends RedisAdapter implements CacheInterface
             $this->throwCLEx();
         }
 
-        if ($allDBs) {
-            $redisResponse = $this->getRedis()->flushAll();
-        } else {
-            $redisResponse = $this->getRedis()->flushdb();
+        try {
+            if ($allDBs) {
+                $redisResponse = $this->getRedis()->flushAll();
+            } else {
+                if (!$this->checkIntegrity()) {
+                    $this->throwLIEx();
+                }
+                $redisResponse = $this->getRedis()->flushdb();
+            }
+        } catch (\Throwable $t) {
+            if ($t instanceof \LLegaz\Redis\Exception\LocalIntegrityException) {
+                throw $t;
+            }
+        } finally {
+            return ($redisResponse instanceof Status && $redisResponse->getPayload() === 'OK') ? true : false;
         }
-
-        return ($redisResponse instanceof Status && $redisResponse->getPayload() === 'OK') ? true : false;
-
     }
 
     /**
@@ -91,7 +100,18 @@ class RedisCache extends RedisAdapter implements CacheInterface
      */
     public function delete(string $key): bool
     {
+        $this->checkKeyValidity($key);
+        if (!$this->isConnected()) {
+            $this->throwCLEx();
+        }
 
+        try {
+            $redisResponse = $this->getRedis()->del($key);
+        } catch (\Throwable $t) {
+            // do nothing
+        } finally {
+            return ($redisResponse instanceof Status && $redisResponse->getPayload() === 'OK') ? true : false;
+        }
     }
 
     /**
@@ -107,7 +127,20 @@ class RedisCache extends RedisAdapter implements CacheInterface
      */
     public function deleteMultiple($keys): bool
     {
+        $strKeys = true;
+        $this->checkKeysValidity($keys, $strKeys);
+        trim($strKeys);
+        if (!$this->isConnected()) {
+            $this->throwCLEx();
+        }
 
+        try {
+            $redisResponse = $this->getRedis()->del($strKeys);
+        } catch (\Throwable $t) {
+            // do nothing
+        } finally {
+            return ($redisResponse instanceof Status && $redisResponse->getPayload() > 0) ? true : false;
+        }
     }
 
     /**
@@ -123,7 +156,25 @@ class RedisCache extends RedisAdapter implements CacheInterface
      */
     public function get(string $key, mixed $default = null): mixed
     {
+        $this->checkKeyValidity($key);
+        if (!$this->isConnected()) {
+            $this->throwCLEx();
+        }
 
+        try {
+            $value = $this->getRedis()->get($key);
+            $toReturn = unserialize($value);
+            if ($toReturn === false) {
+                $toReturn = $value;
+            }
+            if (!strlen($toReturn)) {
+                $toReturn = $default;
+            }
+        } catch (\Throwable $t) {
+            $toReturn = $default;
+        } finally {
+            return $toReturn;
+        }
     }
 
     /**
@@ -140,7 +191,29 @@ class RedisCache extends RedisAdapter implements CacheInterface
      */
     public function getMultiple($keys, mixed $default = null): iterable
     {
+        $this->checkKeysValidity($keys);
+        if (!$this->isConnected()) {
+            $this->throwCLEx();
+        }
 
+        $values = [];
+        try {
+            $values = $this->getRedis()->mget($keys);
+            foreach ($values as &$value) {
+                $tmp = unserialize($value);
+                if ($tmp !== false) {
+                    $value = $tmp;
+                } else if (!strlen($value) || $value === 'nil') {
+                    $value = $default;
+                }
+            }
+        } catch (\Throwable $t) {
+            if (!count($values)) {
+                array_fill(0, count($keys), $default);
+            }
+        } finally {
+            return array_combine(array_values($keys), array_values($values));
+        }
     }
 
     /**
@@ -301,6 +374,25 @@ class RedisCache extends RedisAdapter implements CacheInterface
             throw new InvalidArgumentException('RedisCache says "Key is too big"');
         }
     }
+
+    private function checkKeysValidity($keys, &$keysForDelete=false): void
+    {
+        if (!count($keys) || !($keys instanceof \Traversable)) {
+            throw new InvalidArgumentException('RedisCache says "invalid keys"');
+        }
+        $bln = $keysForDelete===true;
+        if ($bln) {
+            $keysForDelete = '';
+        }
+        foreach ($keys as $key) {
+            $this->checkKeyValidity($key);
+            if ($bln) {
+                $keysForDelete .= $key;
+                $keysForDelete .= ' ';
+            }
+        }
+    }
+
     /**
      *
      * @param \DateInterval $ttl
