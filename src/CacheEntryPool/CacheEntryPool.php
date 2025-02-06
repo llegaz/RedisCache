@@ -8,6 +8,8 @@ use Psr\Cache\CacheItemPoolInterface;
 use Psr\SimpleCache\CacheInterface;
 
 /**
+ * PSR-6 implementation - Underlying Redis data type used is HASH
+ *
  * Our Redis <code>CacheEntryPool</code> will typically be a <a href="https://redis.io/glossary/redis-hashes/">redis hash</a>
  *
  */

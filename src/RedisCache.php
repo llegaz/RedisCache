@@ -6,11 +6,14 @@ namespace LLegaz\Cache;
 
 use LLegaz\Redis\RedisAdapter;
 use LLegaz\Redis\RedisClientInterface;
-use Psr\SimpleCache\CacheInterface;
 use Predis\Response\Status;
+use Psr\Cache\InvalidArgumentException;
+use Psr\SimpleCache\CacheInterface;
 
 /**
   * Class RedisCache
+ * PSR-16 implementation - Underlying Redis data type used is STRING
+ *
  * @package RedisCache
  * @author Laurent LEGAZ <laurent@legaz.eu>
 
@@ -91,6 +94,17 @@ class RedisCache extends RedisAdapter implements CacheInterface
 
     }
 
+    /**
+     * Deletes multiple cache items in a single operation.
+     *
+     * @param iterable<string> $keys A list of string-based keys to be deleted.
+     *
+     * @return bool True if the items were successfully removed. False if there was an error.
+     *
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     *   MUST be thrown if $keys is neither an array nor a Traversable,
+     *   or if any of the $keys are not a legal value.
+     */
     public function deleteMultiple($keys): bool
     {
 
@@ -112,11 +126,38 @@ class RedisCache extends RedisAdapter implements CacheInterface
 
     }
 
+    /**
+     * Obtains multiple cache items by their unique keys.
+     *
+     * @param iterable<string> $keys    A list of keys that can be obtained in a single operation.
+     * @param mixed            $default Default value to return for keys that do not exist.
+     *
+     * @return iterable<string, mixed> A list of key => value pairs. Cache keys that do not exist or are stale will have $default as value.
+     *
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     *   MUST be thrown if $keys is neither an array nor a Traversable,
+     *   or if any of the $keys are not a legal value.
+     */
     public function getMultiple($keys, mixed $default = null): iterable
     {
 
     }
 
+    /**
+     * Determines whether an item is present in the cache.
+     *
+     * NOTE: It is recommended that has() is only to be used for cache warming type purposes
+     * and not to be used within your live applications operations for get/set, as this method
+     * is subject to a race condition where your has() will return true and immediately after,
+     * another script can remove it making the state of your app out of date.
+     *
+     * @param string $key The cache item key.
+     *
+     * @return bool
+     *
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     *   MUST be thrown if the $key string is not a legal value.
+     */
     public function has(string $key): bool
     {
 
@@ -138,12 +179,109 @@ class RedisCache extends RedisAdapter implements CacheInterface
      */
     public function set(string $key, mixed $value, null|int|\DateInterval $ttl = null): bool
     {
+        if (!$this->isConnected()) {
+            $this->throwCLEx();
+        }
+        $this->checkKeyValuePair($key, $value);
+
+        if ($ttl instanceof \DateInterval) {
+            $ttl = $this->dateIntervalToSeconds($ttl);
+        }
+        $redisResponse = $this->getRedis()->set($key, $value);
+        if ($ttl > 0) {
+            $this->getRedis()->expire($key, $ttl);
+        }
+
+        return ($redisResponse instanceof Status && $redisResponse->getPayload() === 'OK') ? true : false;
 
     }
 
+    /**
+     * Persists a set of key => value pairs in the cache, with an optional TTL.
+     *
+     * @param iterable               $values A list of key => value pairs for a multiple-set operation.
+     * @param null|int|\DateInterval $ttl    Optional. The TTL value of this item. If no value is sent and
+     *                                       the driver supports TTL then the library may set a default value
+     *                                       for it or let the driver take care of that.
+     *
+     * @return bool True on success and false on failure.
+     *
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     *   MUST be thrown if $values is neither an array nor a Traversable,
+     *   or if any of the $values are not a legal value.
+     */
     public function setMultiple(iterable $values, null|int|\DateInterval $ttl = null): bool
     {
+        if (!$this->isConnected()) {
+            $this->throwCLEx();
+        }
+        if (!count($values) && !($values instanceof \Traversable)) {
+            throw new InvalidArgumentException('RedisCache says "Can\'t do shit with those values"');
+        }
 
+        foreach ($values as $key => $value) {
+            $this->checkKeyValuePair($key, $value);
+        }
+        if ($ttl instanceof \DateInterval) {
+            $ttl = $this->dateIntervalToSeconds($ttl);
+        }
+
+        $options = [
+            'cas'   => true, // Initialize with support for CAS operations
+            'retry' => 3, // Number of retries on aborted transactions, after
+            // which the client bails out with an exception.
+        ];
+        $this->getRedis()->transaction($options, function ($t) use ($values, $ttl) {
+            $t->mset($values);
+
+            if ($ttl > 0) {
+                foreach ($values as $key => $value) {
+                    $t->expire($key, $ttl);
+                }
+            }
+        });
+
+        return true;
     }
 
+    /**
+     * 
+     * @param string $key
+     * @param mixed $value
+     * @return void
+     * @throws InvalidArgumentException
+     */
+    private function checkKeyValuePair(string $key, mixed &$value): void
+    {
+        $this->checkKeyValidity($key);
+        if (!is_string($value)) {
+            $value = serialize($value);
+        }
+    }
+
+    /**
+     * 
+     * @param string $key
+     * @return void
+     * @throws InvalidArgumentException
+     */
+    private function checkKeyValidity(string $key): void
+    {
+        //4 MB maximum key size
+        if (strlen($key) > 4194304) {
+            throw new InvalidArgumentException('RedisCache says "Key is too big"');
+        }
+    }
+    /**
+     *
+     * @param \DateInterval $ttl
+     * @return int
+     */
+    private function dateIntervalToSeconds(\DateInterval $ttl): int
+    {
+        $reference = new DateTimeImmutable();
+        $endTime = $reference->add($ttl);
+
+        return $endTime->getTimestamp() - $reference->getTimestamp();
+    }
 }
