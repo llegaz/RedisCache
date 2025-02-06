@@ -23,9 +23,6 @@ class SimpleCacheTest extends RedisAdapterTest
         parent::setUpBeforeClass();
     }
 
-    /**
-     * @inheritdoc
-     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -43,9 +40,6 @@ class SimpleCacheTest extends RedisAdapterTest
 
     }
 
-    /**
-     * @inheritdoc
-     */
     protected function tearDown(): void
     {
         unset($this->cache);
