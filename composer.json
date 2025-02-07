@@ -1,5 +1,6 @@
 {
     "name": "llegaz/redis-cache",
+    "description": "PSR-16 and PSR-6 implementations based on Redis Strings and Hashes",
     "type": "library",
     "license": "MIT",
     "authors": [
