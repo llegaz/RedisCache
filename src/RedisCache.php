@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace LLegaz\Cache;
 
+use LLegaz\Cache\Exception\InvalidKeyException;
+use LLegaz\Cache\Exception\InvalidKeysException;
+use LLegaz\Cache\Exception\InvalidValuesException;
 use LLegaz\Redis\RedisAdapter;
 use LLegaz\Redis\RedisClientInterface;
 use Predis\Response\Status;
-use Psr\Cache\InvalidArgumentException;
 use Psr\SimpleCache\CacheInterface;
 
 /**
@@ -80,9 +82,13 @@ class RedisCache extends RedisAdapter implements CacheInterface
                 $redisResponse = $this->getRedis()->flushdb();
             }
         } catch (\Throwable $t) {
+            $redisResponse = null;
             if ($t instanceof \LLegaz\Redis\Exception\LocalIntegrityException) {
                 throw $t;
             }
+            /**
+             * @todo notice logger here
+             */
         } finally {
             return ($redisResponse instanceof Status && $redisResponse->getPayload() === 'OK') ? true : false;
         }
@@ -108,7 +114,10 @@ class RedisCache extends RedisAdapter implements CacheInterface
         try {
             $redisResponse = $this->getRedis()->del($key);
         } catch (\Throwable $t) {
-            // do nothing
+            /**
+             * @todo notice logger here
+             */
+            $redisResponse = null;
         } finally {
             return ($redisResponse instanceof Status && $redisResponse->getPayload() === 'OK') ? true : false;
         }
@@ -137,7 +146,10 @@ class RedisCache extends RedisAdapter implements CacheInterface
         try {
             $redisResponse = $this->getRedis()->del($strKeys);
         } catch (\Throwable $t) {
-            // do nothing
+            /**
+             * @todo notice logger here
+             */
+            $redisResponse = null;
         } finally {
             return ($redisResponse instanceof Status && $redisResponse->getPayload() > 0) ? true : false;
         }
@@ -163,14 +175,21 @@ class RedisCache extends RedisAdapter implements CacheInterface
 
         try {
             $value = $this->getRedis()->get($key);
-            $toReturn = unserialize($value);
-            if ($toReturn === false) {
-                $toReturn = $value;
-            }
-            if (!strlen($toReturn)) {
+            if ($value === false) {
                 $toReturn = $default;
+            } else {
+                $toReturn = @unserialize($value);
+                if ($toReturn === false) {
+                    $toReturn = $value;
+                }
+                if (!strlen($toReturn)) {
+                    $toReturn = $default;
+                }
             }
         } catch (\Throwable $t) {
+            /**
+             * @todo notice logger here
+             */
             $toReturn = $default;
         } finally {
             return $toReturn;
@@ -197,17 +216,25 @@ class RedisCache extends RedisAdapter implements CacheInterface
         }
 
         $values = [];
+
         try {
             $values = $this->getRedis()->mget($keys);
             foreach ($values as &$value) {
-                $tmp = unserialize($value);
-                if ($tmp !== false) {
-                    $value = $tmp;
-                } else if (!strlen($value) || $value === 'nil') {
+                if ($value === false) {
                     $value = $default;
+                } else {
+                    $tmp = @unserialize($value);
+                    if ($tmp !== false) {
+                        $value = $tmp;
+                    } elseif (!strlen($value)) {
+                        $value = $default;
+                    }
                 }
             }
         } catch (\Throwable $t) {
+            /**
+             * @todo notice logger here
+             */
             if (!count($values)) {
                 array_fill(0, count($keys), $default);
             }
@@ -239,12 +266,14 @@ class RedisCache extends RedisAdapter implements CacheInterface
         }
 
         try {
-            $toReturn = true;
-            $redisResponse = $this->getRedis()->exist($key);
+            $redisResponse = $this->getRedis()->exists($key);
         } catch (\Throwable $t) {
-            $toReturn = false;
+            /**
+             * @todo notice logger here
+             */
+            $redisResponse = null;
         } finally {
-            return ($redisResponse instanceof Status && $redisResponse->getPayload() === 1) ? $toReturn : false;
+            return ($redisResponse === 1) ? true : false;
         }
 
 
@@ -275,19 +304,18 @@ class RedisCache extends RedisAdapter implements CacheInterface
             $ttl = $this->dateIntervalToSeconds($ttl);
         }
 
-        /**
-         * @todo maybe enhance this
-         */
         try {
-            $toReturn = true;
             $redisResponse = $this->getRedis()->set($key, $value);
             if ($ttl > 0) {
                 $this->getRedis()->expire($key, $ttl);
             }
         } catch (\Throwable $t) {
-            $toReturn = false;
+            /**
+             * @todo notice logger here
+             */
+            $redisResponse = null;
         } finally {
-            return ($redisResponse instanceof Status && $redisResponse->getPayload() === 'OK') ? $toReturn : false;
+            return ($redisResponse instanceof Status && $redisResponse->getPayload() === 'OK') ? true : false;
         }
     }
 
@@ -310,8 +338,8 @@ class RedisCache extends RedisAdapter implements CacheInterface
         if (!$this->isConnected()) {
             $this->throwCLEx();
         }
-        if (!count($values) || !($values instanceof \Traversable)) {
-            throw new InvalidArgumentException('RedisCache says "Can\'t do shit with those values"');
+        if (!count($values) && !($values instanceof \Traversable)) {
+            throw new InvalidValuesException();
         }
 
         foreach ($values as $key => $value) {
@@ -322,7 +350,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
         }
 
         /**
-         * @todo maybe enhance this too
+         * @todo implement mset for PHP Redis
          */
         try {
             $options = [
@@ -340,6 +368,9 @@ class RedisCache extends RedisAdapter implements CacheInterface
                 }
             });
         } catch (\Throwable $t) {
+            /**
+             * @todo notice logger here
+             */
             return false;
         }
 
@@ -371,16 +402,16 @@ class RedisCache extends RedisAdapter implements CacheInterface
     {
         //4 MB maximum key size
         if (strlen($key) > 4194304) {
-            throw new InvalidArgumentException('RedisCache says "Key is too big"');
+            throw new InvalidKeyException('RedisCache says "Key is too big"');
         }
     }
 
-    private function checkKeysValidity($keys, &$keysForDelete=false): void
+    private function checkKeysValidity($keys, &$keysForDelete = false): void
     {
-        if (!count($keys) || !($keys instanceof \Traversable)) {
-            throw new InvalidArgumentException('RedisCache says "invalid keys"');
+        if (!count($keys) && !($keys instanceof \Traversable)) {
+            throw new InvalidKeysException('RedisCache says "invalid keys"');
         }
-        $bln = $keysForDelete===true;
+        $bln = $keysForDelete === true;
         if ($bln) {
             $keysForDelete = '';
         }
