@@ -180,15 +180,12 @@ class RedisCache extends RedisAdapter implements CacheInterface
 
         try {
             $value = $this->getRedis()->get($key);
-            if ($value === false) {
+            if ($value === false || !is_string($value)) {
                 $toReturn = $default;
             } else {
                 $toReturn = @unserialize($value);
                 if ($toReturn === false) {
                     $toReturn = $value;
-                }
-                if (!strlen($toReturn)) {
-                    $toReturn = $default;
                 }
             }
         } catch (\Throwable $t) {
@@ -309,14 +306,14 @@ class RedisCache extends RedisAdapter implements CacheInterface
             $ttl = $this->dateIntervalToSeconds($ttl);
         }
 
+        dump($key, $value, $ttl);
         try {
-            if ($ttl === null || $ttl > 0) {
-                $redisResponse = $this->getRedis()->set($key, $value);
-                if ($ttl) {
-                    $this->getRedis()->expire($key, $ttl);
-                }
-            } elseif ($ttl <= 0) {
-                $redisResponse = $this->delete($key);
+            if ($ttl < 0) {
+                $ttl = 0;
+            }
+            $redisResponse = $this->getRedis()->set($key, $value);
+            if ($ttl !== null && $ttl >= 0) {
+                $this->getRedis()->expire($key, $ttl);
             }
         } catch (\Throwable $t) {
             /**
@@ -369,6 +366,8 @@ class RedisCache extends RedisAdapter implements CacheInterface
             /** meh, keys have to be strings, always - @todo maybe rework this **/
             $this->checkKeyValuePair(is_int($key) ? (string) $key : $key, $value);
         }
+
+        dump($values, $ttl);
         if ($ttl instanceof \DateInterval) {
             $ttl = $this->dateIntervalToSeconds($ttl);
         }
@@ -385,7 +384,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             $this->getRedis()->transaction($options, function ($t) use ($values, $ttl) {
                 $t->mset($values);
 
-                if ($ttl > 0) {
+                if ($ttl !== null && $ttl >= 0) {
                     foreach ($values as $key => $value) {
                         $t->expire($key, $ttl);
                     }

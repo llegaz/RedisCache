@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types=1); // @todo add to SimpleCacheTest
 
 namespace LLegaz\Cache\Tests\Integration;
 
@@ -64,7 +64,7 @@ class CacheIntegrationTest extends SimpleCacheTest
     public static function invalidTEKeys()
     {
         return array_merge(
-            self::invalidArrayKeys(),
+            self::invalidArrayTEKeys(),
             [
                 [2], // TypeError
             ]
@@ -84,6 +84,24 @@ class CacheIntegrationTest extends SimpleCacheTest
         ];
     }
 
+    /**
+     * @return array
+     */
+    public static function invalidTtl()
+    {
+        return [
+            //[''],
+            [true],
+            [false],
+            //['abc'],
+            [2.5],
+            [' 1'], // can be casted to a int
+            //['12foo'], // can be casted to a int
+            ['025'], // can be interpreted as hex
+            //[new \stdClass()],
+            //[['array']],
+        ];
+    }
 
     /**
      * @dataProvider invalidTEKeys
@@ -138,9 +156,9 @@ class CacheIntegrationTest extends SimpleCacheTest
     }
 
     /**
-     * @dataProvider invalidArrayKeys
+     * @dataProvider invalidArrayTEKeys
      */
-    #[DataProvider('invalidArrayKeys')]
+    #[DataProvider('invalidArrayTEKeys')]
     public function testSetMultipleInvalidTEKeys($key)
     {
         if (isset($this->skippedTests[__FUNCTION__])) {
@@ -208,14 +226,32 @@ class CacheIntegrationTest extends SimpleCacheTest
         $this->cache->deleteMultiple(['key1', $key, 'key2']);
     }
 
-    public function testDeleteMultipleNoIterable()
+    /**
+     * @dataProvider invalidTtl
+     */
+    #[DataProvider('invalidTtl')]
+    public function testSetInvalidTtl($ttl)
     {
         if (isset($this->skippedTests[__FUNCTION__])) {
             $this->markTestSkipped($this->skippedTests[__FUNCTION__]);
         }
 
         $this->expectException('\TypeError');
-        $this->cache->deleteMultiple('key');
+        $this->cache->set('key', 'value', $ttl);
+    }
+
+    /**
+     * @dataProvider invalidTtl
+     */
+    #[DataProvider('invalidTtl')]
+    public function testSetMultipleInvalidTtl($ttl)
+    {
+        if (isset($this->skippedTests[__FUNCTION__])) {
+            $this->markTestSkipped($this->skippedTests[__FUNCTION__]);
+        }
+
+        $this->expectException('\TypeError');
+        $this->cache->setMultiple(['key' => 'value'], $ttl);
     }
 
 
