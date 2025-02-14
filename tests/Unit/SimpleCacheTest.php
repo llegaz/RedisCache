@@ -159,11 +159,11 @@ class SimpleCacheTest extends RedisAdapterTestBase
          * @todo test with values other than strings (serialize)
          */
         $key = 'do:exist';
-        $expected = NULL;
+        $expected = null;
         $this->predisClient->expects($this->exactly(1))
             ->method('get')
             ->with($key)
-            ->willReturn("N;")
+            ->willReturn('N;')
         ;
         $actual = $this->cache->get($key);
         $this->assertNull($actual);
