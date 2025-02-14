@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace LLegaz\Cache\Exception;
 
-use Psr\Cache\InvalidArgumentException;
+use Psr\SimpleCache\InvalidArgumentException;
 
 class InvalidValuesException extends \Exception implements InvalidArgumentException
 {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LLegaz\Cache;
 
+use DateTimeImmutable;
 use LLegaz\Cache\Exception\InvalidKeyException;
 use LLegaz\Cache\Exception\InvalidKeysException;
 use LLegaz\Cache\Exception\InvalidValuesException;
@@ -119,7 +120,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
              */
             $redisResponse = null;
         } finally {
-            return ($redisResponse instanceof Status && $redisResponse->getPayload() === 'OK') ? true : false;
+            return ($redisResponse >= 0) ? true : false;
         }
     }
 
@@ -136,22 +137,26 @@ class RedisCache extends RedisAdapter implements CacheInterface
      */
     public function deleteMultiple($keys): bool
     {
-        $strKeys = true;
-        $this->checkKeysValidity($keys, $strKeys);
-        trim($strKeys);
+        dump($keys);
+        //$strKeys = true;
+        $keys = $this->checkKeysValidity($keys/*, $strKeys*/);
+        //trim($strKeys);
         if (!$this->isConnected()) {
             $this->throwCLEx();
         }
 
         try {
-            $redisResponse = $this->getRedis()->del($strKeys);
+            dump($keys);
+            $redisResponse = $this->getRedis()->del(/*$strKeys*/ $keys);
         } catch (\Throwable $t) {
+            dump($t->getMessage());
             /**
              * @todo notice logger here
              */
             $redisResponse = null;
         } finally {
-            return ($redisResponse instanceof Status && $redisResponse->getPayload() > 0) ? true : false;
+            dump($redisResponse);
+            return ($redisResponse >= 0) ? true : false;
         }
     }
 
@@ -210,7 +215,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
      */
     public function getMultiple($keys, mixed $default = null): iterable
     {
-        $this->checkKeysValidity($keys);
+        $keys = $this->checkKeysValidity($keys);
         if (!$this->isConnected()) {
             $this->throwCLEx();
         }
@@ -305,9 +310,13 @@ class RedisCache extends RedisAdapter implements CacheInterface
         }
 
         try {
-            $redisResponse = $this->getRedis()->set($key, $value);
-            if ($ttl > 0) {
-                $this->getRedis()->expire($key, $ttl);
+            if ($ttl === null || $ttl > 0) {
+                $redisResponse = $this->getRedis()->set($key, $value);
+                if ($ttl) {
+                    $this->getRedis()->expire($key, $ttl);
+                }
+            } elseif ($ttl <= 0) {
+                $redisResponse = $this->delete($key);
             }
         } catch (\Throwable $t) {
             /**
@@ -315,6 +324,13 @@ class RedisCache extends RedisAdapter implements CacheInterface
              */
             $redisResponse = null;
         } finally {
+            /**
+             * @todo rework returns
+             */
+            if ($redisResponse === true) {
+                return true;
+            }
+
             return ($redisResponse instanceof Status && $redisResponse->getPayload() === 'OK') ? true : false;
         }
     }
@@ -338,12 +354,20 @@ class RedisCache extends RedisAdapter implements CacheInterface
         if (!$this->isConnected()) {
             $this->throwCLEx();
         }
-        if (!count($values) && !($values instanceof \Traversable)) {
-            throw new InvalidValuesException();
+
+        if (!is_array($values)) {
+            if (!($values instanceof \Traversable)) {
+                throw new InvalidValuesException('RedisCache says "invalid keys/values set"');
+            }
+            $values = iterator_to_array($values);
+        }
+        if (!count($values)) {
+            throw new InvalidValuesException('RedisCache says "empty keys/values set"');
         }
 
         foreach ($values as $key => $value) {
-            $this->checkKeyValuePair($key, $value);
+            /** meh, keys have to be strings, always - @todo maybe rework this **/
+            $this->checkKeyValuePair(is_int($key) ? (string) $key : $key, $value);
         }
         if ($ttl instanceof \DateInterval) {
             $ttl = $this->dateIntervalToSeconds($ttl);
@@ -389,6 +413,8 @@ class RedisCache extends RedisAdapter implements CacheInterface
         $this->checkKeyValidity($key);
         if (!is_string($value)) {
             $value = serialize($value);
+            /*dump($value);
+            usleep(100000);*/
         }
     }
 
@@ -400,28 +426,44 @@ class RedisCache extends RedisAdapter implements CacheInterface
      */
     private function checkKeyValidity(string $key): void
     {
+        if (!strlen($key)) {
+            throw new InvalidKeyException('RedisCache says "Empty Key is forbidden"');
+        }
+
         //4 MB maximum key size
         if (strlen($key) > 4194304) {
             throw new InvalidKeyException('RedisCache says "Key is too big"');
         }
+
+        // keys with only 5 digits or less won't be allowed
+        /*$match = preg_match('/^([0-9]+){1,2}(\.)?([0-9]+){0,3}$/U', $key);
+        if ($match) {
+            throw new InvalidKeyException();
+        }*/
     }
 
-    private function checkKeysValidity($keys, &$keysForDelete = false): void
+    private function checkKeysValidity($keys/*, &$keysForDelete = false*/): array
     {
-        if (!count($keys) && !($keys instanceof \Traversable)) {
-            throw new InvalidKeysException('RedisCache says "invalid keys"');
+        if (!is_array($keys)) {
+            if (!($keys instanceof \Traversable)) {
+                throw new InvalidKeysException('RedisCache says "invalid keys"');
+            }
+            $keys = iterator_to_array($keys, false);
         }
-        $bln = $keysForDelete === true;
+
+        /*$bln = $keysForDelete === true;
         if ($bln) {
             $keysForDelete = '';
-        }
+        }*/
         foreach ($keys as $key) {
             $this->checkKeyValidity($key);
-            if ($bln) {
+            /*if ($bln) {
                 $keysForDelete .= $key;
                 $keysForDelete .= ' ';
-            }
+            }*/
         }
+
+        return $keys;
     }
 
     /**
