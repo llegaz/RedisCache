@@ -57,7 +57,9 @@ class CacheIntegrationTest extends SimpleCacheTest
     public static function invalidArrayKeys()
     {
         return [
-            [''],
+            [true],
+            [false],
+            [null],
         ];
     }
 
@@ -67,6 +69,9 @@ class CacheIntegrationTest extends SimpleCacheTest
             self::invalidArrayTEKeys(),
             [
                 [2], // TypeError
+                [new \stdClass()], // TypeError
+                [2.5], // TypeError
+                [1337], // TypeError
             ]
         );
     }
@@ -74,17 +79,13 @@ class CacheIntegrationTest extends SimpleCacheTest
     public static function invalidArrayTEKeys()
     {
         return [
-            [true], // TypeError
-            [false], // TypeError
-            [null], // TypeError
-            [2.5], // TypeError
-            [1337], // TypeError
-            [new \stdClass()], // TypeError
             [['array']], // TypeError
+            [[1 => 'array', 2 => 'again']], // TypeError
         ];
     }
 
     /**
+     * @todo handle TypeError here too
      * @return array
      */
     public static function invalidTtl()
@@ -254,6 +255,16 @@ class CacheIntegrationTest extends SimpleCacheTest
         $this->cache->setMultiple(['key' => 'value'], $ttl);
     }
 
+    public function testSetMultipleWithIntegerArrayKey()
+    {
+        if (isset($this->skippedTests[__FUNCTION__])) {
+            $this->markTestSkipped($this->skippedTests[__FUNCTION__]);
+        }
+
+        $result = $this->cache->setMultiple(['00' => 'value0']);
+        $this->assertTrue($result, 'setMultiple() must return true if success');
+        $this->assertEquals('value0', $this->cache->get('00'));
+    }
 
     public function createSimpleCache(): CacheInterface
     {
