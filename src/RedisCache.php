@@ -137,7 +137,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
      */
     public function deleteMultiple($keys): bool
     {
-        dump($keys);
+        //dump($keys);
         //$strKeys = true;
         $keys = $this->checkKeysValidity($keys/*, $strKeys*/);
         //trim($strKeys);
@@ -155,7 +155,6 @@ class RedisCache extends RedisAdapter implements CacheInterface
              */
             $redisResponse = null;
         } finally {
-            dump($redisResponse);
 
             return ($redisResponse >= 0) ? true : false;
         }
@@ -220,11 +219,10 @@ class RedisCache extends RedisAdapter implements CacheInterface
         }
 
         $values = [];
-
         try {
             $values = $this->getRedis()->mget($keys);
             foreach ($values as &$value) {
-                if ($value === false) {
+                if ($value === false || !is_string($value)) {
                     $value = $default;
                 } else {
                     $tmp = @unserialize($value);
@@ -239,6 +237,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             /**
              * @todo notice logger here
              */
+            dump($t->getMessage());
             if (!count($values)) {
                 array_fill(0, count($keys), $default);
             }
@@ -308,7 +307,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             $ttl = $this->dateIntervalToSeconds($ttl);
         }
 
-        dump($key, $value, $ttl);
+        //dump($key, $value, $ttl);
 
         try {
             if ($ttl < 0) {
