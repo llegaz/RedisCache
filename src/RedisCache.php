@@ -156,6 +156,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             $redisResponse = null;
         } finally {
             dump($redisResponse);
+
             return ($redisResponse >= 0) ? true : false;
         }
     }
@@ -308,6 +309,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
         }
 
         dump($key, $value, $ttl);
+
         try {
             if ($ttl < 0) {
                 $ttl = 0;
@@ -461,22 +463,30 @@ class RedisCache extends RedisAdapter implements CacheInterface
             if (!($keys instanceof \Traversable)) {
                 throw new InvalidKeysException('RedisCache says "invalid keys"');
             }
-            $keys = iterator_to_array($keys, false);
         }
 
         /*$bln = $keysForDelete === true;
         if ($bln) {
             $keysForDelete = '';
         }*/
+        $newKeys = [];
         foreach ($keys as $key) {
+            if (is_scalar($key)) {
+                $key = (string) $key;
+            } elseif (is_object($key)) {
+                $key = spl_object_hash($key);
+            } elseif (!is_string($key)) {
+                throw new InvalidKeyException();
+            }
             $this->checkKeyValidity($key);
+            $newKeys[] = $key;
             /*if ($bln) {
                 $keysForDelete .= $key;
                 $keysForDelete .= ' ';
             }*/
         }
 
-        return $keys;
+        return $newKeys;
     }
 
     /**
