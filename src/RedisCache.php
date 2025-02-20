@@ -228,6 +228,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
                     $tmp = @unserialize($value);
                     if ($tmp !== false) {
                         $value = $tmp;
+                        /** @todo - remove this strlen check? + refacto this with get part in 1 function **/
                     } elseif (!strlen($value)) {
                         $value = $default;
                     }
