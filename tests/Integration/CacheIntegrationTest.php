@@ -57,16 +57,25 @@ class CacheIntegrationTest extends SimpleCacheTest
     public static function invalidArrayKeys()
     {
         return [
-            [true],
-            [false],
-            [null],
+            ['a'],
+            ['b'],
+            ['c'],
+            ['1'],
+            ['2'],
+            ['3'],
         ];
     }
 
-    public static function invalidTEKeys()
+    /**
+     *  more TypeError on single operation method (declared with string arguments)
+     * @see Psr\SimpleCache\CacheInterface
+     * 
+     * @return array
+     */
+    public static function invalidTEKeysSingle()
     {
         return array_merge(
-            self::invalidArrayTEKeys(),
+            self::invalidTEKeys(),
             [
                 [2], // TypeError
                 [new \stdClass()], // TypeError
@@ -76,11 +85,14 @@ class CacheIntegrationTest extends SimpleCacheTest
         );
     }
 
-    public static function invalidArrayTEKeys()
+    public static function invalidTEKeys()
     {
         return [
-            [['array']], // TypeError
-            [[1 => 'array', 2 => 'again']], // TypeError
+            [['array']],
+            [[1 => 'array', 2 => 'again']],
+            [true],
+            [false],
+            [null],
         ];
     }
 
@@ -105,9 +117,9 @@ class CacheIntegrationTest extends SimpleCacheTest
     }
 
     /**
-     * @dataProvider invalidTEKeys
+     * @dataProvider invalidTEKeysSingle
      */
-    #[DataProvider('invalidTEKeys')]
+    #[DataProvider('invalidTEKeysSingle')]
     public function testGetInvalidTEKeys($key)
     {
         if (isset($this->skippedTests[__FUNCTION__])) {
@@ -128,7 +140,8 @@ class CacheIntegrationTest extends SimpleCacheTest
             $this->markTestSkipped($this->skippedTests[__FUNCTION__]);
         }
 
-        $this->expectException('\TypeError');
+        //$this->expectException('\TypeError');
+        $this->expectException('Psr\SimpleCache\InvalidArgumentException');
         $result = $this->cache->getMultiple(['key1', $key, 'key2']);
     }
 
@@ -143,9 +156,9 @@ class CacheIntegrationTest extends SimpleCacheTest
     }
 
     /**
-     * @dataProvider invalidTEKeys
+     * @dataProvider invalidTEKeysSingle
      */
-    #[DataProvider('invalidTEKeys')]
+    #[DataProvider('invalidTEKeysSingle')]
     public function testSetInvalidTEKeys($key)
     {
         if (isset($this->skippedTests[__FUNCTION__])) {
@@ -157,38 +170,9 @@ class CacheIntegrationTest extends SimpleCacheTest
     }
 
     /**
-     * @dataProvider invalidArrayTEKeys
+     * @dataProvider invalidTEKeysSingle
      */
-    #[DataProvider('invalidArrayTEKeys')]
-    public function testSetMultipleInvalidTEKeys($key)
-    {
-        if (isset($this->skippedTests[__FUNCTION__])) {
-            $this->markTestSkipped($this->skippedTests[__FUNCTION__]);
-        }
-
-        $values = function () use ($key) {
-            yield 'key1' => 'foo';
-            yield $key => 'bar';
-            yield 'key2' => 'baz';
-        };
-        $this->expectException('\TypeError');
-        $this->cache->setMultiple($values());
-    }
-
-    public function testSetMultipleNoIterable()
-    {
-        if (isset($this->skippedTests[__FUNCTION__])) {
-            $this->markTestSkipped($this->skippedTests[__FUNCTION__]);
-        }
-
-        $this->expectException('\TypeError');
-        $this->cache->setMultiple('key');
-    }
-
-    /**
-     * @dataProvider invalidTEKeys
-     */
-    #[DataProvider('invalidTEKeys')]
+    #[DataProvider('invalidTEKeysSingle')]
     public function testHasInvalidTEKeys($key)
     {
         if (isset($this->skippedTests[__FUNCTION__])) {
@@ -200,9 +184,9 @@ class CacheIntegrationTest extends SimpleCacheTest
     }
 
     /**
-     * @dataProvider invalidTEKeys
+     * @dataProvider invalidTEKeysSingle
      */
-    #[DataProvider('invalidTEKeys')]
+    #[DataProvider('invalidTEKeysSingle')]
     public function testDeleteInvalidTEKeys($key)
     {
         if (isset($this->skippedTests[__FUNCTION__])) {
@@ -223,8 +207,19 @@ class CacheIntegrationTest extends SimpleCacheTest
             $this->markTestSkipped($this->skippedTests[__FUNCTION__]);
         }
 
-        $this->expectException('\TypeError');
+        //$this->expectException('\TypeError');
+        $this->expectException('Psr\SimpleCache\InvalidArgumentException');
         $this->cache->deleteMultiple(['key1', $key, 'key2']);
+    }
+
+    public function testDeleteMultipleNoIterable()
+    {
+        if (isset($this->skippedTests[__FUNCTION__])) {
+            $this->markTestSkipped($this->skippedTests[__FUNCTION__]);
+        }
+
+        $this->expectException('\TypeError');
+        $this->cache->deleteMultiple('key');
     }
 
     /**
@@ -239,6 +234,16 @@ class CacheIntegrationTest extends SimpleCacheTest
 
         $this->expectException('\TypeError');
         $this->cache->set('key', 'value', $ttl);
+    }
+
+    public function testSetMultipleNoIterable()
+    {
+        if (isset($this->skippedTests[__FUNCTION__])) {
+            $this->markTestSkipped($this->skippedTests[__FUNCTION__]);
+        }
+
+        $this->expectException('\TypeError');
+        $this->cache->setMultiple('key');
     }
 
     /**

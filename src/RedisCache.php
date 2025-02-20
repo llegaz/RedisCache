@@ -131,18 +131,21 @@ class RedisCache extends RedisAdapter implements CacheInterface
      *   MUST be thrown if $keys is neither an array nor a Traversable,
      *   or if any of the $keys are not a legal value.
      */
-    public function deleteMultiple($keys): bool
+    public function deleteMultiple(iterable $keys): bool
     {
         //dump($keys);
         //$strKeys = true;
         $keys = $this->checkKeysValidity($keys/*, $strKeys*/);
         //trim($strKeys);
+
+        if (!count($keys)) {
+            return true;
+        }
         if (!$this->isConnected()) {
             $this->throwCLEx();
         }
 
         try {
-            dump($keys);
             $redisResponse = $this->getRedis()->del(/*$strKeys*/ $keys);
         } catch (\Throwable $t) {
             $redisResponse = null;
@@ -173,11 +176,12 @@ class RedisCache extends RedisAdapter implements CacheInterface
 
         try {
             $value = $this->getRedis()->get($key);
+            //$this->logger->info('GET: ' . $key . ' - ' . $value);
             if ($value === false || !is_string($value)) {
                 $toReturn = $default;
             } else {
                 $toReturn = @unserialize($value);
-                if ($toReturn === false) {
+                if ($toReturn === false && $value !== 'b:0;') {
                     $toReturn = $value;
                 }
             }
@@ -201,7 +205,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
      *   MUST be thrown if $keys is neither an array nor a Traversable,
      *   or if any of the $keys are not a legal value.
      */
-    public function getMultiple($keys, mixed $default = null): iterable
+    public function getMultiple(iterable $keys, mixed $default = null): iterable
     {
         /** handle keys as in setMultiple **/
         $keys = $this->checkKeysValidity($keys);
@@ -301,6 +305,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             if ($ttl < 0) {
                 $ttl = 0;
             }
+            //$this->logger->info('SET: ' . $key . ' - ' . $value);
             $redisResponse = $this->getRedis()->set($key, $value);
             if ($ttl !== null && $ttl >= 0) {
                 $this->getRedis()->expire($key, $ttl);
@@ -441,7 +446,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
         }*/
     }
 
-    private function checkKeysValidity($keys/*, &$keysForDelete = false*/): array
+    private function checkKeysValidity(iterable $keys/*, &$keysForDelete = false*/): array
     {
         if (!is_array($keys)) {
             if (!($keys instanceof \Traversable)) {
