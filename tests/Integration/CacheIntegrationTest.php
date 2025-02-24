@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1); // @todo add to SimpleCacheTest
+declare(strict_types=1); // @todo maybe add to Cache\IntegrationTests\SimpleCacheTest for a PR proposal
 
 namespace LLegaz\Cache\Tests\Integration;
 
@@ -69,7 +69,7 @@ class CacheIntegrationTest extends SimpleCacheTest
     /**
      *  more TypeError on single operation method (declared with string arguments)
      * @see Psr\SimpleCache\CacheInterface
-     * 
+     *
      * @return array
      */
     public static function invalidTEKeysSingle()
