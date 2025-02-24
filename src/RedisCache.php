@@ -89,7 +89,10 @@ class RedisCache extends RedisAdapter implements CacheInterface
             }
             $this->logger->error($t->getMessage(), $t->getTrace());
         } finally {
-            return ($redisResponse instanceof Status && $redisResponse->getPayload() === 'OK') ? true : false;
+            return (
+                $redisResponse === true ||
+                ($redisResponse instanceof Status && $redisResponse->getPayload() === 'OK')
+            ) ? true : false;
         }
     }
 
@@ -133,11 +136,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
      */
     public function deleteMultiple(iterable $keys): bool
     {
-        //dump($keys);
-        //$strKeys = true;
-        $keys = $this->checkKeysValidity($keys/*, $strKeys*/);
-        //trim($strKeys);
-
+        $keys = $this->checkKeysValidity($keys);
         if (!count($keys)) {
             return true;
         }
@@ -146,12 +145,11 @@ class RedisCache extends RedisAdapter implements CacheInterface
         }
 
         try {
-            $redisResponse = $this->getRedis()->del(/*$strKeys*/ $keys);
+            $redisResponse = $this->getRedis()->del($keys);
         } catch (\Throwable $t) {
             $redisResponse = null;
             $this->logger->error($t->getMessage(), $t->getTrace());
         } finally {
-
             return ($redisResponse >= 0) ? true : false;
         }
     }
@@ -299,13 +297,10 @@ class RedisCache extends RedisAdapter implements CacheInterface
             $ttl = $this->dateIntervalToSeconds($ttl);
         }
 
-        //dump($key, $value, $ttl);
-
         try {
             if ($ttl < 0) {
                 $ttl = 0;
             }
-            //$this->logger->info('SET: ' . $key . ' - ' . $value);
             $redisResponse = $this->getRedis()->set($key, $value);
             if ($ttl !== null && $ttl >= 0) {
                 $this->getRedis()->expire($key, $ttl);
@@ -314,14 +309,10 @@ class RedisCache extends RedisAdapter implements CacheInterface
             $redisResponse = null;
             $this->logger->error($t->getMessage(), $t->getTrace());
         } finally {
-            /**
-             * @todo rework returns
-             */
-            if ($redisResponse === true) {
-                return true;
-            }
-
-            return ($redisResponse instanceof Status && $redisResponse->getPayload() === 'OK') ? true : false;
+            return (
+                $redisResponse === true ||
+                ($redisResponse instanceof Status && $redisResponse->getPayload() === 'OK')
+            ) ? true : false;
         }
     }
 
@@ -341,6 +332,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
      */
     public function setMultiple(iterable $values, null|int|\DateInterval $ttl = null): bool
     {
+        /** @todo - refactor here ? */
         if (!$this->isConnected()) {
             $this->throwCLEx();
         }
@@ -349,7 +341,6 @@ class RedisCache extends RedisAdapter implements CacheInterface
             if (!($values instanceof \Traversable)) {
                 throw new InvalidValuesException('RedisCache says "invalid keys/values set"');
             }
-            //$values = iterator_to_array($values);
         }
 
         $newValues = [];
@@ -368,36 +359,42 @@ class RedisCache extends RedisAdapter implements CacheInterface
             throw new InvalidValuesException('RedisCache says "empty keys/values set"');
         }
 
-        //dump($values, $ttl);
         if ($ttl instanceof \DateInterval) {
             $ttl = $this->dateIntervalToSeconds($ttl);
         }
 
-        /**
-         * @todo implement mset for PHP Redis
-         */
         try {
-            $options = [
-                'cas'   => true, // Initialize with support for CAS operations
-                'retry' => 3, // Number of retries on aborted transactions, after
-                // which the client bails out with an exception.
-            ];
-            $this->getRedis()->transaction($options, function ($t) use ($newValues, $ttl) {
-                $t->mset($newValues);
-
+            $toReturn = false;
+            if ($this->getRedis()->toString() === RedisClientInterface::PHP_REDIS) {
+                $this->getRedis()->multi(); // begin transaction
+                $toReturn = $this->getRedis()->mset($newValues);
                 if ($ttl !== null && $ttl >= 0) {
                     foreach ($newValues as $key => $value) {
-                        $t->expire($key, $ttl);
+                        $this->getRedis()->expire($key, $ttl);
                     }
                 }
-            });
+                $this->getRedis()->exec();
+            } else { // predis fallback
+                $options = [
+                    'cas' => true, // Initialize with support for CAS operations
+                    'retry' => 3, // Number of retries on aborted transactions, after
+                        // which the client bails out with an exception.
+                ];
+                $this->getRedis()->transaction($options, function ($t) use ($newValues, $ttl, &$toReturn) {
+                    $toReturn = $t->mset($newValues);
+
+                    if ($ttl !== null && $ttl >= 0) {
+                        foreach ($newValues as $key => $value) {
+                            $t->expire($key, $ttl);
+                        }
+                    }
+                });
+            }
         } catch (\Throwable $t) {
             $this->logger->error($t->getMessage(), $t->getTrace());
-
-            return false;
+        } finally {
+            return $toReturn !== false;
         }
-
-        return true;
     }
 
     /**
@@ -412,8 +409,6 @@ class RedisCache extends RedisAdapter implements CacheInterface
         $this->checkKeyValidity($key);
         if (!is_string($value)) {
             $value = serialize($value);
-            /*dump($value);
-            usleep(100000);*/
         }
     }
 
@@ -438,15 +433,9 @@ class RedisCache extends RedisAdapter implements CacheInterface
         if ($len > 4194304) {
             throw new InvalidKeyException('RedisCache says "Key is too big"');
         }
-
-        // keys with only 5 digits or less won't be allowed
-        /*$match = preg_match('/^([0-9]+){1,2}(\.)?([0-9]+){0,3}$/U', $key);
-        if ($match) {
-            throw new InvalidKeyException();
-        }*/
     }
 
-    private function checkKeysValidity(iterable $keys/*, &$keysForDelete = false*/): array
+    private function checkKeysValidity(iterable $keys): array
     {
         if (!is_array($keys)) {
             if (!($keys instanceof \Traversable)) {
@@ -454,10 +443,6 @@ class RedisCache extends RedisAdapter implements CacheInterface
             }
         }
 
-        /*$bln = $keysForDelete === true;
-        if ($bln) {
-            $keysForDelete = '';
-        }*/
         $newKeys = [];
         foreach ($keys as $key) {
             if (is_scalar($key)) {
@@ -469,10 +454,6 @@ class RedisCache extends RedisAdapter implements CacheInterface
             }
             $this->checkKeyValidity($key);
             $newKeys[] = $key;
-            /*if ($bln) {
-                $keysForDelete .= $key;
-                $keysForDelete .= ' ';
-            }*/
         }
 
         return $newKeys;
