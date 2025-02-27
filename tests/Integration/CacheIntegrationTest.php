@@ -26,7 +26,6 @@ class CacheIntegrationTest extends SimpleCacheTest
     #[Before]
     public function setupService()
     {
-        //dump('setup service');        sleep(1);
         if (SKIP_INTEGRATION_TESTS) {
             // don't forget that tests are deleoppers' tools (and not only an approval seal)
             $this->markTestSkipped('INTEGRATION TESTS are skipped by default when executing Units tests only.');
@@ -36,7 +35,6 @@ class CacheIntegrationTest extends SimpleCacheTest
 
     protected function setUp(): void
     {
-        //dump('setp');        sleep(1);
         if (SKIP_INTEGRATION_TESTS) {
             // don't forget that tests are deleoppers' tools (and not only an approval seal)
             $this->markTestSkipped('INTEGRATION TESTS are skipped by default when executing Units tests only.');

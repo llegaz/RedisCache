@@ -364,10 +364,10 @@ class RedisCache extends RedisAdapter implements CacheInterface
         }
 
         try {
-            $toReturn = false;
+            $redisResponse = false;
             if ($this->getRedis()->toString() === RedisClientInterface::PHP_REDIS) {
                 $this->getRedis()->multi(); // begin transaction
-                $toReturn = $this->getRedis()->mset($newValues);
+                $redisResponse = $this->getRedis()->mset($newValues);
                 if ($ttl !== null && $ttl >= 0) {
                     foreach ($newValues as $key => $value) {
                         $this->getRedis()->expire($key, $ttl);
@@ -380,8 +380,8 @@ class RedisCache extends RedisAdapter implements CacheInterface
                     'retry' => 3, // Number of retries on aborted transactions, after
                         // which the client bails out with an exception.
                 ];
-                $this->getRedis()->transaction($options, function ($t) use ($newValues, $ttl, &$toReturn) {
-                    $toReturn = $t->mset($newValues);
+                $this->getRedis()->transaction($options, function ($t) use ($newValues, $ttl, &$redisResponse) {
+                    $redisResponse = $t->mset($newValues);
 
                     if ($ttl !== null && $ttl >= 0) {
                         foreach ($newValues as $key => $value) {
@@ -393,7 +393,11 @@ class RedisCache extends RedisAdapter implements CacheInterface
         } catch (\Throwable $t) {
             $this->logger->error($t->getMessage(), $t->getTrace());
         } finally {
-            return $toReturn !== false;
+            if ($redisResponse instanceof Status) {
+                return $redisResponse->getPayload() === 'OK';
+            } else {
+                return $redisResponse !== false;
+            }
         }
     }
 
