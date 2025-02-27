@@ -42,7 +42,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
                 'flushall',
                 'flushdb',
                 'set',
-                'mset',
+                //'mset',
                 ])
             ->getMock()
         ;
@@ -104,7 +104,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
         $this->predisClient->expects($this->exactly(1))
             ->method('del')
             ->with($key)
-            ->willReturn(new Status('OK'))
+            ->willReturn(1)
         ;
         $this->assertTrue($this->cache->delete($key));
     }
@@ -244,17 +244,28 @@ class SimpleCacheTest extends RedisAdapterTestBase
 
     /**
      *
-     * @todo rework parameters
+     * @todo maybe rework this (and get some inspiration here:
+     * @link https://medium.com/@dotcom.software/unit-testing-closures-the-right-way-b982fc833bfa)
      */
     public function testSetMultiple()
     {
         $values = ['do:exist1' => 'value1', 'do:exist2' => 'value2'];
+
+        $testcase = $this;
         $this->predisClient->expects($this->exactly(1))
-            //->method('mset')
             ->method('transaction') // predis case
-            //->with($values)
-            ->willReturn(new Status('OK'))
-        ;
+            ->withAnyParameters()
+            ->willReturnCallback(function($options, $closure) use ($testcase) {
+                $reflection = new \ReflectionFunction($closure);
+                $testcase->assertFalse($reflection->getStaticVariables()['redisResponse']);
+                $testcase->assertIsArray($options);
+                $testcase->assertIsArray($reflection->getStaticVariables()['newValues']);
+                $ttl = $reflection->getStaticVariables()['ttl'];
+                $testcase->assertTrue(is_int($ttl) || is_null($ttl));
+                $reflection->getStaticVariables()['redisResponse'] = true;
+                $testcase->assertTrue($reflection->getStaticVariables()['redisResponse']);
+            });
+
         $this->assertTrue($this->cache->setMultiple($values));
     }
 
