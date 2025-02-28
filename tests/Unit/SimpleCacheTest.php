@@ -257,9 +257,9 @@ class SimpleCacheTest extends RedisAdapterTestBase
     /**
      *
      * @todo maybe rework this and get some inspiration here:
-     * 
+     *
      * @link https://medium.com/@dotcom.software/unit-testing-closures-the-right-way-b982fc833bfa
-     * 
+     *
      * to redefine another object to emulate transaction part from predis and test behavior inside (mset, expire, etc.)
      */
     public function testSetMultiple()
