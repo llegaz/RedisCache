@@ -95,22 +95,21 @@ class CacheIntegrationTest extends SimpleCacheTest
     }
 
     /**
-     * @todo handle TypeError here too
      * @return array
      */
     public static function invalidTtl()
     {
         return [
-            //[''],
+            [''],
             [true],
             [false],
-            //['abc'],
+            ['abc'],
             [2.5],
             [' 1'], // can be casted to a int
-            //['12foo'], // can be casted to a int
+            ['12foo'], // can be casted to a int
             ['025'], // can be interpreted as hex
-            //[new \stdClass()],
-            //[['array']],
+            [new \stdClass()],
+            [['array']],
         ];
     }
 

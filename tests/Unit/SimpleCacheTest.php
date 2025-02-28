@@ -154,12 +154,22 @@ class SimpleCacheTest extends RedisAdapterTestBase
         $this->assertEquals($expected, $actual);
     }
 
-    public function testGetExistantButNull()
+    public function testGetFalse()
     {
-        /**
-         *
-         * @todo test with values other than strings (serialize)
-         */
+        $key = 'do:exist';
+        $expected = false;
+        $this->predisClient->expects($this->once())
+            ->method('get')
+            ->with($key)
+            ->willReturn('b:0;')
+        ;
+        $actual = $this->cache->get($key);
+        $this->assertIsBool($actual);
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function testGetNull()
+    {
         $key = 'do:exist';
         $expected = null;
         $this->predisClient->expects($this->once())
@@ -246,8 +256,11 @@ class SimpleCacheTest extends RedisAdapterTestBase
 
     /**
      *
-     * @todo maybe rework this (and get some inspiration here:
-     * @link https://medium.com/@dotcom.software/unit-testing-closures-the-right-way-b982fc833bfa)
+     * @todo maybe rework this and get some inspiration here:
+     *
+     * @link https://medium.com/@dotcom.software/unit-testing-closures-the-right-way-b982fc833bfa
+     *
+     * to redefine another object to emulate transaction part from predis and test behavior inside (mset, expire, etc.)
      */
     public function testSetMultiple()
     {
@@ -257,7 +270,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
         $this->predisClient->expects($this->once())
             ->method('transaction') // predis case
             ->withAnyParameters()
-            ->willReturnCallback(function ($options, $closure) use ($testcase, $values) {
+            ->willReturnCallback(function (array $options, $closure) use ($testcase, $values) {
                 $reflection = new \ReflectionFunction($closure);
                 $testcase->assertFalse($reflection->getStaticVariables()['redisResponse']);
                 $testcase->assertIsArray($options);
@@ -273,7 +286,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
     }
 
     /**
-     * @todo test TTL with setMultiple
+     * @todo maybe enhance logger testing
      */
     public function testSetWithTtl()
     {
@@ -286,9 +299,37 @@ class SimpleCacheTest extends RedisAdapterTestBase
         $this->predisClient->expects($this->once())
             ->method('expire')
             ->with($key, 1337)
+            //->will($this->throwException(new Exception())); // test logger
             ->willReturn(1)
         ;
         $this->assertTrue($this->cache->set($key, 'bbbbbbbbbbbbbbbbbbbb', 1337));
+    }
+
+    /**
+     * @todo test TTL with DateInterval too
+     */
+    public function testSetMultipleWithTtl()
+    {
+        $values = ['do:exist1' => 'value1', 'do:exist2' => 'value2'];
+        $ttl = 2;
+
+        $testcase = $this;
+        $this->predisClient->expects($this->once())
+            ->method('transaction') // predis case
+            ->withAnyParameters()
+            ->willReturnCallback(function (array $options, $closure) use ($testcase, $values, $ttl) {
+                $reflection = new \ReflectionFunction($closure);
+                $testcase->assertFalse($reflection->getStaticVariables()['redisResponse']);
+                $testcase->assertIsArray($options);
+                $testcase->assertIsArray($reflection->getStaticVariables()['newValues']);
+                $testcase->assertEquals($values, $reflection->getStaticVariables()['newValues']);
+                $testcase->assertTrue(is_int($reflection->getStaticVariables()['ttl']));
+                $testcase->assertEquals($ttl, $reflection->getStaticVariables()['ttl']);
+                $reflection->getStaticVariables()['redisResponse'] = true;
+                $testcase->assertTrue($reflection->getStaticVariables()['redisResponse']);
+            });
+
+        $this->assertTrue($this->cache->setMultiple($values, $ttl));
     }
 
 }
