@@ -174,8 +174,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
 
         try {
             $value = $this->getRedis()->get($key);
-            //$this->logger->info('GET: ' . $key . ' - ' . $value);
-            if ($value === false || !is_string($value)) {
+            if (!is_string($value)) {
                 $toReturn = $default;
             } else {
                 $toReturn = @unserialize($value);
@@ -216,15 +215,12 @@ class RedisCache extends RedisAdapter implements CacheInterface
         try {
             $values = $this->getRedis()->mget($keys);
             foreach ($values as &$value) {
-                if ($value === false || !is_string($value)) {
+                if (!is_string($value)) {
                     $value = $default;
                 } else {
                     $tmp = @unserialize($value);
-                    if ($tmp !== false) {
+                    if ($tmp !== false || $value === 'b:0;') {
                         $value = $tmp;
-                        /** @todo - remove this strlen check? + refacto this with get part in 1 function **/
-                    } elseif (!strlen($value)) {
-                        $value = $default;
                     }
                 }
             }
