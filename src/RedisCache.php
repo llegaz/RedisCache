@@ -299,6 +299,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             }
             $redisResponse = $this->getRedis()->set($key, $value);
             if ($ttl !== null && $ttl >= 0) {
+                /** @todo maybe test return value here too */
                 $this->getRedis()->expire($key, $ttl);
             }
         } catch (\Throwable $t) {
