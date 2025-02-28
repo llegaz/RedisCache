@@ -332,10 +332,8 @@ class RedisCache extends RedisAdapter implements CacheInterface
             $this->throwCLEx();
         }
 
-        if (!is_array($values)) {
-            if (!($values instanceof \Traversable)) {
-                throw new InvalidValuesException('RedisCache says "invalid keys/values set"');
-            }
+        if (!is_array($values) && !($values instanceof \Traversable)) {
+            throw new InvalidValuesException('RedisCache says "invalid keys/values set"');
         }
 
         /** @todo - refactor this (maybe use Predis/Redis Clients) */
@@ -437,10 +435,8 @@ class RedisCache extends RedisAdapter implements CacheInterface
 
     private function checkKeysValidity(iterable $keys): array
     {
-        if (!is_array($keys)) {
-            if (!($keys instanceof \Traversable)) {
-                throw new InvalidKeysException('RedisCache says "invalid keys"');
-            }
+        if (!is_array($keys) && !($keys instanceof \Traversable)) {
+            throw new InvalidKeysException('RedisCache says "invalid keys"');
         }
 
         $newKeys = [];
