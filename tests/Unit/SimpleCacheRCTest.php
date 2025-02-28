@@ -166,7 +166,21 @@ class SimpleCacheRCTest extends RedisAdapterTestBase
         $this->assertEquals($expected, $actual);
     }
 
-    public function testGetExistantButNull()
+    public function testGetFalse()
+    {
+        $key = 'do:exist';
+        $expected = false;
+        $this->redisClient->expects($this->once())
+            ->method('get')
+            ->with($key)
+            ->willReturn('b:0;')
+        ;
+        $actual = $this->cache->get($key);
+        $this->assertIsBool($actual);
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function testGetNull()
     {
         /**
          *
