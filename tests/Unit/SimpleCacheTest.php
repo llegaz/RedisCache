@@ -274,6 +274,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
 
     /**
      * @todo test TTL with setMultiple
+     * @todo maybe enhance logger testing
      */
     public function testSetWithTtl()
     {
@@ -286,6 +287,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
         $this->predisClient->expects($this->once())
             ->method('expire')
             ->with($key, 1337)
+            //->will($this->throwException(new Exception())); // test logger
             ->willReturn(1)
         ;
         $this->assertTrue($this->cache->set($key, 'bbbbbbbbbbbbbbbbbbbb', 1337));

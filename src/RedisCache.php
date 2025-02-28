@@ -87,7 +87,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             if ($t instanceof \LLegaz\Redis\Exception\LocalIntegrityException) {
                 throw $t;
             }
-            $this->logger->error($t->getMessage(), $t->getTrace());
+            $this->logger->notice($t->getMessage(), $t->getTrace());
         } finally {
             return (
                 $redisResponse === true ||
@@ -117,7 +117,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             $redisResponse = $this->getRedis()->del($key);
         } catch (\Throwable $t) {
             $redisResponse = null;
-            $this->logger->error($t->getMessage(), $t->getTrace());
+            $this->logger->notice($t->getMessage(), $t->getTrace());
         } finally {
             return ($redisResponse >= 0) ? true : false;
         }
@@ -148,7 +148,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             $redisResponse = $this->getRedis()->del($keys);
         } catch (\Throwable $t) {
             $redisResponse = null;
-            $this->logger->error($t->getMessage(), $t->getTrace());
+            $this->logger->notice($t->getMessage(), $t->getTrace());
         } finally {
             return ($redisResponse >= 0) ? true : false;
         }
@@ -185,7 +185,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             }
         } catch (\Throwable $t) {
             $toReturn = $default;
-            $this->logger->error($t->getMessage(), $t->getTrace());
+            $this->logger->notice($t->getMessage(), $t->getTrace());
         } finally {
             return $toReturn;
         }
@@ -232,7 +232,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             if (!count($values)) {
                 array_fill(0, count($keys), $default);
             }
-            $this->logger->error($t->getMessage(), $t->getTrace());
+            $this->logger->notice($t->getMessage(), $t->getTrace());
         } finally {
             return array_combine(array_values($keys), array_values($values));
         }
@@ -264,7 +264,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             $redisResponse = $this->getRedis()->exists($key);
         } catch (\Throwable $t) {
             $redisResponse = null;
-            $this->logger->error($t->getMessage(), $t->getTrace());
+            $this->logger->notice($t->getMessage(), $t->getTrace());
         } finally {
             return ($redisResponse === 1) ? true : false;
         }
@@ -307,7 +307,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             }
         } catch (\Throwable $t) {
             $redisResponse = null;
-            $this->logger->error($t->getMessage(), $t->getTrace());
+            $this->logger->notice($t->getMessage(), $t->getTrace());
         } finally {
             return (
                 $redisResponse === true ||
@@ -391,7 +391,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
                 });
             }
         } catch (\Throwable $t) {
-            $this->logger->error($t->getMessage(), $t->getTrace());
+            $this->logger->notice($t->getMessage(), $t->getTrace());
         } finally {
             if ($redisResponse instanceof Status) {
                 return $redisResponse->getPayload() === 'OK';
