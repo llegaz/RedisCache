@@ -5,21 +5,21 @@ declare(strict_types=1);
 namespace LLegaz\Cache\Tests\Unit;
 
 use LLegaz\Cache\RedisCache as SUT;
-use LLegaz\Redis\PredisClient;
+use LLegaz\Redis\RedisClient;
 use LLegaz\Redis\RedisClientInterface;
 use LLegaz\Redis\Tests\RedisAdapterTestBase;
 use Predis\Response\Status;
 
 /**
- * Test PSR-16 implementation with predis client
+ * Test PSR-16 implementation with phpredis client
  *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
-class SimpleCacheTest extends RedisAdapterTestBase
+class SimpleCacheRCTest extends RedisAdapterTestBase
 {
     protected SUT $cache;
 
-    protected RedisClientInterface $predisClient;
+    protected RedisClientInterface $redisClient;
 
     public static function setUpBeforeClass(): void
     {
@@ -28,14 +28,20 @@ class SimpleCacheTest extends RedisAdapterTestBase
 
     protected function setUp(): void
     {
+        if (!in_array('redis', get_loaded_extensions())) {
+            $this->markTestSkipped('Skip those units as php-redis extension is not loaded.');
+        }
+
         parent::setUp();
-        $this->predisClient = $this->getMockBuilder(PredisClient::class)
+        $this->redisClient = $this->getMockBuilder(RedisClient::class)
             ->disableOriginalConstructor()
-            ->onlyMethods(['disconnect', 'executeCommand', 'transaction',])
-            ->addMethods([
+            ->onlyMethods([
+                'client',
+                'disconnect',
+                'isConnected',
+                'launchConnection',
                 'ping',
                 'select',
-                'client',
                 'del',
                 'exists',
                 'expire',
@@ -44,29 +50,35 @@ class SimpleCacheTest extends RedisAdapterTestBase
                 'flushall',
                 'flushdb',
                 'set',
-                //'mset',
+                'mset',
+                'multi',
+                'exec',
                 ])
             ->getMock()
         ;
-        $this->predisClient
+        $this->redisClient
+            ->expects($this->any())
+            ->method('isConnected')
+            ->willReturn(true)
+        ;
+        $this->redisClient
             ->expects($this->any())
             ->method('disconnect')
             ->willReturnSelf()
         ;
-        $this->predisClient
+        $this->redisClient
             ->expects($this->any())
             ->method('ping')
-            ->willReturn(new Status('PONG'))
+            ->willReturn(true)
         ;
-
-        $this->redisAdapter = $this->cache = new SUT(
+        $this->cache = $this->redisAdapter = new SUT(
             RedisClientInterface::DEFAULTS['host'],
             RedisClientInterface::DEFAULTS['port'],
             null,
             RedisClientInterface::DEFAULTS['scheme'],
             RedisClientInterface::DEFAULTS['database'],
             false,
-            $this->predisClient
+            $this->redisClient
         );
         $this->assertDefaultContext();
 
@@ -79,7 +91,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
 
     public function testClearAll()
     {
-        $this->predisClient->expects($this->once())
+        $this->redisClient->expects($this->once())
             ->method('flushall')
             ->willReturn(new Status('OK'))
         ;
@@ -88,12 +100,12 @@ class SimpleCacheTest extends RedisAdapterTestBase
 
     public function testClear()
     {
-        $this->predisClient->expects($this->once())
+        $this->redisClient->expects($this->once())
             ->method('client')
             ->with('list')
             ->willReturn([['id' => 1337, 'db' => 0, 'cmd' => 'client']])
         ;
-        $this->predisClient->expects($this->once())
+        $this->redisClient->expects($this->once())
             ->method('flushdb')
             ->willReturn(new Status('OK'))
         ;
@@ -103,7 +115,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
     public function testDelete()
     {
         $key = 'test';
-        $this->predisClient->expects($this->once())
+        $this->redisClient->expects($this->once())
             ->method('del')
             ->with($key)
             ->willReturn(1)
@@ -114,7 +126,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
     public function deleteMultiple()
     {
         $keys = ['test1', 'test2', 'test3'];
-        $this->predisClient->expects($this->once())
+        $this->redisClient->expects($this->once())
             ->method('del')
             ->with(trim(implode(' ', $keys)))
             ->willReturn(new Status(3))
@@ -126,7 +138,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
     {
         $key = 'do:not:exist';
         $expected = 'default';
-        $this->predisClient->expects($this->once())
+        $this->redisClient->expects($this->once())
             ->method('get')
             ->with($key)
             ->willReturn(false)
@@ -144,7 +156,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
          */
         $key = 'do:exist';
         $expected = 'a value';
-        $this->predisClient->expects($this->once())
+        $this->redisClient->expects($this->once())
             ->method('get')
             ->with($key)
             ->willReturn($expected)
@@ -162,7 +174,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
          */
         $key = 'do:exist';
         $expected = null;
-        $this->predisClient->expects($this->once())
+        $this->redisClient->expects($this->once())
             ->method('get')
             ->with($key)
             ->willReturn('N;')
@@ -176,7 +188,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
     {
         $keys = ['do:not:exist1', 'do:not:exist2', 'do:not:exist3'];
         $expected = 'default';
-        $this->predisClient->expects($this->once())
+        $this->redisClient->expects($this->once())
             ->method('mget')
             ->with($keys)
             ->willReturn([false, false, false])
@@ -197,7 +209,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
          * @todo test with values other than strings (serialize)
          */
         $keys = ['do:exist1', 'do:exist2', 'do:exist3'];
-        $this->predisClient->expects($this->once())
+        $this->redisClient->expects($this->once())
             ->method('mget')
             ->with($keys)
             ->willReturn(['value1', 'value2', 'value3'])
@@ -214,7 +226,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
     public function testHas()
     {
         $key = 'test';
-        $this->predisClient->expects($this->once())
+        $this->redisClient->expects($this->once())
             ->method('exists')
             ->with($key)
             ->willReturn(1)
@@ -225,7 +237,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
     public function testHasNot()
     {
         $key = 'test';
-        $this->predisClient->expects($this->once())
+        $this->redisClient->expects($this->once())
             ->method('exists')
             ->with($key)
             ->willReturn(0)
@@ -236,7 +248,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
     public function testSet()
     {
         $key = 'test';
-        $this->predisClient->expects($this->once())
+        $this->redisClient->expects($this->once())
             ->method('set')
             ->with($key)
             ->willReturn(new Status('OK'))
@@ -244,46 +256,76 @@ class SimpleCacheTest extends RedisAdapterTestBase
         $this->assertTrue($this->cache->set($key, 'bbbbbbbbbbbbbbbbbbbb'));
     }
 
-    /**
-     *
-     * @todo maybe rework this (and get some inspiration here:
-     * @link https://medium.com/@dotcom.software/unit-testing-closures-the-right-way-b982fc833bfa)
-     */
     public function testSetMultiple()
     {
         $values = ['do:exist1' => 'value1', 'do:exist2' => 'value2'];
 
-        $testcase = $this;
-        $this->predisClient->expects($this->once())
-            ->method('transaction') // predis case
+        $this->redisClient->expects($this->once())
+            ->method('multi')
+            ->with(\Redis::PIPELINE)
+            ->willReturn(true);
+        $this->redisClient->expects($this->once())
+            ->method('mset')
+            ->with($values)
+            ->willReturn(true);
+        $this->redisClient->expects($this->never())
+            ->method('expire');
+        $this->redisClient->expects($this->once())
+            ->method('exec')
             ->withAnyParameters()
-            ->willReturnCallback(function ($options, $closure) use ($testcase, $values) {
-                $reflection = new \ReflectionFunction($closure);
-                $testcase->assertFalse($reflection->getStaticVariables()['redisResponse']);
-                $testcase->assertIsArray($options);
-                $testcase->assertIsArray($reflection->getStaticVariables()['newValues']);
-                $testcase->assertEquals($values, $reflection->getStaticVariables()['newValues']);
-                $ttl = $reflection->getStaticVariables()['ttl'];
-                $testcase->assertTrue(is_int($ttl) || is_null($ttl));
-                $reflection->getStaticVariables()['redisResponse'] = true;
-                $testcase->assertTrue($reflection->getStaticVariables()['redisResponse']);
-            });
+            ->willReturn(true);
 
         $this->assertTrue($this->cache->setMultiple($values));
     }
 
     /**
-     * @todo test TTL with setMultiple
+     * @todo test TTL with DateInterval too
      */
+    public function testSetMultipleWithTtl()
+    {
+        $values = ['do:exist1' => 'value1', 'do:exist2' => 'value2'];
+        $ttl = 2;
+
+        $expected = array_keys($values);
+        $this->redisClient->expects($this->once())
+            ->method('multi')
+            ->with(\Redis::PIPELINE)
+            ->willReturn(true);
+        $this->redisClient->expects($this->once())
+            ->method('mset')
+            ->with($values)
+            ->willReturn(true);
+        $matcher = $this->exactly(\count($values));
+        $this->redisClient
+            ->expects($matcher)
+            ->method('expire')
+            ->willReturnCallback(function (string $key, int $i) use ($matcher, $expected, $ttl) {
+                $this->assertLessThanOrEqual(\count($expected), $matcher->numberOfInvocations());
+                /** we could replace this by an <code>in_array</code> generic check */
+                match ($matcher->numberOfInvocations()) {
+                    1 =>  $this->assertEquals($expected[0], $key),
+                    2 =>  $this->assertEquals($expected[1], $key),
+                };
+                $this->assertTrue(is_array($expected) && in_array($key, $expected));
+                $this->assertEquals($ttl, $i);
+            });
+        $this->redisClient->expects($this->once())
+            ->method('exec')
+            ->withAnyParameters()
+            ->willReturn(true);
+
+        $this->assertTrue($this->cache->setMultiple($values, $ttl));
+    }
+
     public function testSetWithTtl()
     {
         $key = 'testTTL';
-        $this->predisClient->expects($this->once())
+        $this->redisClient->expects($this->once())
             ->method('set')
             ->with($key, 'bbbbbbbbbbbbbbbbbbbb')
             ->willReturn(new Status('OK'))
         ;
-        $this->predisClient->expects($this->once())
+        $this->redisClient->expects($this->once())
             ->method('expire')
             ->with($key, 1337)
             ->willReturn(1)

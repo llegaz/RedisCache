@@ -332,7 +332,6 @@ class RedisCache extends RedisAdapter implements CacheInterface
      */
     public function setMultiple(iterable $values, null|int|\DateInterval $ttl = null): bool
     {
-        /** @todo - refactor here ? */
         if (!$this->isConnected()) {
             $this->throwCLEx();
         }
@@ -343,6 +342,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             }
         }
 
+        /** @todo - refactor this (maybe use Predis/Redis Clients) */
         $newValues = [];
         foreach ($values as $key => $value) {
             if (is_scalar($key)) {
@@ -366,7 +366,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
         try {
             $redisResponse = false;
             if ($this->getRedis()->toString() === RedisClientInterface::PHP_REDIS) {
-                $this->getRedis()->multi(); // begin transaction
+                $this->getRedis()->multi(\Redis::PIPELINE); // begin transaction
                 $redisResponse = $this->getRedis()->mset($newValues);
                 if ($ttl !== null && $ttl >= 0) {
                     foreach ($newValues as $key => $value) {
