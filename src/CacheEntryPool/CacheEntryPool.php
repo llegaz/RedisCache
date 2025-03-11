@@ -12,20 +12,32 @@ use Psr\SimpleCache\CacheInterface;
  *
  * Our Redis <code>CacheEntryPool</code> will typically be a <a href="https://redis.io/glossary/redis-hashes/">redis hash</a>
  *
+ * this brings limitation on expiration part so take it into account for your future design
+ * (expiration on an entire pool only, thus til redis v-xx on paid version only as of now)
+ *
  */
 class CacheEntryPool implements CacheItemPoolInterface
 {
     private CacheInterface $cache;
+
     private ?string $poolName = null;
+
+    private array $deferredItems = [];
+
+    protected const HASH_DB_PREFIX = 'DEFAULT_Cache_Pool';
 
     public function __construct(CacheInterface $cache, ?string $poolName)
     {
         $this->cache = $cache;
-        if ($poolName) {
-            $this->poolName = $poolName;
-        }
+        $this->poolName = $this->getPoolName($poolName);
     }
 
+    /**
+     * Deletes all items in the pool.
+     *
+     * @return bool
+     *   True if the pool was successfully cleared. False if there was an error.
+     */
     public function clear(): bool
     {
 
@@ -33,6 +45,11 @@ class CacheEntryPool implements CacheItemPoolInterface
 
     public function commit(): bool
     {
+        $deferred = [];
+        foreach ($this->deferredItems as $item) {
+            $deferred[$item->getKey()] = $item->get();
+        }
+        $this->cache->setMultiple($deferred);
 
     }
 
@@ -69,6 +86,20 @@ class CacheEntryPool implements CacheItemPoolInterface
     public function saveDeferred(\Psr\Cache\CacheItemInterface $item): bool
     {
 
+    }
+
+    /**
+     * @param mixed $poolSuffix
+     * @return string
+     */
+    protected function getPoolName($poolSuffix): string
+    {
+        if ($poolSuffix !== null && strlen($poolSuffix)) {
+            return self::HASH_DB_PREFIX . "_{$poolSuffix}";
+        }
+
+        // else return default pool name
+        return self::HASH_DB_PREFIX;
     }
 
 }
