@@ -14,19 +14,19 @@ use Predis\Response\Status;
 use Psr\SimpleCache\CacheInterface;
 
 /**
-  * Class RedisCache
+ * Class RedisCache
  * PSR-16 implementation - Underlying Redis data type used is STRING
+ *
  *
  * @package RedisCache
  * @author Laurent LEGAZ <laurent@legaz.eu>
-
  */
 class RedisCache extends RedisAdapter implements CacheInterface
 {
     /**
      * Expiration Time Constants named by duration
      */
-    public const FOREVER = -1;
+    public const FOREVER = null;
 
     public const SHORT_EXPIRATION_TIME = 180;     // 3 minutes
 
@@ -45,8 +45,6 @@ class RedisCache extends RedisAdapter implements CacheInterface
     public const LONG_EXPIRATION_TIME = 2592000; // 30 days
 
     public const VERY_LONG_EXPIRATION_TIME = 7776000; // 90 days
-
-    protected const HASH_DB_PREFIX = 'DEFAULT_Cache_Pool';
 
     public function __construct(
         string $host = RedisClientInterface::DEFAULTS['host'],
@@ -297,7 +295,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
      * @throws \Psr\SimpleCache\InvalidArgumentException
      *   MUST be thrown if the $key string is not a legal value.
      */
-    public function set(string $key, mixed $value, null|int|\DateInterval $ttl = null): bool
+    public function set(string $key, mixed $value, null|int|\DateInterval $ttl = self::FOREVER): bool
     {
         $this->checkKeyValuePair($key, $value);
         if (!$this->isConnected()) {
@@ -316,7 +314,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
                 $ttl = 0;
             }
             $redisResponse = $this->getRedis()->set($key, $value);
-            if ($ttl !== null && $ttl >= 0) {
+            if ($ttl !== self::FOREVER && $ttl >= 0) {
                 /** @todo maybe test return value here too */
                 $this->getRedis()->expire($key, $ttl);
             }
@@ -345,7 +343,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
      *   MUST be thrown if $values is neither an array nor a Traversable,
      *   or if any of the $values are not a legal value.
      */
-    public function setMultiple(iterable $values, null|int|\DateInterval $ttl = null): bool
+    public function setMultiple(iterable $values, null|int|\DateInterval $ttl = self::FOREVER): bool
     {
         if (!$this->isConnected()) {
             $this->throwCLEx();
@@ -384,7 +382,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             if ($this->getRedis()->toString() === RedisClientInterface::PHP_REDIS) {
                 $this->getRedis()->multi(\Redis::PIPELINE); // begin transaction
                 $redisResponse = $this->getRedis()->mset($newValues);
-                if ($ttl !== null && $ttl >= 0) {
+                if ($ttl !== self::FOREVER && $ttl >= 0) {
                     foreach ($newValues as $key => $value) {
                         $this->getRedis()->expire($key, $ttl);
                     }
@@ -399,7 +397,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
                 $this->getRedis()->transaction($options, function ($t) use ($newValues, $ttl, &$redisResponse) {
                     $redisResponse = $t->mset($newValues);
 
-                    if ($ttl !== null && $ttl >= 0) {
+                    if ($ttl !== self::FOREVER && $ttl >= 0) {
                         foreach ($newValues as $key => $value) {
                             $t->expire($key, $ttl);
                         }
@@ -445,6 +443,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             throw new InvalidKeyException('RedisCache says "Empty Key is forbidden"');
         }
 
+        /** @todo maybe remove this and rework integration for 1 digit keys (00 back to 0) */
         if ($len < 2) {
             throw new InvalidKeyException('RedisCache says "Key is too small"');
         }
