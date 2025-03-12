@@ -48,13 +48,6 @@ class RedisCache extends RedisAdapter implements CacheInterface
 
     protected const HASH_DB_PREFIX = 'DEFAULT_Cache_Pool';
 
-    /**
-     * Do we check for database integrity ? default = always
-     * 
-     * @var bool
-     */
-    protected bool $paranoid = true;
-
     public function __construct(
         string $host = RedisClientInterface::DEFAULTS['host'],
         int $port = RedisClientInterface::DEFAULTS['port'],
@@ -84,7 +77,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             if ($allDBs) {
                 $redisResponse = $this->getRedis()->flushAll();
             } else {
-                if ($this->paranoid && !$this->checkIntegrity()) {
+                if (!$this->checkIntegrity()) {
                     $this->throwLIEx();
                 }
                 $redisResponse = $this->getRedis()->flushdb();
@@ -119,7 +112,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
         if (!$this->isConnected()) {
             $this->throwCLEx();
         }
-        if ($this->paranoid && !$this->checkIntegrity()) {
+        if (!$this->checkIntegrity()) {
             $this->throwLIEx();
         }
 
@@ -153,7 +146,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
         if (!$this->isConnected()) {
             $this->throwCLEx();
         }
-        if ($this->paranoid && !$this->checkIntegrity()) {
+        if (!$this->checkIntegrity()) {
             $this->throwLIEx();
         }
 
@@ -184,7 +177,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
         if (!$this->isConnected()) {
             $this->throwCLEx();
         }
-        if ($this->paranoid && !$this->checkIntegrity()) {
+        if (!$this->checkIntegrity()) {
             $this->throwLIEx();
         }
 
@@ -225,7 +218,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
         if (!$this->isConnected()) {
             $this->throwCLEx();
         }
-        if ($this->paranoid && !$this->checkIntegrity()) {
+        if (!$this->checkIntegrity()) {
             $this->throwLIEx();
         }
 
@@ -274,7 +267,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
         if (!$this->isConnected()) {
             $this->throwCLEx();
         }
-        if ($this->paranoid && !$this->checkIntegrity()) {
+        if (!$this->checkIntegrity()) {
             $this->throwLIEx();
         }
 
@@ -310,7 +303,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
         if (!$this->isConnected()) {
             $this->throwCLEx();
         }
-        if ($this->paranoid && !$this->checkIntegrity()) {
+        if (!$this->checkIntegrity()) {
             $this->throwLIEx();
         }
 
@@ -357,7 +350,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
         if (!$this->isConnected()) {
             $this->throwCLEx();
         }
-        if ($this->paranoid && !$this->checkIntegrity()) {
+        if (!$this->checkIntegrity()) {
             $this->throwLIEx();
         }
 
@@ -495,19 +488,5 @@ class RedisCache extends RedisAdapter implements CacheInterface
         $endTime = $reference->add($ttl);
 
         return $endTime->getTimestamp() - $reference->getTimestamp();
-    }
-
-    /**
-     * Do we check for database integrity ? default = always
-     * 
-     * you can disable all those integrity checks for performance purpose (at your own risks)
-     * 
-     * @param bool $paranoid
-     * @return self
-     */
-    public function setParanoid(bool $paranoid = true) :self {
-        $this->paranoid = $paranoid;
-
-        return $this;
     }
 }
