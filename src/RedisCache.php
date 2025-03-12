@@ -87,7 +87,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             if ($t instanceof \LLegaz\Redis\Exception\LocalIntegrityException) {
                 throw $t;
             }
-            $this->logger->notice($t->getMessage(), $t->getTrace());
+            $this->formatException($t);
         } finally {
             return (
                 $redisResponse === true ||
@@ -112,12 +112,15 @@ class RedisCache extends RedisAdapter implements CacheInterface
         if (!$this->isConnected()) {
             $this->throwCLEx();
         }
+        if (!$this->checkIntegrity()) {
+            $this->throwLIEx();
+        }
 
         try {
             $redisResponse = $this->getRedis()->del($key);
         } catch (\Throwable $t) {
             $redisResponse = null;
-            $this->logger->notice($t->getMessage(), $t->getTrace());
+            $this->formatException($t);
         } finally {
             return ($redisResponse >= 0) ? true : false;
         }
@@ -143,12 +146,15 @@ class RedisCache extends RedisAdapter implements CacheInterface
         if (!$this->isConnected()) {
             $this->throwCLEx();
         }
+        if (!$this->checkIntegrity()) {
+            $this->throwLIEx();
+        }
 
         try {
             $redisResponse = $this->getRedis()->del($keys);
         } catch (\Throwable $t) {
             $redisResponse = null;
-            $this->logger->notice($t->getMessage(), $t->getTrace());
+            $this->formatException($t);
         } finally {
             return ($redisResponse >= 0) ? true : false;
         }
@@ -171,6 +177,9 @@ class RedisCache extends RedisAdapter implements CacheInterface
         if (!$this->isConnected()) {
             $this->throwCLEx();
         }
+        if (!$this->checkIntegrity()) {
+            $this->throwLIEx();
+        }
 
         try {
             $value = $this->getRedis()->get($key);
@@ -184,7 +193,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             }
         } catch (\Throwable $t) {
             $toReturn = $default;
-            $this->logger->notice($t->getMessage(), $t->getTrace());
+            $this->formatException($t);
         } finally {
             return $toReturn;
         }
@@ -209,6 +218,9 @@ class RedisCache extends RedisAdapter implements CacheInterface
         if (!$this->isConnected()) {
             $this->throwCLEx();
         }
+        if (!$this->checkIntegrity()) {
+            $this->throwLIEx();
+        }
 
         $values = [];
 
@@ -228,7 +240,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             if (!count($values)) {
                 array_fill(0, count($keys), $default);
             }
-            $this->logger->notice($t->getMessage(), $t->getTrace());
+            $this->formatException($t);
         } finally {
             return array_combine(array_values($keys), array_values($values));
         }
@@ -255,12 +267,15 @@ class RedisCache extends RedisAdapter implements CacheInterface
         if (!$this->isConnected()) {
             $this->throwCLEx();
         }
+        if (!$this->checkIntegrity()) {
+            $this->throwLIEx();
+        }
 
         try {
             $redisResponse = $this->getRedis()->exists($key);
         } catch (\Throwable $t) {
             $redisResponse = null;
-            $this->logger->notice($t->getMessage(), $t->getTrace());
+            $this->formatException($t);
         } finally {
             return ($redisResponse === 1) ? true : false;
         }
@@ -284,10 +299,13 @@ class RedisCache extends RedisAdapter implements CacheInterface
      */
     public function set(string $key, mixed $value, null|int|\DateInterval $ttl = null): bool
     {
+        $this->checkKeyValuePair($key, $value);
         if (!$this->isConnected()) {
             $this->throwCLEx();
         }
-        $this->checkKeyValuePair($key, $value);
+        if (!$this->checkIntegrity()) {
+            $this->throwLIEx();
+        }
 
         if ($ttl instanceof \DateInterval) {
             $ttl = $this->dateIntervalToSeconds($ttl);
@@ -304,7 +322,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             }
         } catch (\Throwable $t) {
             $redisResponse = null;
-            $this->logger->notice($t->getMessage(), $t->getTrace());
+            $this->formatException($t);
         } finally {
             return (
                 $redisResponse === true ||
@@ -331,6 +349,9 @@ class RedisCache extends RedisAdapter implements CacheInterface
     {
         if (!$this->isConnected()) {
             $this->throwCLEx();
+        }
+        if (!$this->checkIntegrity()) {
+            $this->throwLIEx();
         }
 
         if (!is_array($values) && !($values instanceof \Traversable)) {
@@ -386,7 +407,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
                 });
             }
         } catch (\Throwable $t) {
-            $this->logger->notice($t->getMessage(), $t->getTrace());
+            $this->formatException($t);
         } finally {
             if ($redisResponse instanceof Status) {
                 return $redisResponse->getPayload() === 'OK';
