@@ -270,7 +270,12 @@ class CacheIntegrationTest extends SimpleCacheTest
 
     public function createSimpleCache(): CacheInterface
     {
-        return new SUT();
+        $sut = new SUT();
+        /** test with persistent co *//*
+        $sut = new SUT('localhost', 6379, null, 'tcp', 0, true);
+        dump($sut->getRedis());*/
+
+        return $sut;
     }
 
 }

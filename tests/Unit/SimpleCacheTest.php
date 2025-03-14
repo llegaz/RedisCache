@@ -12,6 +12,9 @@ use Predis\Response\Status;
 
 /**
  * Test PSR-16 implementation with predis client
+ * 
+ * expect 1 more client command (list) because of the integrity check
+ * (units are in forced paranoid mode for now @todo mb rework this here and in adapter)
  *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
@@ -68,6 +71,13 @@ class SimpleCacheTest extends RedisAdapterTestBase
             false,
             $this->predisClient
         );
+        /**
+         * expect 1 more client command (list) because of the integrity check
+         * (units are in forced paranoid mode for now)
+         * 
+         * @todo mb rework this here and in adapter project
+         */
+        \LLegaz\Redis\RedisClientsPool::setOracle($this->defaults);
         $this->assertDefaultContext();
 
     }
@@ -88,11 +98,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
 
     public function testClear()
     {
-        $this->predisClient->expects($this->once())
-            ->method('client')
-            ->with('list')
-            ->willReturn([['id' => 1337, 'db' => 0, 'cmd' => 'client']])
-        ;
+        $this->integrityCheckCL();
         $this->predisClient->expects($this->once())
             ->method('flushdb')
             ->willReturn(new Status('OK'))
@@ -103,6 +109,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
     public function testDelete()
     {
         $key = 'test';
+        $this->integrityCheckCL();
         $this->predisClient->expects($this->once())
             ->method('del')
             ->with($key)
@@ -114,6 +121,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
     public function deleteMultiple()
     {
         $keys = ['test1', 'test2', 'test3'];
+        $this->integrityCheckCL();
         $this->predisClient->expects($this->once())
             ->method('del')
             ->with(trim(implode(' ', $keys)))
@@ -125,6 +133,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
     public function testGetInexistant()
     {
         $key = 'do:not:exist';
+        $this->integrityCheckCL();
         $expected = 'default';
         $this->predisClient->expects($this->once())
             ->method('get')
@@ -144,6 +153,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
          */
         $key = 'do:exist';
         $expected = 'a value';
+        $this->integrityCheckCL();
         $this->predisClient->expects($this->once())
             ->method('get')
             ->with($key)
@@ -158,6 +168,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
     {
         $key = 'do:exist';
         $expected = false;
+        $this->integrityCheckCL();
         $this->predisClient->expects($this->once())
             ->method('get')
             ->with($key)
@@ -172,6 +183,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
     {
         $key = 'do:exist';
         $expected = null;
+        $this->integrityCheckCL();
         $this->predisClient->expects($this->once())
             ->method('get')
             ->with($key)
@@ -186,6 +198,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
     {
         $keys = ['do:not:exist1', 'do:not:exist2', 'do:not:exist3'];
         $expected = 'default';
+        $this->integrityCheckCL();
         $this->predisClient->expects($this->once())
             ->method('mget')
             ->with($keys)
@@ -207,6 +220,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
          * @todo test with values other than strings (serialize)
          */
         $keys = ['do:exist1', 'do:exist2', 'do:exist3'];
+        $this->integrityCheckCL();
         $this->predisClient->expects($this->once())
             ->method('mget')
             ->with($keys)
@@ -224,6 +238,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
     public function testHas()
     {
         $key = 'test';
+        $this->integrityCheckCL();
         $this->predisClient->expects($this->once())
             ->method('exists')
             ->with($key)
@@ -235,6 +250,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
     public function testHasNot()
     {
         $key = 'test';
+        $this->integrityCheckCL();
         $this->predisClient->expects($this->once())
             ->method('exists')
             ->with($key)
@@ -246,6 +262,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
     public function testSet()
     {
         $key = 'test';
+        $this->integrityCheckCL();
         $this->predisClient->expects($this->once())
             ->method('set')
             ->with($key)
@@ -267,6 +284,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
         $values = ['do:exist1' => 'value1', 'do:exist2' => 'value2'];
 
         $testcase = $this;
+        $this->integrityCheckCL();
         $this->predisClient->expects($this->once())
             ->method('transaction') // predis case
             ->withAnyParameters()
@@ -291,6 +309,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
     public function testSetWithTtl()
     {
         $key = 'testTTL';
+        $this->integrityCheckCL();
         $this->predisClient->expects($this->once())
             ->method('set')
             ->with($key, 'bbbbbbbbbbbbbbbbbbbb')
@@ -314,6 +333,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
         $ttl = 2;
 
         $testcase = $this;
+        $this->integrityCheckCL();
         $this->predisClient->expects($this->once())
             ->method('transaction') // predis case
             ->withAnyParameters()
@@ -331,5 +351,18 @@ class SimpleCacheTest extends RedisAdapterTestBase
 
         $this->assertTrue($this->cache->setMultiple($values, $ttl));
     }
+
+    /**
+     * Client List call expectation for paranoid mode (integrity check are mandatory
+     * because multiple access to redis clients pool are simulated for units)
+     */
+    private function integrityCheckCL() {
+        $this->predisClient->expects($this->once())
+            ->method('client')
+            ->with('list')
+            ->willReturn([['id' => 1337, 'db' => 0, 'cmd' => 'client']])
+        ;
+    }
+    
 
 }
