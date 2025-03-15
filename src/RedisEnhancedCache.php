@@ -15,24 +15,40 @@ namespace LLegaz\Cache;
 class RedisEnhancedCache extends RedisCache
 {
     /**
+     * clear a pool entirely
+      *
+      * @param string $pool the pool's name
+      */
+    public function clearPool(string $pool)
+    {
+        if (!$this->isConnected()) {
+            $this->throwCLEx();
+        }
+
+        $this->set($pool, null);
+        $this->delete($pool);
+    }
+    /**
      * @todo rework this
-     * 
+     *
      *
      * @param string|array $key
-     * @param string $poolSuffix
+     * @param string $pool the pool's name
      * @return array|bool|string
      * @throws NotConnectedException | LogicException
      */
-    public function fetchFromPool($key, string $poolSuffix = '')
+    public function fetchFromPool(mixed $key, string $pool)
     {
-        $this->checkClientConnection();
+        if (!$this->isConnected()) {
+            $this->throwCLEx();
+        }
 
         switch (gettype($key)) {
             case 'integer':
             case 'string':
-                return $this->redis->hget($this->getPoolName($poolSuffix), $key) ?? false;
+                return $this->redis->hget($pool, $key) ?? false;
             case 'array':
-                $data = $this->redis->hmget($this->getPoolName($poolSuffix), $key);
+                $data = $this->redis->hmget($pool, $key);
 
                 return array_combine(array_values($key), array_values($data));
 
@@ -46,31 +62,36 @@ class RedisEnhancedCache extends RedisCache
     /**
      * @todo rework this
      *
-     * 
-     * @param string $poolSuffix
+     *
+     * @param string $pool
      * @return array
      * @throws NotConnectedException
      */
-    public function fetchAllFromPool(string $poolSuffix = '')
+    public function fetchAllFromPool(string $pool)
     {
-        $this->checkClientConnection();
+        if (!$this->isConnected()) {
+            $this->throwCLEx();
+        }
 
-        return $this->redis->hgetall($this->getPoolName($poolSuffix));
+        return $this->redis->hgetall($pool);
     }
 
     /**
      * @todo rework this
-     * 
-     * 
+     *
+     *
      * @param array $values A flat array of key => value pairs to store
      * in GIVEN POOL or DEFAULT
-     * @param string $poolSuffix
+     * @param string $pool
      * @return bool True on success
      * @throws NotConnectedException
      */
-    public function storeToPool(array $values, string $poolSuffix = ''): bool
+    public function storeToPool(array $values, string $pool = ''): bool
     {
-        $this->checkClientConnection();
+        if (!$this->isConnected()) {
+            $this->throwCLEx();
+        }
+
         array_walk($values, function (&$value) {
             if (is_array($value) || is_object($value)) {
                 $value = serialize($value);
@@ -78,7 +99,7 @@ class RedisEnhancedCache extends RedisCache
         });
 
         return $this->redis->hmset(
-            $this->getPoolName($poolSuffix),
+            $pool,
             $values
         ) == 'OK';
     }
@@ -86,16 +107,23 @@ class RedisEnhancedCache extends RedisCache
     /**
      * @todo rework this
      *
-     * @param array  $keys
-     * @param string $poolSuffix
+     * @param array $keys
+     * @param string $pool
      * @return bool True on success
      * @throws NotConnectedException
      */
-    public function deleteFromPool(array $keys, string $poolSuffix = ''): bool
+    public function deleteFromPool(mixed $keys, string $pool = ''): bool
     {
-        $this->checkClientConnection();
+        if (is_string($keys)) {
+            $this->checkKeyValidity($keys);
+        } else {
+            $this->checkKeysValidity($keys);
+        }
+        if (!$this->isConnected()) {
+            $this->throwCLEx();
+        }
 
-        return $this->redis->hdel($this->getPoolName($poolSuffix), $keys) == count($keys);
+        return $this->redis->hdel($pool, $keys) == count($keys);
     }
 
     /**
@@ -107,17 +135,20 @@ class RedisEnhancedCache extends RedisCache
      *
      * @param string $key
      * @param mixed  $data string, object and array are preferred
-     * @param string $poolSuffix
+     * @param string $pool
      * @return bool
      * @throws NotConnectedException
      */
-    public function serializeToPool(string $key, mixed $data, string $poolSuffix = ''): bool
+    public function serializeToPool(string $key, mixed $data, string $pool = ''): bool
     {
-        $this->checkClientConnection();
+        if (!$this->isConnected()) {
+            $this->throwCLEx();
+        }
+
         $serializeData = serialize($data);
 
         if (!empty($serializeData)) {
-            $redisResponse = $this->redis->hset($this->getPoolName($poolSuffix), $key, $serializeData);
+            $redisResponse = $this->redis->hset($pool, $key, $serializeData);
 
             return ($redisResponse >= 0) ? true : false;
         }
@@ -133,7 +164,7 @@ class RedisEnhancedCache extends RedisCache
      * @todo rework this
      *
      * @param string $key
-     * @param string $poolSuffix
+     * @param string $pool
      * @return mixed <p> The converted value is returned, and can be a boolean,
      * integer, float, string,
      * array or object.
@@ -143,35 +174,40 @@ class RedisEnhancedCache extends RedisCache
      * <b>E_NOTICE</b> is issued.
      * @throws NotConnectedException
      */
-    public function unserializeFromPool(string $key, string $poolSuffix = '')
+    public function unserializeFromPool(string $key, string $pool = '')
     {
-        $this->checkClientConnection();
+        if (!$this->isConnected()) {
+            $this->throwCLEx();
+        }
 
-        return unserialize($this->redis->hget($this->getPoolName($poolSuffix), $key));
+        return unserialize($this->redis->hget($pool, $key));
     }
 
     /**
      * @todo rework this
-     * 
-     * 
-     * 
+     *
+     *
+     *
      * Expiration Time is set with this method on the entire Hash Set <b>HASH_DB_PREFIX</b> concatenate
-     * with a private <b>$poolSuffix</b>
+     * with a private <b>$pool</b>
      *
      * <b> Caution: expired Hash SET will EXPIRE ALL SUBKEYS as well (even more recent entries)</b>
      *
-     * @param string $poolSuffix
+     * @param string $pool
      * @param int    $expirationTime
      * @return bool
      * @throws NotConnectedException
      */
-    public function setHsetPoolExpiration(string $poolSuffix = '', int $expirationTime = self::HOURS_EXPIRATION_TIME): bool
+    public function setHsetPoolExpiration(string $pool = '', int $expirationTime = self::HOURS_EXPIRATION_TIME): bool
     {
-        $this->checkClientConnection();
+        if (!$this->isConnected()) {
+            $this->throwCLEx();
+        }
+
         $redisResponse = -1;
 
         if ($expirationTime > 0) {
-            $redisResponse = $this->redis->expire($this->getPoolName($poolSuffix), $expirationTime);
+            $redisResponse = $this->redis->expire($pool, $expirationTime);
         }
 
         return ($redisResponse === 1) ? true : false;
@@ -179,19 +215,19 @@ class RedisEnhancedCache extends RedisCache
 
     /**
      * -- debug utilities methods --
-     * 
-     * 
-     * 
-     * 
-     * 
-     * 
-     * 
-     * 
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
      * @todo rework all these
      */
-    public function printCacheHash(string $poolSuffix = '', $silent = false): string
+    public function printCacheHash(string $pool = '', $silent = false): string
     {
-        $data = $this->fetchAllFromPool($poolSuffix);
+        $data = $this->fetchAllFromPool($pool);
 
         /**
          * @todo - rework this
@@ -211,7 +247,7 @@ class RedisEnhancedCache extends RedisCache
 
     /**
      * @todo rework this
-     * 
+     *
      * print only cache keys set
      *
      * @return null
@@ -228,7 +264,7 @@ class RedisEnhancedCache extends RedisCache
 
     /**
      * @todo rework this
-     * 
+     *
      * @param string $key
      * @return int
      */
@@ -241,7 +277,7 @@ class RedisEnhancedCache extends RedisCache
 
     /**
      * @todo rework this
-     * 
+     *
      * @return array
      * @throws NotConnectedException
      */
@@ -253,36 +289,21 @@ class RedisEnhancedCache extends RedisCache
     }
 
     /**
-     * @todo rework this (with CacheEntryPool)
-     * 
-     * @param mixed $poolSuffix
-     * @return string
-     */
-    protected function getPoolName($poolSuffix): string
-    {
-        if ($poolSuffix !== null && strlen($poolSuffix)) {
-            return self::HASH_DB_PREFIX . "_{$poolSuffix}";
-        }
-        // else return default pool name
-        return self::HASH_DB_PREFIX;
-    }
-
-    /**
-     * @param string $poolSuffix
+     * @param string $pool
      * @return array
      * @throws NotConnectedException
      */
-    public function getPoolKeys(string $poolSuffix = ''): array
+    public function getPoolKeys(string $pool = ''): array
     {
         $this->checkClientConnection();
 
-        return $this->redis->hkeys($this->getPoolName($poolSuffix));
+        return $this->redis->hkeys($pool);
     }
 
 
     /**
      * @todo rework this
-     * 
+     *
      * key => value array is returned corresponding accurately to the redis cache set
      *
      * @return array
@@ -303,7 +324,7 @@ class RedisEnhancedCache extends RedisCache
 
     /**
      * @todo rework this
-     * 
+     *
      * print everything in Cache Store for the selected Database
      * (except HSET entries)
      *
@@ -333,7 +354,7 @@ class RedisEnhancedCache extends RedisCache
         return $toReturn;
     }
 
-    
+
 
 
     /**

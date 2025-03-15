@@ -12,7 +12,7 @@ use Predis\Response\Status;
 
 /**
  * Test PSR-16 implementation with predis client
- * 
+ *
  * expect 1 more client command (list) because of the integrity check
  * (units are in forced paranoid mode for now @todo mb rework this here and in adapter)
  *
@@ -74,7 +74,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
         /**
          * expect 1 more client command (list) because of the integrity check
          * (units are in forced paranoid mode for now)
-         * 
+         *
          * @todo mb rework this here and in adapter project
          */
         \LLegaz\Redis\RedisClientsPool::setOracle($this->defaults);
@@ -356,13 +356,14 @@ class SimpleCacheTest extends RedisAdapterTestBase
      * Client List call expectation for paranoid mode (integrity check are mandatory
      * because multiple access to redis clients pool are simulated for units)
      */
-    private function integrityCheckCL() {
+    private function integrityCheckCL()
+    {
         $this->predisClient->expects($this->once())
             ->method('client')
             ->with('list')
             ->willReturn([['id' => 1337, 'db' => 0, 'cmd' => 'client']])
         ;
     }
-    
+
 
 }

@@ -422,7 +422,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
      * @return void
      * @throws InvalidArgumentException
      */
-    private function checkKeyValuePair(string $key, mixed &$value): void
+    protected function checkKeyValuePair(string $key, mixed &$value): void
     {
         $this->checkKeyValidity($key);
         if (!is_string($value)) {
@@ -436,7 +436,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
      * @return void
      * @throws InvalidArgumentException
      */
-    private function checkKeyValidity(string $key): void
+    protected function checkKeyValidity(string $key): void
     {
         $len = strlen($key);
         if (!$len) {
@@ -454,7 +454,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
         }
     }
 
-    private function checkKeysValidity(iterable $keys): array
+    protected function checkKeysValidity(iterable $keys): array
     {
         if (!is_array($keys) && !($keys instanceof \Traversable)) {
             throw new InvalidKeysException('RedisCache says "invalid keys"');
