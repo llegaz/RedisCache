@@ -26,10 +26,10 @@ class CacheEntryPool implements CacheItemPoolInterface
 
     protected const HASH_DB_PREFIX = 'DEFAULT_Cache_Pool';
 
-    public function __construct(CacheInterface $cache, ?string $poolName)
+    public function __construct(CacheInterface $cache, ?string $pool)
     {
         $this->cache = $cache;
-        $this->poolName = $this->getPoolName($poolName);
+        $this->poolName = $this->getPoolName($pool);
     }
 
     /**
@@ -40,6 +40,7 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     public function clear(): bool
     {
+        $this->cache->clearPool($this->poolName);
 
     }
 
@@ -55,11 +56,13 @@ class CacheEntryPool implements CacheItemPoolInterface
 
     public function deleteItem(string $key): bool
     {
+        $this->cache->deleteFromPool($key);
 
     }
 
     public function deleteItems(string $keys): bool
     {
+        $this->cache->deleteFromPool($keys);
 
     }
 
@@ -92,14 +95,12 @@ class CacheEntryPool implements CacheItemPoolInterface
      * @param mixed $poolSuffix
      * @return string
      */
-    protected function getPoolName($poolSuffix): string
+    protected function getPoolName(string $poolSuffix): string
     {
-        if ($poolSuffix !== null && strlen($poolSuffix)) {
-            return self::HASH_DB_PREFIX . "_{$poolSuffix}";
-        }
-
-        // else return default pool name
-        return self::HASH_DB_PREFIX;
+        return strlen($poolSuffix) ?
+            self::HASH_DB_PREFIX . "_{$poolSuffix}" :
+            self::HASH_DB_PREFIX
+        ;
     }
 
 }

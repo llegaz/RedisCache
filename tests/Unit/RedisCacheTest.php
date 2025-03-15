@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LLegaz\Cache\Tests\Unit;
 
 /**
+ * <code>RedisEnhancedCache</code> tests
  *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
