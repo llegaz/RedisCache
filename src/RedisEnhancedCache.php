@@ -32,12 +32,12 @@ class RedisEnhancedCache extends RedisCache
      * @todo rework this
      *
      *
-     * @param string|array $key
+     * @param int|string|array $key
      * @param string $pool the pool's name
-     * @return array|bool|string
-     * @throws NotConnectedException | LogicException
+     * @return mixed
+     * @throws ConnectionLostException | LogicException
      */
-    public function fetchFromPool(mixed $key, string $pool)
+    public function fetchFromPool(mixed $key, string $pool) :mixed
     {
         if (!$this->isConnected()) {
             $this->throwCLEx();
@@ -65,9 +65,9 @@ class RedisEnhancedCache extends RedisCache
      *
      * @param string $pool
      * @return array
-     * @throws NotConnectedException
+     * @throws ConnectionLostException
      */
-    public function fetchAllFromPool(string $pool)
+    public function fetchAllFromPool(string $pool) :array
     {
         if (!$this->isConnected()) {
             $this->throwCLEx();
@@ -80,11 +80,10 @@ class RedisEnhancedCache extends RedisCache
      * @todo rework this
      *
      *
-     * @param array $values A flat array of key => value pairs to store
-     * in GIVEN POOL or DEFAULT
-     * @param string $pool
+     * @param array $values A flat array of key => value pairs to store in GIVEN POOL name
+     * @param string $pool the pool name
      * @return bool True on success
-     * @throws NotConnectedException
+     * @throws ConnectionLostException
      */
     public function storeToPool(array $values, string $pool = ''): bool
     {
@@ -92,16 +91,17 @@ class RedisEnhancedCache extends RedisCache
             $this->throwCLEx();
         }
 
+        /**
+         * @todo enhance keys / values treatment (see / homogenize with RedisCache::setMultiple and RedisCache::checkKeysValidity)
+         * @todo need better handling on serialization and its reverse method in fetches.
+         */
         array_walk($values, function (&$value) {
             if (is_array($value) || is_object($value)) {
                 $value = serialize($value);
             }
         });
 
-        return $this->redis->hmset(
-            $pool,
-            $values
-        ) == 'OK';
+        return $this->redis->hmset($pool, $values) == 'OK';
     }
 
     /**
@@ -110,7 +110,7 @@ class RedisEnhancedCache extends RedisCache
      * @param array $keys
      * @param string $pool
      * @return bool True on success
-     * @throws NotConnectedException
+     * @throws ConnectionLostException
      */
     public function deleteFromPool(mixed $keys, string $pool = ''): bool
     {
@@ -137,7 +137,7 @@ class RedisEnhancedCache extends RedisCache
      * @param mixed  $data string, object and array are preferred
      * @param string $pool
      * @return bool
-     * @throws NotConnectedException
+     * @throws ConnectionLostException
      */
     public function serializeToPool(string $key, mixed $data, string $pool = ''): bool
     {
@@ -172,7 +172,7 @@ class RedisEnhancedCache extends RedisCache
      * <p>
      * In case the passed string is not unserializable, <b>FALSE</b> is returned and
      * <b>E_NOTICE</b> is issued.
-     * @throws NotConnectedException
+     * @throws ConnectionLostException
      */
     public function unserializeFromPool(string $key, string $pool = '')
     {
@@ -196,7 +196,7 @@ class RedisEnhancedCache extends RedisCache
      * @param string $pool
      * @param int    $expirationTime
      * @return bool
-     * @throws NotConnectedException
+     * @throws ConnectionLostException
      */
     public function setHsetPoolExpiration(string $pool = '', int $expirationTime = self::HOURS_EXPIRATION_TIME): bool
     {
@@ -251,7 +251,7 @@ class RedisEnhancedCache extends RedisCache
      * print only cache keys set
      *
      * @return null
-     * @throws NotConnectedException
+     * @throws ConnectionLostException
      */
     public function printCacheKeys()
     {
@@ -279,7 +279,7 @@ class RedisEnhancedCache extends RedisCache
      * @todo rework this
      *
      * @return array
-     * @throws NotConnectedException
+     * @throws ConnectionLostException
      */
     public function getInfo(): array
     {
@@ -291,7 +291,7 @@ class RedisEnhancedCache extends RedisCache
     /**
      * @param string $pool
      * @return array
-     * @throws NotConnectedException
+     * @throws ConnectionLostException
      */
     public function getPoolKeys(string $pool = ''): array
     {
@@ -307,7 +307,7 @@ class RedisEnhancedCache extends RedisCache
      * key => value array is returned corresponding accurately to the redis cache set
      *
      * @return array
-     * @throws NotConnectedException
+     * @throws ConnectionLostException
      */
     public function getAllCacheStoreAsArray()
     {
@@ -316,7 +316,7 @@ class RedisEnhancedCache extends RedisCache
         $result = [];
 
         if (count($keys)) {
-            $result = $this->fetch($keys);
+            $result = $this->getMultiple($keys);
         }
 
         return $result;
@@ -329,7 +329,7 @@ class RedisEnhancedCache extends RedisCache
      * (except HSET entries)
      *
      * @return string
-     * @throws NotConnectedException
+     * @throws ConnectionLostException
      */
     public function getAllCacheStoreAsString(): string
     {
@@ -337,9 +337,10 @@ class RedisEnhancedCache extends RedisCache
         $toReturn = '';
         $nl       = PHP_EOL;
 
+        /** @todo disgusting smell to get rid of */
         foreach ($this->redis->keys('*') as $key) {
             try {
-                $value = $this->fetch($key);
+                $value = $this->get($key);
                 $toReturn .= sprintf(
                     'Key: %s  -  Value:%sTTL = %s',
                     $key,
@@ -352,29 +353,5 @@ class RedisEnhancedCache extends RedisCache
         }
 
         return $toReturn;
-    }
-
-
-
-
-    /**
-     * @return string
-     */
-    public function getRedisClientID(): string
-    {
-        return spl_object_hash($this->redis);
-    }
-
-    public function setTimeOut(int $timeout): void
-    {
-        $this->timeout = $timeout;
-    }
-
-    /**
-     * PHPUnit DI setter
-     */
-    public function setRedisClient(\Predis\Client $client): void
-    {
-        $this->redis = $client;
     }
 }
