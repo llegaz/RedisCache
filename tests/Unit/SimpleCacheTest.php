@@ -365,5 +365,4 @@ class SimpleCacheTest extends RedisAdapterTestBase
         ;
     }
 
-
 }
