@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LLegaz\Cache\Pool;
 
+use LLegaz\Cache\Entry\CacheEntry;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\SimpleCache\CacheInterface;
 
@@ -40,7 +41,8 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     public function clear(): bool
     {
-        $this->cache->clearPool($this->poolName);
+        $this->cache->set($this->poolName, null);
+        $this->cache->delete($this->poolName);
 
     }
 
@@ -56,24 +58,39 @@ class CacheEntryPool implements CacheItemPoolInterface
 
     public function deleteItem(string $key): bool
     {
-        $this->cache->deleteFromPool($key);
+        return $this->cache->deleteFromPool($key);
 
     }
 
     public function deleteItems(string $keys): bool
     {
-        $this->cache->deleteFromPool($keys);
+        return $this->cache->deleteFromPool($keys);
 
     }
 
     public function getItem(string $key): \Psr\Cache\CacheItemInterface
     {
+        $value = $this->cache->fetchFromPool($key, $this->poolName);
+        /** @todo handle hit, ttl */
+        $item = new CacheEntry($key);
+        $item->set($value);
+
+        return $item;
 
     }
 
     public function getItems(string $keys = []): iterable
     {
+        $items = [];
+        $values = $this->cache->fetchFromPool($keys, $this->poolName);
+        foreach ($values as $key => $value) {
+            /** @todo handle hit, ttl */
+            $item = new CacheEntry($key);
+            $item->set($value);
+            $items[] = $item;
+        }
 
+        return $items;
     }
 
     public function hasItem(string $key): bool
