@@ -16,20 +16,6 @@ namespace LLegaz\Cache;
 class RedisEnhancedCache extends RedisCache
 {
     /**
-     * clear a pool entirely
-      *
-      * @param string $pool the pool's name
-      */
-    public function clearPool(string $pool)
-    {
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
-
-        $this->set($pool, null);
-        $this->delete($pool);
-    }
-    /**
      * @todo rework this
      *
      *
@@ -38,7 +24,7 @@ class RedisEnhancedCache extends RedisCache
      * @return mixed
      * @throws ConnectionLostException | LogicException
      */
-    public function fetchFromPool(mixed $key, string $pool) :mixed
+    public function fetchFromPool(mixed $key, string $pool): mixed
     {
         if (!$this->isConnected()) {
             $this->throwCLEx();
@@ -68,7 +54,7 @@ class RedisEnhancedCache extends RedisCache
      * @return array
      * @throws ConnectionLostException
      */
-    public function fetchAllFromPool(string $pool) :array
+    public function fetchAllFromPool(string $pool): array
     {
         if (!$this->isConnected()) {
             $this->throwCLEx();
@@ -372,13 +358,13 @@ class RedisEnhancedCache extends RedisCache
     }
 
     /**
-     * 
-     * disclaimer: <b>DO NOT USE EXECPT IN DEBUGGING SCENARIO</b> this redis call is too intensive in O(n) complexity 
+     *
+     * disclaimer: <b>DO NOT USE EXECPT IN DEBUGGING SCENARIO</b> this redis call is too intensive in O(n) complexity
      * so the more keys the more blocking it is for all redis clients trying to access the redis db
-     * 
+     *
      * @return array all the keys in redis (for a selected db ?)
      */
-    private function getAllkeys() :array
+    private function getAllkeys(): array
     {
         return $this->getRedis()->keys('*');
     }
