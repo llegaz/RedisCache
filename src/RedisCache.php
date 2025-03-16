@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace LLegaz\Cache;
 
-use DateTimeImmutable;
 use LLegaz\Cache\Exception\InvalidKeyException;
 use LLegaz\Cache\Exception\InvalidKeysException;
 use LLegaz\Cache\Exception\InvalidValuesException;
@@ -306,7 +305,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
         }
 
         if ($ttl instanceof \DateInterval) {
-            $ttl = $this->dateIntervalToSeconds($ttl);
+            $ttl = Utils::dateIntervalToSeconds($ttl);
         }
 
         try {
@@ -374,7 +373,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
         }
 
         if ($ttl instanceof \DateInterval) {
-            $ttl = $this->dateIntervalToSeconds($ttl);
+            $ttl = Utils::dateIntervalToSeconds($ttl);
         }
 
         try {
@@ -474,18 +473,5 @@ class RedisCache extends RedisAdapter implements CacheInterface
         }
 
         return $newKeys;
-    }
-
-    /**
-     *
-     * @param \DateInterval $ttl
-     * @return int
-     */
-    private function dateIntervalToSeconds(\DateInterval $ttl): int
-    {
-        $reference = new DateTimeImmutable();
-        $endTime = $reference->add($ttl);
-
-        return $endTime->getTimestamp() - $reference->getTimestamp();
     }
 }
