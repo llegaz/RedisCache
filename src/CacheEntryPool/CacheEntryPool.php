@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LLegaz\Cache\Pool;
 
 use LLegaz\Cache\Entry\CacheEntry;
+use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\SimpleCache\CacheInterface;
 
@@ -21,6 +22,11 @@ class CacheEntryPool implements CacheItemPoolInterface
 {
     private CacheInterface $cache;
 
+    /**
+     * <b>Immutable</b>
+     *
+     * @var string|null
+     */
     private ?string $poolName = null;
 
     private array $deferredItems = [];
@@ -62,13 +68,13 @@ class CacheEntryPool implements CacheItemPoolInterface
 
     }
 
-    public function deleteItems(string $keys): bool
+    public function deleteItems(array $keys): bool
     {
         return $this->cache->deleteFromPool($keys);
 
     }
 
-    public function getItem(string $key): \Psr\Cache\CacheItemInterface
+    public function getItem(string $key): CacheItemInterface
     {
         $value = $this->cache->fetchFromPool($key, $this->poolName);
         /** @todo handle hit, ttl */
@@ -79,7 +85,7 @@ class CacheEntryPool implements CacheItemPoolInterface
 
     }
 
-    public function getItems(string $keys = []): iterable
+    public function getItems(array $keys = []): iterable
     {
         $items = [];
         $values = $this->cache->fetchFromPool($keys, $this->poolName);
@@ -98,12 +104,12 @@ class CacheEntryPool implements CacheItemPoolInterface
 
     }
 
-    public function save(\Psr\Cache\CacheItemInterface $item): bool
+    public function save(CacheItemInterface $item): bool
     {
 
     }
 
-    public function saveDeferred(\Psr\Cache\CacheItemInterface $item): bool
+    public function saveDeferred(CacheItemInterface $item): bool
     {
 
     }
