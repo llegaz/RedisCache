@@ -176,6 +176,7 @@ class CacheEntryPool implements CacheItemPoolInterface
     {
         $this->deferredItems[] = $item;
 
+        return true;
     }
 
     /**
@@ -190,8 +191,8 @@ class CacheEntryPool implements CacheItemPoolInterface
         foreach ($this->deferredItems as $item) {
             $deferred[$item->getKey()] = $item->get();
         }
-        $this->cache->setMultiple($deferred);
 
+        return $this->cache->storeToPool($deferred);
     }
 
     /**

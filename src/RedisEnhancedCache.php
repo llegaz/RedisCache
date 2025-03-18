@@ -115,6 +115,9 @@ class RedisEnhancedCache extends RedisCache
             }
         });
 
+        /**
+         * @todo rework exception handling and returns
+         */
         return $this->getRedis()->hmset($pool, $values) == 'OK';
     }
 
