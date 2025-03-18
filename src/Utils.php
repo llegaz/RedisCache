@@ -21,4 +21,13 @@ class Utils
 
         return $endTime->getTimestamp() - $reference->getTimestamp();
     }
+
+    public static function benchmark(callable $callback, array $params = []): string
+    {
+        $startTime = microtime(true);
+        call_user_func_array($callback, $params);
+        $endTime = microtime(true);
+
+        return sprintf('%.9f seconds', $endTime - $startTime);
+    }
 }

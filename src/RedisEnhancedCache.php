@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace LLegaz\Cache;
 
+use LLegaz\Cache\Exception\InvalidKeyException;
+
 /**
  * Class RedisEnhancedCache
  * built on top of PSR-16 implementation to complete it for PSR-16 CacheEntries Pools based on Redis Hashed
@@ -22,14 +24,17 @@ class RedisEnhancedCache extends RedisCache
      * @param int|string|array $key
      * @param string $pool the pool's name
      * @return mixed
-     * @throws ConnectionLostException | LogicException
+     * @throws LLegaz\Redis\Exception\ConnectionLostException
+     * @throws LLegaz\Redis\Exception\LocalIntegrityException
+     * @throws LLegaz\Cache\Exception\InvalidKeyException
      */
     public function fetchFromPool(mixed $key, string $pool): mixed
     {
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
+        $this->begin();
 
+        /**
+         * @todo rework this
+         */
         switch (gettype($key)) {
             case 'integer':
             case 'string':
@@ -40,10 +45,33 @@ class RedisEnhancedCache extends RedisCache
                 return array_combine(array_values($key), array_values($data));
 
             default:
-                throw new \LogicException('Invalid Parameter');
+                throw new InvalidKeyException('Invalid Parameter');
         }
 
         return false;
+    }
+
+    /**
+     *
+     * @param string $key
+     * @param string $pool
+     * @return bool
+     * @throws LLegaz\Redis\Exception\ConnectionLostException
+     * @throws LLegaz\Redis\Exception\LocalIntegrityException
+     */
+    public function hasInPool(string $key, string $pool): bool
+    {
+        $this->checkKeyValidity($key);
+        $this->begin();
+
+        try {
+            $redisResponse = $this->getRedis()->hexists($pool, $key);
+        } catch (\Throwable $t) {
+            $redisResponse = null;
+            $this->formatException($t);
+        } finally {
+            return ($redisResponse === 1) ? true : false;
+        }
     }
 
     /**
@@ -52,7 +80,7 @@ class RedisEnhancedCache extends RedisCache
      *
      * @param string $pool the pool's name
      * @return array
-     * @throws ConnectionLostException
+     * @throws LLegaz\Redis\Exception\ConnectionLostException
      */
     public function fetchAllFromPool(string $pool): array
     {
@@ -70,13 +98,12 @@ class RedisEnhancedCache extends RedisCache
      * @param array $values A flat array of key => value pairs to store in GIVEN POOL name
      * @param string $pool the pool name
      * @return bool True on success
-     * @throws ConnectionLostException
+     * @throws LLegaz\Redis\Exception\ConnectionLostException
+     * @throws LLegaz\Redis\Exception\LocalIntegrityException
      */
     public function storeToPool(array $values, string $pool): bool
     {
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
+        $this->begin();
 
         /**
          * @todo enhance keys / values treatment (see / homogenize with RedisCache::setMultiple and RedisCache::checkKeysValidity)
@@ -101,16 +128,26 @@ class RedisEnhancedCache extends RedisCache
      */
     public function deleteFromPool(mixed $keys, string $pool): bool
     {
+        $cnt = 1;
         if (is_string($keys)) {
             $this->checkKeyValidity($keys);
         } else {
             $this->checkKeysValidity($keys);
+            $cnt = count($keys);
         }
         if (!$this->isConnected()) {
             $this->throwCLEx();
         }
 
-        return $this->getRedis()->hdel($pool, $keys) == count($keys);
+        try {
+            $redisResponse = $this->getRedis()->hdel($pool, $keys);
+        } catch (Exception $e) {
+            $redisResponse = false;
+            $this->formatException($e);
+        }
+
+
+        return $redisResponse === $cnt;
     }
 
     /**

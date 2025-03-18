@@ -102,16 +102,13 @@ class RedisCache extends RedisAdapter implements CacheInterface
      *
      * @throws \Psr\SimpleCache\InvalidArgumentException
      *   MUST be thrown if the $key string is not a legal value.
+     * @throws LLegaz\Redis\Exception\ConnectionLostException
+     * @throws LLegaz\Redis\Exception\LocalIntegrityException
      */
     public function delete(string $key): bool
     {
         $this->checkKeyValidity($key);
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
-        if (!$this->checkIntegrity()) {
-            $this->throwLIEx();
-        }
+        $this->begin();
 
         try {
             $redisResponse = $this->getRedis()->del($key);
@@ -133,6 +130,8 @@ class RedisCache extends RedisAdapter implements CacheInterface
      * @throws \Psr\SimpleCache\InvalidArgumentException
      *   MUST be thrown if $keys is neither an array nor a Traversable,
      *   or if any of the $keys are not a legal value.
+     * @throws LLegaz\Redis\Exception\ConnectionLostException
+     * @throws LLegaz\Redis\Exception\LocalIntegrityException
      */
     public function deleteMultiple(iterable $keys): bool
     {
@@ -140,12 +139,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
         if (!count($keys)) {
             return true;
         }
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
-        if (!$this->checkIntegrity()) {
-            $this->throwLIEx();
-        }
+        $this->begin();
 
         try {
             $redisResponse = $this->getRedis()->del($keys);
@@ -167,16 +161,13 @@ class RedisCache extends RedisAdapter implements CacheInterface
      *
      * @throws \Psr\SimpleCache\InvalidArgumentException
      *   MUST be thrown if the $key string is not a legal value.
+     * @throws LLegaz\Redis\Exception\ConnectionLostException
+     * @throws LLegaz\Redis\Exception\LocalIntegrityException
      */
     public function get(string $key, mixed $default = null): mixed
     {
         $this->checkKeyValidity($key);
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
-        if (!$this->checkIntegrity()) {
-            $this->throwLIEx();
-        }
+        $this->begin();
 
         try {
             $value = $this->getRedis()->get($key);
@@ -207,17 +198,14 @@ class RedisCache extends RedisAdapter implements CacheInterface
      * @throws \Psr\SimpleCache\InvalidArgumentException
      *   MUST be thrown if $keys is neither an array nor a Traversable,
      *   or if any of the $keys are not a legal value.
+     * @throws LLegaz\Redis\Exception\ConnectionLostException
+     * @throws LLegaz\Redis\Exception\LocalIntegrityException
      */
     public function getMultiple(iterable $keys, mixed $default = null): iterable
     {
         /** handle keys as in setMultiple **/
         $keys = $this->checkKeysValidity($keys);
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
-        if (!$this->checkIntegrity()) {
-            $this->throwLIEx();
-        }
+        $this->begin();
 
         $values = [];
 
@@ -257,16 +245,13 @@ class RedisCache extends RedisAdapter implements CacheInterface
      *
      * @throws \Psr\SimpleCache\InvalidArgumentException
      *   MUST be thrown if the $key string is not a legal value.
+     * @throws LLegaz\Redis\Exception\ConnectionLostException
+     * @throws LLegaz\Redis\Exception\LocalIntegrityException
      */
     public function has(string $key): bool
     {
         $this->checkKeyValidity($key);
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
-        if (!$this->checkIntegrity()) {
-            $this->throwLIEx();
-        }
+        $this->begin();
 
         try {
             $redisResponse = $this->getRedis()->exists($key);
@@ -276,8 +261,6 @@ class RedisCache extends RedisAdapter implements CacheInterface
         } finally {
             return ($redisResponse === 1) ? true : false;
         }
-
-
     }
 
     /**
@@ -293,16 +276,13 @@ class RedisCache extends RedisAdapter implements CacheInterface
      *
      * @throws \Psr\SimpleCache\InvalidArgumentException
      *   MUST be thrown if the $key string is not a legal value.
+     * @throws LLegaz\Redis\Exception\ConnectionLostException
+     * @throws LLegaz\Redis\Exception\LocalIntegrityException
      */
     public function set(string $key, mixed $value, null|int|\DateInterval $ttl = self::FOREVER): bool
     {
         $this->checkKeyValuePair($key, $value);
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
-        if (!$this->checkIntegrity()) {
-            $this->throwLIEx();
-        }
+        $this->begin();
 
         if ($ttl instanceof \DateInterval) {
             $ttl = Utils::dateIntervalToSeconds($ttl);
@@ -341,16 +321,12 @@ class RedisCache extends RedisAdapter implements CacheInterface
      * @throws \Psr\SimpleCache\InvalidArgumentException
      *   MUST be thrown if $values is neither an array nor a Traversable,
      *   or if any of the $values are not a legal value.
+     * @throws LLegaz\Redis\Exception\ConnectionLostException
+     * @throws LLegaz\Redis\Exception\LocalIntegrityException
      */
     public function setMultiple(iterable $values, null|int|\DateInterval $ttl = self::FOREVER): bool
     {
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
-        if (!$this->checkIntegrity()) {
-            $this->throwLIEx();
-        }
-
+        $this->begin();
         if (!is_array($values) && !($values instanceof \Traversable)) {
             throw new InvalidValuesException('RedisCache says "invalid keys/values set"');
         }
@@ -473,5 +449,21 @@ class RedisCache extends RedisAdapter implements CacheInterface
         }
 
         return $newKeys;
+    }
+
+    /**
+     * begin redis communication
+     *
+     * @throws LLegaz\Redis\Exception\ConnectionLostException
+     * @throws LLegaz\Redis\Exception\LocalIntegrityException
+     */
+    protected function begin(): void
+    {
+        if (!$this->isConnected()) {
+            $this->throwCLEx();
+        }
+        if (!$this->checkIntegrity()) {
+            $this->throwLIEx();
+        }
     }
 }
