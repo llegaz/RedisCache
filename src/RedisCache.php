@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace LLegaz\Cache;
 
-use DateTimeImmutable;
 use LLegaz\Cache\Exception\InvalidKeyException;
 use LLegaz\Cache\Exception\InvalidKeysException;
 use LLegaz\Cache\Exception\InvalidValuesException;
@@ -14,19 +13,19 @@ use Predis\Response\Status;
 use Psr\SimpleCache\CacheInterface;
 
 /**
-  * Class RedisCache
+ * Class RedisCache
  * PSR-16 implementation - Underlying Redis data type used is STRING
+ *
  *
  * @package RedisCache
  * @author Laurent LEGAZ <laurent@legaz.eu>
-
  */
 class RedisCache extends RedisAdapter implements CacheInterface
 {
     /**
      * Expiration Time Constants named by duration
      */
-    public const FOREVER = -1;
+    public const FOREVER = null;
 
     public const SHORT_EXPIRATION_TIME = 180;     // 3 minutes
 
@@ -45,8 +44,6 @@ class RedisCache extends RedisAdapter implements CacheInterface
     public const LONG_EXPIRATION_TIME = 2592000; // 30 days
 
     public const VERY_LONG_EXPIRATION_TIME = 7776000; // 90 days
-
-    protected const HASH_DB_PREFIX = 'DEFAULT_Cache_Pool';
 
     public function __construct(
         string $host = RedisClientInterface::DEFAULTS['host'],
@@ -105,16 +102,13 @@ class RedisCache extends RedisAdapter implements CacheInterface
      *
      * @throws \Psr\SimpleCache\InvalidArgumentException
      *   MUST be thrown if the $key string is not a legal value.
+     * @throws LLegaz\Redis\Exception\ConnectionLostException
+     * @throws LLegaz\Redis\Exception\LocalIntegrityException
      */
     public function delete(string $key): bool
     {
         $this->checkKeyValidity($key);
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
-        if (!$this->checkIntegrity()) {
-            $this->throwLIEx();
-        }
+        $this->begin();
 
         try {
             $redisResponse = $this->getRedis()->del($key);
@@ -136,6 +130,8 @@ class RedisCache extends RedisAdapter implements CacheInterface
      * @throws \Psr\SimpleCache\InvalidArgumentException
      *   MUST be thrown if $keys is neither an array nor a Traversable,
      *   or if any of the $keys are not a legal value.
+     * @throws LLegaz\Redis\Exception\ConnectionLostException
+     * @throws LLegaz\Redis\Exception\LocalIntegrityException
      */
     public function deleteMultiple(iterable $keys): bool
     {
@@ -143,12 +139,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
         if (!count($keys)) {
             return true;
         }
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
-        if (!$this->checkIntegrity()) {
-            $this->throwLIEx();
-        }
+        $this->begin();
 
         try {
             $redisResponse = $this->getRedis()->del($keys);
@@ -170,16 +161,13 @@ class RedisCache extends RedisAdapter implements CacheInterface
      *
      * @throws \Psr\SimpleCache\InvalidArgumentException
      *   MUST be thrown if the $key string is not a legal value.
+     * @throws LLegaz\Redis\Exception\ConnectionLostException
+     * @throws LLegaz\Redis\Exception\LocalIntegrityException
      */
     public function get(string $key, mixed $default = null): mixed
     {
         $this->checkKeyValidity($key);
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
-        if (!$this->checkIntegrity()) {
-            $this->throwLIEx();
-        }
+        $this->begin();
 
         try {
             $value = $this->getRedis()->get($key);
@@ -210,17 +198,14 @@ class RedisCache extends RedisAdapter implements CacheInterface
      * @throws \Psr\SimpleCache\InvalidArgumentException
      *   MUST be thrown if $keys is neither an array nor a Traversable,
      *   or if any of the $keys are not a legal value.
+     * @throws LLegaz\Redis\Exception\ConnectionLostException
+     * @throws LLegaz\Redis\Exception\LocalIntegrityException
      */
     public function getMultiple(iterable $keys, mixed $default = null): iterable
     {
         /** handle keys as in setMultiple **/
         $keys = $this->checkKeysValidity($keys);
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
-        if (!$this->checkIntegrity()) {
-            $this->throwLIEx();
-        }
+        $this->begin();
 
         $values = [];
 
@@ -260,16 +245,13 @@ class RedisCache extends RedisAdapter implements CacheInterface
      *
      * @throws \Psr\SimpleCache\InvalidArgumentException
      *   MUST be thrown if the $key string is not a legal value.
+     * @throws LLegaz\Redis\Exception\ConnectionLostException
+     * @throws LLegaz\Redis\Exception\LocalIntegrityException
      */
     public function has(string $key): bool
     {
         $this->checkKeyValidity($key);
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
-        if (!$this->checkIntegrity()) {
-            $this->throwLIEx();
-        }
+        $this->begin();
 
         try {
             $redisResponse = $this->getRedis()->exists($key);
@@ -279,8 +261,6 @@ class RedisCache extends RedisAdapter implements CacheInterface
         } finally {
             return ($redisResponse === 1) ? true : false;
         }
-
-
     }
 
     /**
@@ -296,19 +276,16 @@ class RedisCache extends RedisAdapter implements CacheInterface
      *
      * @throws \Psr\SimpleCache\InvalidArgumentException
      *   MUST be thrown if the $key string is not a legal value.
+     * @throws LLegaz\Redis\Exception\ConnectionLostException
+     * @throws LLegaz\Redis\Exception\LocalIntegrityException
      */
-    public function set(string $key, mixed $value, null|int|\DateInterval $ttl = null): bool
+    public function set(string $key, mixed $value, null|int|\DateInterval $ttl = self::FOREVER): bool
     {
         $this->checkKeyValuePair($key, $value);
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
-        if (!$this->checkIntegrity()) {
-            $this->throwLIEx();
-        }
+        $this->begin();
 
         if ($ttl instanceof \DateInterval) {
-            $ttl = $this->dateIntervalToSeconds($ttl);
+            $ttl = Utils::dateIntervalToSeconds($ttl);
         }
 
         try {
@@ -316,7 +293,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
                 $ttl = 0;
             }
             $redisResponse = $this->getRedis()->set($key, $value);
-            if ($ttl !== null && $ttl >= 0) {
+            if ($ttl !== self::FOREVER && $ttl >= 0) {
                 /** @todo maybe test return value here too */
                 $this->getRedis()->expire($key, $ttl);
             }
@@ -344,16 +321,12 @@ class RedisCache extends RedisAdapter implements CacheInterface
      * @throws \Psr\SimpleCache\InvalidArgumentException
      *   MUST be thrown if $values is neither an array nor a Traversable,
      *   or if any of the $values are not a legal value.
+     * @throws LLegaz\Redis\Exception\ConnectionLostException
+     * @throws LLegaz\Redis\Exception\LocalIntegrityException
      */
-    public function setMultiple(iterable $values, null|int|\DateInterval $ttl = null): bool
+    public function setMultiple(iterable $values, null|int|\DateInterval $ttl = self::FOREVER): bool
     {
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
-        if (!$this->checkIntegrity()) {
-            $this->throwLIEx();
-        }
-
+        $this->begin();
         if (!is_array($values) && !($values instanceof \Traversable)) {
             throw new InvalidValuesException('RedisCache says "invalid keys/values set"');
         }
@@ -376,7 +349,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
         }
 
         if ($ttl instanceof \DateInterval) {
-            $ttl = $this->dateIntervalToSeconds($ttl);
+            $ttl = Utils::dateIntervalToSeconds($ttl);
         }
 
         try {
@@ -384,7 +357,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             if ($this->getRedis()->toString() === RedisClientInterface::PHP_REDIS) {
                 $this->getRedis()->multi(\Redis::PIPELINE); // begin transaction
                 $redisResponse = $this->getRedis()->mset($newValues);
-                if ($ttl !== null && $ttl >= 0) {
+                if ($ttl !== self::FOREVER && $ttl >= 0) {
                     foreach ($newValues as $key => $value) {
                         $this->getRedis()->expire($key, $ttl);
                     }
@@ -399,7 +372,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
                 $this->getRedis()->transaction($options, function ($t) use ($newValues, $ttl, &$redisResponse) {
                     $redisResponse = $t->mset($newValues);
 
-                    if ($ttl !== null && $ttl >= 0) {
+                    if ($ttl !== self::FOREVER && $ttl >= 0) {
                         foreach ($newValues as $key => $value) {
                             $t->expire($key, $ttl);
                         }
@@ -424,7 +397,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
      * @return void
      * @throws InvalidArgumentException
      */
-    private function checkKeyValuePair(string $key, mixed &$value): void
+    protected function checkKeyValuePair(string $key, mixed &$value): void
     {
         $this->checkKeyValidity($key);
         if (!is_string($value)) {
@@ -438,13 +411,14 @@ class RedisCache extends RedisAdapter implements CacheInterface
      * @return void
      * @throws InvalidArgumentException
      */
-    private function checkKeyValidity(string $key): void
+    protected function checkKeyValidity(string $key): void
     {
         $len = strlen($key);
         if (!$len) {
             throw new InvalidKeyException('RedisCache says "Empty Key is forbidden"');
         }
 
+        /** @todo maybe remove this and rework integration for 1 digit keys (00 back to 0) */
         if ($len < 2) {
             throw new InvalidKeyException('RedisCache says "Key is too small"');
         }
@@ -455,7 +429,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
         }
     }
 
-    private function checkKeysValidity(iterable $keys): array
+    protected function checkKeysValidity(iterable $keys): array
     {
         if (!is_array($keys) && !($keys instanceof \Traversable)) {
             throw new InvalidKeysException('RedisCache says "invalid keys"');
@@ -478,15 +452,18 @@ class RedisCache extends RedisAdapter implements CacheInterface
     }
 
     /**
+     * begin redis communication
      *
-     * @param \DateInterval $ttl
-     * @return int
+     * @throws LLegaz\Redis\Exception\ConnectionLostException
+     * @throws LLegaz\Redis\Exception\LocalIntegrityException
      */
-    private function dateIntervalToSeconds(\DateInterval $ttl): int
+    protected function begin(): void
     {
-        $reference = new DateTimeImmutable();
-        $endTime = $reference->add($ttl);
-
-        return $endTime->getTimestamp() - $reference->getTimestamp();
+        if (!$this->isConnected()) {
+            $this->throwCLEx();
+        }
+        if (!$this->checkIntegrity()) {
+            $this->throwLIEx();
+        }
     }
 }

@@ -83,7 +83,7 @@ class SimpleCacheRCTest extends RedisAdapterTestBase
         /**
          * expect 1 more client command (list) because of the integrity check
          * (units are in forced paranoid mode for now)
-         * 
+         *
          * @todo mb rework this here and in adapter project
          */
         \LLegaz\Redis\RedisClientsPool::setOracle($this->defaults);
@@ -368,7 +368,8 @@ class SimpleCacheRCTest extends RedisAdapterTestBase
      * Client List call expectation for paranoid mode (integrity check are mandatory
      * because multiple access to redis clients pool are simulated for units)
      */
-    protected function integrityCheckCL() {
+    protected function integrityCheckCL()
+    {
         $this->redisClient->expects($this->once())
             ->method('client')
             ->with('list')
