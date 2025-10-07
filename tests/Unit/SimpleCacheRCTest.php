@@ -363,17 +363,4 @@ class SimpleCacheRCTest extends RedisAdapterTestBase
         ;
         $this->assertTrue($this->cache->set($key, 'bbbbbbbbbbbbbbbbbbbb', 1337));
     }
-
-    /**
-     * Client List call expectation for paranoid mode (integrity check are mandatory
-     * because multiple access to redis clients pool are simulated for units)
-     */
-    protected function integrityCheckCL()
-    {
-        $this->redisClient->expects($this->once())
-            ->method('client')
-            ->with('list')
-            ->willReturn([['id' => 1337, 'db' => 0, 'cmd' => 'client']])
-        ;
-    }
 }
