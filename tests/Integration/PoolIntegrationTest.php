@@ -19,6 +19,10 @@ if (!defined('SKIP_INTEGRATION_TESTS')) {
  */
 class PoolIntegrationTest extends CachePoolTest
 {
+    /**
+     * @before
+     */
+    #[Before]
     public function setupService()
     {
         if (SKIP_INTEGRATION_TESTS) {

@@ -33,11 +33,10 @@ class CacheEntryPool implements CacheItemPoolInterface
 
     protected const HASH_DB_PREFIX = 'DEFAULT_Cache_Pool';
 
-    public function __construct(RedisEnhancedCache $cache, ?string $pool)
+    public function __construct(RedisEnhancedCache $cache, ?string $pool = null)
     {
         $this->cache = $cache;
-        dump($this->cache);
-        $this->poolName = $this->getPoolName($pool);
+        $this->poolName = $this->getPoolName($pool ?? '');
     }
 
     /**
@@ -88,6 +87,7 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     public function getItem(string $key): CacheItemInterface
     {
+        //dump('getItem', $this->cache);
         $value = $this->cache->fetchFromPool($key, $this->poolName);
         /** @todo handle hit, ttl */
         $item = new CacheEntry($key);
@@ -162,6 +162,7 @@ class CacheEntryPool implements CacheItemPoolInterface
     public function save(CacheItemInterface $item): bool
     {
 
+        return true;
     }
 
     /**
