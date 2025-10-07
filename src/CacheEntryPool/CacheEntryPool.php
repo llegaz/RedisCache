@@ -36,6 +36,7 @@ class CacheEntryPool implements CacheItemPoolInterface
     public function __construct(RedisEnhancedCache $cache, ?string $pool)
     {
         $this->cache = $cache;
+        dump($this->cache);
         $this->poolName = $this->getPoolName($pool);
     }
 
