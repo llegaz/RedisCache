@@ -410,6 +410,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
     }
 
     /**
+     * @todo yes rework this and checkKeysValidity too to better integrate object and scalar
      *
      * @param string $key
      * @return void

@@ -59,13 +59,16 @@ class CacheEntryPool implements CacheItemPoolInterface
 
     public function deleteItem(string $key): bool
     {
-        return $this->cache->deleteFromPool($key);
+        return $this->deleteItems([$key]);
 
     }
 
     public function deleteItems(array $keys): bool
     {
-        return $this->cache->deleteFromPool($keys);
+        $bln = $this->cache->deleteFromPool($keys, $this->poolName);
+        dump('deleteItems', $keys, $bln);
+
+        return  $bln;/*$this->cache->deleteFromPool($keys, $this->poolName);*/
 
     }
 
@@ -87,11 +90,14 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     public function getItem(string $key): CacheItemInterface
     {
-        //dump('getItem', $this->cache);
         $value = $this->cache->fetchFromPool($key, $this->poolName);
+        dump('getItem', $key, $value);
         /** @todo handle hit, ttl */
         $item = new CacheEntry($key);
-        $item->set($value);
+        if ($this->exist($value)) {
+            $item->set($value);
+            $item->hit();
+        }
 
         return $item;
 
@@ -161,8 +167,8 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     public function save(CacheItemInterface $item): bool
     {
-
-        return true;
+        //dump("save", $item);
+        return $this->cache->storeToPool([$item->getKey() => $item->get()], $this->poolName);
     }
 
     /**
@@ -209,4 +215,12 @@ class CacheEntryPool implements CacheItemPoolInterface
         ;
     }
 
+    private function exist(mixed $value): bool
+    {
+        if (is_string($value) && strlen($value) && $value === RedisEnhancedCache::DOES_NOT_EXIST) {
+            return false;
+        }
+
+        return true;
+    }
 }
