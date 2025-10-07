@@ -8,9 +8,9 @@ use LLegaz\Cache\Exception\InvalidKeyException;
 
 /**
  * Class RedisEnhancedCache
- * built on top of PSR-16 implementation to complete it for PSR-16 CacheEntries Pools based on Redis Hashed
+ * This is built on top of PSR-16 implementation to complete it for PSR-6 CacheEntries Pools.
+ * My implementation is based on Redis Hashes implying some technical limitations.
  *
- * @todo test pool name parameter is given if not maybe throw error or fallback on SimpleCache PSR-16 ?
  *
  * @package RedisCache
  * @author Laurent LEGAZ <laurent@legaz.eu>

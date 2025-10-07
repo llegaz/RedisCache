@@ -10,12 +10,15 @@ use LLegaz\Cache\Exception\InvalidValuesException;
 use LLegaz\Redis\RedisAdapter;
 use LLegaz\Redis\RedisClientInterface;
 use Predis\Response\Status;
+use Psr\Log\LoggerInterface;
 use Psr\SimpleCache\CacheInterface;
 
 /**
  * Class RedisCache
  * PSR-16 implementation - Underlying Redis data type used is STRING
  *
+ *@todo I think we will have to refacto here to in order to pass the RedisAdapter as a parameter
+ *      or keep it as a class attribute ?
  *
  * @package RedisCache
  * @author Laurent LEGAZ <laurent@legaz.eu>
@@ -52,9 +55,10 @@ class RedisCache extends RedisAdapter implements CacheInterface
         string $scheme = RedisClientInterface::DEFAULTS['scheme'],
         int $db = RedisClientInterface::DEFAULTS['database'],
         bool $persistent = false,
-        ?RedisClientInterface $client = null
+        ?RedisClientInterface $client = null,
+        ?LoggerInterface $logger = null
     ) {
-        parent::__construct($host, $port, $pwd, $scheme, $db, $persistent, $client);
+        parent::__construct($host, $port, $pwd, $scheme, $db, $persistent, $client, $logger);
     }
 
     /**

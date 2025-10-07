@@ -39,7 +39,8 @@ class PoolIntegrationTest extends CachePoolTest
 
     public function createCachePool(): CacheItemPoolInterface
     {
-        return new SUT();
-    }
+        $cache = new \LLegaz\Cache\RedisEnhancedCache();
 
+        return new SUT($cache);
+    }
 }
