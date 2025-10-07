@@ -17,6 +17,8 @@ use LLegaz\Cache\Exception\InvalidKeyException;
  */
 class RedisEnhancedCache extends RedisCache
 {
+    public const DOES_NOT_EXIST = '%=%=% item does not exist %=%=%';
+
     /**
      * @todo rework this
      *
@@ -30,25 +32,32 @@ class RedisEnhancedCache extends RedisCache
      */
     public function fetchFromPool(mixed $key, string $pool): mixed
     {
+        $this->checkKeyValidity($key);
         $this->begin();
 
-        /**
-         * @todo rework this
-         */
-        switch (gettype($key)) {
-            case 'integer':
-            case 'string':
-                return $this->getRedis()->hget($pool, $key) ?? false;
-            case 'array':
-                $data = $this->getRedis()->hmget($pool, $key);
+        try {
+            switch (gettype($key)) {
+                case 'integer':
+                case 'string':
+                    if ($this->getRedis()->hexists($pool, $key)) {
 
-                return array_combine(array_values($key), array_values($data));
+                        return $this->getRedis()->hget($pool, $key);
+                    }
 
-            default:
-                throw new InvalidKeyException('Invalid Parameter');
+                    break;
+                case 'array':
+                    $data = $this->getRedis()->hmget($pool, $key);
+
+                    return array_combine(array_values($key), array_values($data));
+
+                default:
+                    throw new InvalidKeyException('Invalid Parameter');
+            }
+        } catch (\Throwable $t) {
+            $this->formatException($t);
         }
 
-        return false;
+        return self::DOES_NOT_EXIST;
     }
 
     /**
@@ -122,33 +131,33 @@ class RedisEnhancedCache extends RedisCache
     }
 
     /**
-     * @todo rework this
      *
      * @param array $keys
      * @param string $pool the pool's name
      * @return bool True on success
      * @throws ConnectionLostException
      */
-    public function deleteFromPool(mixed $keys, string $pool): bool
+    public function deleteFromPool(array $keys, string $pool): bool
     {
-        $cnt = 1;
-        if (is_string($keys)) {
-            $this->checkKeyValidity($keys);
-        } else {
-            $this->checkKeysValidity($keys);
-            $cnt = count($keys);
-        }
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
+        $cnt = count($keys);
+        $payload = '';
+        $keys = $this->checkKeysValidity($keys);
+        array_walk($keys, function (&$key, $i) use (&$payload) {
+            if (is_string($key)) {
+                if ($i !== 0) {
+                    $payload .= ' ';
+                }
+                $payload .= $key;
+            }
+        });
+        $this->begin();
 
         try {
-            $redisResponse = $this->getRedis()->hdel($pool, $keys);
+            $redisResponse = $this->getRedis()->hdel($pool, $payload);
         } catch (Exception $e) {
             $redisResponse = false;
             $this->formatException($e);
         }
-
 
         return $redisResponse === $cnt;
     }
