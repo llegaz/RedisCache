@@ -72,8 +72,12 @@ class CacheEntry extends AbstractCacheEntry
         return $this;
     }
 
-    public function set(mixed $value): static
+    public function set($value): static
     {
+        /*$type = gettype($value);
+        dump("CacheEntry::set value= " . $value ." and type= " . $type);
+        $e = new \Exception();
+        dump($e->getTraceAsString());*/
         $this->value = $value;
 
         return $this;

@@ -43,6 +43,7 @@ class PoolIntegrationTest extends CachePoolTest
 
     public function createCachePool(): CacheItemPoolInterface
     {
+        //define('LLEGAZ_DEBUG', true);
         $cache = new \LLegaz\Cache\RedisEnhancedCache();
 
         return new SUT($cache);
