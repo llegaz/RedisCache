@@ -21,6 +21,11 @@ class RedisEnhancedCache extends RedisCache
 
     /**
      * @todo rework this
+     * 
+     * @hint Redis return mostly strings with hget or hmget, maybe we should use serialize to preserve type
+     * 
+     * @todo implement serialize with serializeToPool and cable those methods for the <code>CacheEntryPool</code> class to use it
+     * 
      *
      *
      * @param int|string|array $key
@@ -32,13 +37,14 @@ class RedisEnhancedCache extends RedisCache
      */
     public function fetchFromPool(mixed $key, string $pool): mixed
     {
-        $this->checkKeyValidity($key);
-        $this->begin();
+
 
         try {
             switch (gettype($key)) {
                 case 'integer':
                 case 'string':
+                    $this->checkKeyValidity($key);
+                    $this->begin();
                     if ($this->getRedis()->hexists($pool, $key)) {
 
                         return $this->getRedis()->hget($pool, $key);
@@ -46,10 +52,23 @@ class RedisEnhancedCache extends RedisCache
 
                     break;
                 case 'array':
-                    $data = $this->getRedis()->hmget($pool, $key);
+                    $this->checkKeysValidity($key);
+                    $this->begin();
+                    $data = array_combine(
+                        array_values($key),
+                        array_values($this->getRedis()->hmget($pool, $key))
+                    );
+                    array_walk($data, function (&$value, &$key) use ($pool) {
+                        if (!$this->getRedis()->hexists($pool, $key)) {
+                            $value = self::DOES_NOT_EXIST;
+                        }
+                    });
+                    if (count($data)) {
 
-                    return array_combine(array_values($key), array_values($data));
+                        return $data;
+                    }
 
+                    break;
                 default:
                     throw new InvalidKeyException('Invalid Parameter');
             }
@@ -127,6 +146,7 @@ class RedisEnhancedCache extends RedisCache
         /**
          * @todo rework exception handling and returns
          */
+        dump("store to pool :", $values);
         return $this->getRedis()->hmset($pool, $values) == 'OK';
     }
 

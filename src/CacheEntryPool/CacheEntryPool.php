@@ -91,7 +91,7 @@ class CacheEntryPool implements CacheItemPoolInterface
     public function getItem(string $key): CacheItemInterface
     {
         $value = $this->cache->fetchFromPool($key, $this->poolName);
-        dump('getItem', $key, $value);
+        //dump('getItem', $key, $value);
         /** @todo handle hit, ttl */
         $item = new CacheEntry($key);
         if ($this->exist($value)) {
@@ -123,11 +123,20 @@ class CacheEntryPool implements CacheItemPoolInterface
     {
         $items = [];
         $values = $this->cache->fetchFromPool($keys, $this->poolName);
-        foreach ($values as $key => $value) {
+        //dump($values);
+        foreach ($keys as $key) {
             /** @todo handle hit, ttl */
             $item = new CacheEntry($key);
-            $item->set($value);
-            $items[] = $item;
+            if (isset($values[$key]) && $this->exist($values[$key])) {
+                $item->set($values[$key]);
+                $item->hit();
+            }
+            //$items[] = $item;
+            /**
+             * because of his code (wrong)
+             * https://github.com/php-cache/integration-tests/blob/fb7d78718f1e5bbfd7c63e5c5734000999ac7366/src/CachePoolTest.php#L208C40-L208C44
+             */
+            $items[$key] = $item;
         }
 
         return $items;
