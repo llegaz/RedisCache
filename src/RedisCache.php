@@ -17,7 +17,7 @@ use Psr\SimpleCache\CacheInterface;
  * Class RedisCache
  * PSR-16 implementation - Underlying Redis data type used is STRING
  *
- *@todo I think we will have to refacto here to in order to pass the RedisAdapter as a parameter
+ *@todo I think we will have to refactor here too in order to pass the RedisAdapter as a parameter
  *      or keep it as a class attribute ?
  *
  * @package RedisCache

@@ -20,6 +20,11 @@ class RedisEnhancedCache extends RedisCache
     public const DOES_NOT_EXIST = '%=%=% item does not exist %=%=%';
 
     /**
+     * It is to be noted that we use different terminology here  from Redis project in the case of a HASH.
+     * for us : pool = key and key = field
+     * but it is only semantic...
+     * 
+     * 
      * @todo rework this
      *
      * @hint Redis return mostly strings with hget or hmget, maybe we should use serialize to preserve type
