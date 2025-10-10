@@ -86,6 +86,9 @@ class CacheEntry extends AbstractCacheEntry
     /**
      * if true = expireAt
      *
+     *
+     * this bool seems useless @todo : remove it
+     *
      * @return bool
      */
     public function isTimeStamp(): bool

@@ -10,16 +10,30 @@ use Psr\Cache\CacheItemInterface;
 use Psr\Cache\CacheItemPoolInterface;
 
 /**
- * PSR-6 implementation - Underlying Redis data type used is HASH
+ * PSR-6 implementation - Underlying Redis data type used is <b>HASH</b>
  *
  * Our Redis <code>CacheEntryPool</code> will typically be a <a href="https://redis.io/glossary/redis-hashes/">redis hash</a>
  *
  * this brings limitation on expiration part so take it into account for your future design
- * (expiration on an entire pool only, thus until redis v-xx on paid version only as of now)
+ * (expiration on an entire pool only, redis version 7.4 (not free?) has the feature to hexpire fields inside a hash)
+ *
+ *
+ * --
+ * @todo dig into Redict ? (or just respect Salvatore's vision, see below)
+ * --
+ * https://groups.google.com/g/redis-db/c/IqA3O8Fq494?pli=1
+ *
+ *    v.s
+ *
+ * https://redis.io/blog/hash-field-expiration-architecture-and-benchmarks
  *
  */
 class CacheEntryPool implements CacheItemPoolInterface
 {
+    /**
+     *
+     * @var Psr\SimpleCache\CacheInterface
+     */
     private RedisEnhancedCache $cache;
 
     /**
@@ -29,10 +43,20 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     private ?string $poolName = null;
 
+    /**
+     *
+     * @var array
+     */
     private array $deferredItems = [];
 
     protected const HASH_DB_PREFIX = 'DEFAULT_Cache_Pool';
 
+    /**
+     * @todo use Psr\SimpleCache\CacheInterface ?
+     *
+     * @param Psr\SimpleCache\CacheInterface $cache
+     * @param string|null $pool
+     */
     public function __construct(RedisEnhancedCache $cache, ?string $pool = null)
     {
         $this->cache = $cache;
@@ -213,6 +237,9 @@ class CacheEntryPool implements CacheItemPoolInterface
     }
 
     /**
+     *
+     * @todo may be rework this a bit (DEFAULT everywhere lol)
+     *
      * @param mixed $poolSuffix
      * @return string
      */

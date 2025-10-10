@@ -6,6 +6,7 @@ namespace LLegaz\Cache\Tests\Integration;
 
 use Cache\IntegrationTests\CachePoolTest;
 use LLegaz\Cache\Pool\CacheEntryPool as SUT;
+use LLegaz\Cache\RedisEnhancedCache;
 use Psr\Cache\CacheItemPoolInterface;
 
 if (!defined('SKIP_INTEGRATION_TESTS')) {
@@ -43,8 +44,7 @@ class PoolIntegrationTest extends CachePoolTest
 
     public function createCachePool(): CacheItemPoolInterface
     {
-        //define('LLEGAZ_DEBUG', true);
-        $cache = new \LLegaz\Cache\RedisEnhancedCache();
+        $cache = new RedisEnhancedCache();
 
         return new SUT($cache);
     }
