@@ -44,19 +44,27 @@
     "scripts": {
         "pu":"@phpunit",
         "puv":"@phpunit-verbose",
+        "pui":"@phpunit-int-suite",
+        "puf":"@phpunit-func-suite",
         "cs":"@phpcsfixer",
         "test": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full",
         "test-only": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full --filter PoolIntegrationTest::testGetItems",
         "test-psr16": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full --filter CacheIntegrationTest",
         "test-psr6": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full --filter PoolIntegrationTest",
-        "phpunit" : "./vendor/bin/phpunit --colors=always --configuration ./phpunit.xml",
+        "phpunit" : "./vendor/bin/phpunit --colors=always --configuration ./phpunit.xml --testsuite unit",
         "phpunit-verbose" : "./vendor/bin/phpunit --colors=always --configuration ./phpunit.xml --no-output --log-events-text php://stdout",
+        "phpunit-int-suite" : "./vendor/bin/phpunit --colors=always --configuration ./phpunit.xml --testsuite integration --bootstrap .phpunit_full",
+        "phpunit-func-suite" : "./vendor/bin/phpunit --colors=always --configuration ./phpunit.xml --testsuite functional --bootstrap .phpunit_full",
         "phpcsfixer": "./vendor/bin/php-cs-fixer fix --config=./.php-cs-fixer.php --diff -vvv"
     },
     "scripts-descriptions": {
         "test": "Run the full tests suite",
         "pu": "Run all unit tests",
         "puv": "Run all unit tests but verbose..",
-        "cs": "Clean the sources"
+        "pui": "Run all integration tests",
+        "puf": "Run all functional tests",
+        "cs": "Clean the sources",
+        "test-psr6": "Run the PSR-6 integration tests suite",
+        "test-psr16": "Run the PSR-16 integration tests suite"
     }
 }

@@ -21,11 +21,11 @@ class RedisEnhancedCache extends RedisCache
 
     /**
      * @todo rework this
-     * 
+     *
      * @hint Redis return mostly strings with hget or hmget, maybe we should use serialize to preserve type
-     * 
+     *
      * @todo implement serialize with serializeToPool and cable those methods for the <code>CacheEntryPool</code> class to use it
-     * 
+     *
      *
      *
      * @param int|string|array $key
@@ -58,7 +58,7 @@ class RedisEnhancedCache extends RedisCache
                         array_values($key),
                         array_values($this->getRedis()->hmget($pool, $key))
                     );
-                    array_walk($data, function (&$value, &$key) use ($pool) {
+                    array_walk($data, function (&$value, $key) use ($pool) {
                         if (!$this->getRedis()->hexists($pool, $key)) {
                             $value = self::DOES_NOT_EXIST;
                         }
@@ -146,7 +146,8 @@ class RedisEnhancedCache extends RedisCache
         /**
          * @todo rework exception handling and returns
          */
-        dump("store to pool :", $values);
+        dump('store to pool :', $values);
+
         return $this->getRedis()->hmset($pool, $values) == 'OK';
     }
 

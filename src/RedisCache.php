@@ -192,6 +192,23 @@ class RedisCache extends RedisAdapter implements CacheInterface
     }
 
     /**
+     * @todo No, no, no ! Nein, nein, nein, don't do that here !
+     * we need another layer (another project ?) but it is NOT priority
+     *
+     *
+     * Getter for non-string key variant
+     * (nope, not accessible just here for documentation purpose)
+     *
+     * @param mixed $key
+     * @param mixed $default
+     * @return mixed
+     */
+    private function get2(mixed $key, mixed $default = null): mixed
+    {
+        return $this->get($this->checkKeyValidity($key), $default);
+    }
+
+    /**
      * Obtains multiple cache items by their unique keys.
      *
      * @param iterable<string> $keys    A list of keys that can be obtained in a single operation.
@@ -416,20 +433,18 @@ class RedisCache extends RedisAdapter implements CacheInterface
      * @return void
      * @throws InvalidArgumentException
      */
-    protected function checkKeyValidity(string $key): void
+    protected function checkKeyValidity(mixed $key): void
     {
+        if (!is_string($key)) {
+            $key = $this->keyToString($key);
+        }
         $len = strlen($key);
         if (!$len) {
             throw new InvalidKeyException('RedisCache says "Empty Key is forbidden"');
         }
 
-        /** @todo maybe remove this and rework integration for 1 digit keys (00 back to 0) */
-        if ($len < 2) {
-            throw new InvalidKeyException('RedisCache says "Key is too small"');
-        }
-
-        //4 MB maximum key size
-        if ($len > 4194304) {
+        //100KB maximum key size (4MB is REALLY too much for my needs)
+        if ($len > 102400) {
             throw new InvalidKeyException('RedisCache says "Key is too big"');
         }
     }
@@ -442,18 +457,27 @@ class RedisCache extends RedisAdapter implements CacheInterface
 
         $newKeys = [];
         foreach ($keys as $key) {
-            if (is_scalar($key)) {
-                $key = (string) $key;
-            } elseif (is_object($key)) {
-                $key = spl_object_hash($key);
-            } elseif (!is_string($key)) {
-                throw new InvalidKeyException();
-            }
+            $key = $this->keyToString($key);
             $this->checkKeyValidity($key);
             $newKeys[] = $key;
         }
 
         return $newKeys;
+    }
+
+    private function keyToString(mixed $key): string
+    {
+        if (is_scalar($key)) {
+            $key = (string) $key;
+        } elseif (is_object($key)) {
+            $key = spl_object_hash($key);
+        }
+
+        if (!is_string($key)) {
+            throw new InvalidKeyException();
+        }
+
+        return $key;
     }
 
     /**
