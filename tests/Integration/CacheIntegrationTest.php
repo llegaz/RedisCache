@@ -44,10 +44,16 @@ class CacheIntegrationTest extends SimpleCacheTest
 
     public static function invalidKeys()
     {
+        $bigKey = '';
+        for ($i = 102500; $i > 0; $i--) {
+            $bigKey .= 'a';
+        }
+
         return array_merge(
             self::invalidArrayKeys(),
             [
                 [''],
+                [$bigKey]
             ]
         );
     }
@@ -55,12 +61,13 @@ class CacheIntegrationTest extends SimpleCacheTest
     public static function invalidArrayKeys()
     {
         return [
-            ['a'],
-            ['b'],
-            ['c'],
-            ['1'],
-            ['2'],
-            ['3'],
+            [''],
+            [''],
+            [''],
+            [''],
+            [''],
+            [''],
+            [''],
         ];
     }
 
@@ -72,6 +79,10 @@ class CacheIntegrationTest extends SimpleCacheTest
      */
     public static function invalidTEKeysSingle()
     {
+        $closure = function ($a) {
+            return $a;
+        };
+
         return array_merge(
             self::invalidTEKeys(),
             [
@@ -79,6 +90,7 @@ class CacheIntegrationTest extends SimpleCacheTest
                 [new \stdClass()], // TypeError
                 [2.5], // TypeError
                 [1337], // TypeError
+                [$closure], // TypeError
             ]
         );
     }
@@ -88,8 +100,6 @@ class CacheIntegrationTest extends SimpleCacheTest
         return [
             [['array']],
             [[1 => 'array', 2 => 'again']],
-            [true],
-            [false],
             [null],
         ];
     }
@@ -99,6 +109,10 @@ class CacheIntegrationTest extends SimpleCacheTest
      */
     public static function invalidTtl()
     {
+        $closure = function ($a) {
+            return $a;
+        };
+
         return [
             [''],
             [true],
@@ -108,6 +122,7 @@ class CacheIntegrationTest extends SimpleCacheTest
             [' 1'], // can be casted to a int
             ['12foo'], // can be casted to a int
             ['025'], // can be interpreted as hex
+            [$closure],
             [new \stdClass()],
             [['array']],
         ];
@@ -195,6 +210,8 @@ class CacheIntegrationTest extends SimpleCacheTest
     }
 
     /**
+     * meh ?
+     *
      * @dataProvider invalidTEKeys
      */
     #[DataProvider('invalidTEKeys')]
