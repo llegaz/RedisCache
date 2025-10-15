@@ -49,7 +49,7 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     private array $deferredItems = [];
 
-    protected const HASH_DB_PREFIX = 'DEFAULT_Cache_Pool';
+    protected const HASH_DB_PREFIX = 'Cache_Pool';
 
     /**
      * @todo use Psr\SimpleCache\CacheInterface ?
@@ -238,7 +238,6 @@ class CacheEntryPool implements CacheItemPoolInterface
 
     /**
      *
-     * @todo may be rework this a bit (DEFAULT everywhere lol)
      *
      * @param mixed $poolSuffix
      * @return string
@@ -247,7 +246,7 @@ class CacheEntryPool implements CacheItemPoolInterface
     {
         return strlen($poolSuffix) ?
             self::HASH_DB_PREFIX . "_{$poolSuffix}" :
-            self::HASH_DB_PREFIX
+            'DEFAULT_' . self::HASH_DB_PREFIX
         ;
     }
 
