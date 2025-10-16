@@ -58,6 +58,11 @@ class CacheIntegrationTest extends SimpleCacheTest
         );
     }
 
+    /**
+     * meh
+     * 
+     * @return array
+     */
     public static function invalidArrayKeys()
     {
         return [
