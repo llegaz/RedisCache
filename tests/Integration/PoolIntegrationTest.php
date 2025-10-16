@@ -58,6 +58,11 @@ class PoolIntegrationTest extends CachePoolTest
         );
     }
 
+    /**
+     * meh
+     * 
+     * @return array
+     */
     public static function invalidArrayKeys()
     {
         return [
@@ -71,6 +76,14 @@ class PoolIntegrationTest extends CachePoolTest
         ];
     }
 
+    /**
+     *  @todo TypeError suite tests needed see <code>CacheIntegrationTest</code> class
+     */
+
+    /**
+     * 
+     * @return CacheItemPoolInterface
+     */
     public function createCachePool(): CacheItemPoolInterface
     {
         $cache = new RedisEnhancedCache();
