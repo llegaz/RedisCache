@@ -23,8 +23,8 @@ class RedisEnhancedCache extends RedisCache
      * It is to be noted that we use different terminology here  from Redis project in the case of a HASH.
      * for us : pool = key and key = field
      * but it is only semantic...
-     * 
-     * 
+     *
+     *
      * @todo rework this
      *
      * @hint Redis return mostly strings with hget or hmget, maybe we should use serialize to preserve type
@@ -43,42 +43,37 @@ class RedisEnhancedCache extends RedisCache
     public function fetchFromPool(mixed $key, string $pool): mixed
     {
 
+        switch (gettype($key)) {
+            case 'integer':
+            case 'string':
+                $this->checkKeyValidity($key);
+                $this->begin();
+                if ($this->getRedis()->hexists($pool, $key)) {
 
-        try {
-            switch (gettype($key)) {
-                case 'integer':
-                case 'string':
-                    $this->checkKeyValidity($key);
-                    $this->begin();
-                    if ($this->getRedis()->hexists($pool, $key)) {
+                    return $this->getRedis()->hget($pool, $key);
+                }
 
-                        return $this->getRedis()->hget($pool, $key);
+                break;
+            case 'array':
+                $this->checkKeysValidity($key);
+                $this->begin();
+                $data = array_combine(
+                    array_values($key),
+                    array_values($this->getRedis()->hmget($pool, $key))
+                );
+                array_walk($data, function (&$value, $key) use ($pool) {
+                    if (!$this->getRedis()->hexists($pool, $key)) {
+                        $value = self::DOES_NOT_EXIST;
                     }
+                });
+                if (count($data)) {
 
-                    break;
-                case 'array':
-                    $this->checkKeysValidity($key);
-                    $this->begin();
-                    $data = array_combine(
-                        array_values($key),
-                        array_values($this->getRedis()->hmget($pool, $key))
-                    );
-                    array_walk($data, function (&$value, $key) use ($pool) {
-                        if (!$this->getRedis()->hexists($pool, $key)) {
-                            $value = self::DOES_NOT_EXIST;
-                        }
-                    });
-                    if (count($data)) {
+                    return $data;
+                }
 
-                        return $data;
-                    }
-
-                    break;
-                default:
-                    throw new InvalidKeyException('Invalid Parameter');
-            }
-        } catch (\Throwable $t) {
-            $this->formatException($t);
+                break;
+            default:
+                throw new InvalidKeyException('Invalid Parameter');
         }
 
         return self::DOES_NOT_EXIST;

@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace LLegaz\Cache\Exception;
 
-use LLegaz\Cache\Exception\InvalidArgumentException;
-
 /**
  *
  * PSR-6 and PSR-16 <b>InvalidArgumentException</b>
