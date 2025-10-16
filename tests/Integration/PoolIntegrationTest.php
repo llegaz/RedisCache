@@ -42,6 +42,35 @@ class PoolIntegrationTest extends CachePoolTest
         parent::setUp();
     }
 
+    public static function invalidKeys()
+    {
+        $bigKey = '';
+        for ($i = 102500; $i > 0; $i--) {
+            $bigKey .= 'a';
+        }
+
+        return array_merge(
+            self::invalidArrayKeys(),
+            [
+                [''],
+                [$bigKey]
+            ]
+        );
+    }
+
+    public static function invalidArrayKeys()
+    {
+        return [
+            [''],
+            [''],
+            [''],
+            [''],
+            [''],
+            [''],
+            [''],
+        ];
+    }
+
     public function createCachePool(): CacheItemPoolInterface
     {
         $cache = new RedisEnhancedCache();
