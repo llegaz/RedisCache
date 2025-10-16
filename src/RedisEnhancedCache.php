@@ -98,7 +98,15 @@ class RedisEnhancedCache extends RedisCache
             $redisResponse = null;
             $this->formatException($t);
         } finally {
-            return ($redisResponse === 1) ? true : false;
+            /**
+             * php-redis hexists returns true while predis returns 1
+             * 
+             * @see adapter classes in adapter (or gateway, or facade) package,
+             *      namely <code>PredisClient</code> and <code>RedisClient</code>
+             * 
+             * @todo in order to simplify and unify those returns mechanisms properly
+             */
+            return ($redisResponse === true || $redisResponse === 1) ? true : false;
         }
     }
 
@@ -136,6 +144,7 @@ class RedisEnhancedCache extends RedisCache
         /**
          * @todo enhance keys / values treatment (see / homogenize with RedisCache::setMultiple and RedisCache::checkKeysValidity)
          * @todo need better handling on serialization and its reverse method in fetches.
+         * @todo check keys arguments are valid
          */
         array_walk($values, function (&$value) {
             if (is_array($value) || is_object($value)) {
@@ -148,7 +157,18 @@ class RedisEnhancedCache extends RedisCache
          */
         dump('store to pool :', $values);
 
-        return $this->getRedis()->hmset($pool, $values) == 'OK';
+        $cnt = count($values);
+        if ($cnt>1) {
+            return $this->getRedis()->hmset($pool, $values) == 'OK';
+        } elseif ($cnt===1) {
+            $key = array_keys($values)[0];
+            $value = isset($key) ? $values[$key] : (isset($values[0]) ? $values[0] : null);
+            if (isset($value)) {
+                return $this->getRedis()->hset($pool, $key, $value) == 'OK';
+            }
+        
+    }
+        
     }
 
     /**
