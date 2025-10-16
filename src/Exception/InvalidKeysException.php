@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace LLegaz\Cache\Exception;
 
-use Psr\SimpleCache\InvalidArgumentException;
+use LLegaz\Cache\Exception\InvalidArgumentException;
 
-class InvalidKeysException extends \Exception implements InvalidArgumentException
+/**
+ *
+ * PSR-6 and PSR-16 <b>InvalidArgumentException</b>
+ */
+class InvalidKeysException extends InvalidArgumentException
 {
     public function __construct(string $message = 'RedisCache says "Can\'t do shit with those keys"' . PHP_EOL, int $code = 400, \Throwable $previous = null)
     {
