@@ -20,6 +20,16 @@ if (!defined('SKIP_INTEGRATION_TESTS')) {
  */
 class CacheIntegrationTest extends SimpleCacheTest
 {
+    private static string $bigKey = '';
+
+    public static function setUpBeforeClass(): void
+    {
+        for ($i = 102500; $i > 0; $i--) {
+            self::$bigKey .= 'a';
+        }
+        parent::setUpBeforeClass();
+    }
+
     /**
      * @before
      */
@@ -44,16 +54,11 @@ class CacheIntegrationTest extends SimpleCacheTest
 
     public static function invalidKeys()
     {
-        $bigKey = '';
-        for ($i = 102500; $i > 0; $i--) {
-            $bigKey .= 'a';
-        }
-
         return array_merge(
             self::invalidArrayKeys(),
             [
                 [''],
-                [$bigKey]
+                [self::$bigKey]
             ]
         );
     }
@@ -67,11 +72,13 @@ class CacheIntegrationTest extends SimpleCacheTest
     {
         return [
             [''],
+            [self::$bigKey],
             [''],
+            [self::$bigKey],
             [''],
+            [self::$bigKey],
             [''],
-            [''],
-            [''],
+            [self::$bigKey],
             [''],
         ];
     }
