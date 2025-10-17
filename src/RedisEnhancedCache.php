@@ -55,20 +55,22 @@ class RedisEnhancedCache extends RedisCache
 
                 break;
             case 'array':
-                $this->checkKeysValidity($key);
-                $this->begin();
-                $data = array_combine(
-                    array_values($key),
-                    array_values($this->getRedis()->hmget($pool, $key))
-                );
-                array_walk($data, function (&$value, $key) use ($pool) {
-                    if (!$this->getRedis()->hexists($pool, $key)) {
-                        $value = self::DOES_NOT_EXIST;
-                    }
-                });
-                if (count($data)) {
+                if (count($key)) {
+                    $this->checkKeysValidity($key);
+                    $this->begin();
+                    $data = array_combine(
+                        array_values($key),
+                        array_values($this->getRedis()->hmget($pool, $key))
+                    );
+                    array_walk($data, function (&$value, $key) use ($pool) {
+                        if (!$this->getRedis()->hexists($pool, $key)) {
+                            $value = self::DOES_NOT_EXIST;
+                        }
+                    });
+                    if (count($data)) {
 
-                    return $data;
+                        return $data;
+                    }
                 }
 
                 break;
@@ -100,10 +102,10 @@ class RedisEnhancedCache extends RedisCache
         } finally {
             /**
              * php-redis hexists returns true while predis returns 1
-             * 
+             *
              * @see adapter classes in adapter (or gateway, or facade) package,
              *      namely <code>PredisClient</code> and <code>RedisClient</code>
-             * 
+             *
              * @todo in order to simplify and unify those returns mechanisms properly
              */
             return ($redisResponse === true || $redisResponse === 1) ? true : false;
@@ -153,22 +155,22 @@ class RedisEnhancedCache extends RedisCache
         });
 
         /**
-         * @todo rework exception handling and returns
+         * @todo rework exception handling and returns (yup rework that below)
          */
         dump('store to pool :', $values);
 
         $cnt = count($values);
-        if ($cnt>1) {
+        if ($cnt > 1) {
             return $this->getRedis()->hmset($pool, $values) == 'OK';
-        } elseif ($cnt===1) {
+        } elseif ($cnt === 1) {
             $key = array_keys($values)[0];
             $value = isset($key) ? $values[$key] : (isset($values[0]) ? $values[0] : null);
             if (isset($value)) {
                 return $this->getRedis()->hset($pool, $key, $value) == 'OK';
             }
-        
-    }
-        
+
+        }
+
     }
 
     /**
