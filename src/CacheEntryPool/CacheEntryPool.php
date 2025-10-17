@@ -121,7 +121,7 @@ class CacheEntryPool implements CacheItemPoolInterface
         //dump('getItem', $key, $value);
         /** @todo handle hit, ttl */
         $item = new CacheEntry($key);
-        if ($this->exist($value)) {
+        if ($this->cache->exist($value)) {
             $item->set($value);
             $item->hit();
         }
@@ -154,7 +154,7 @@ class CacheEntryPool implements CacheItemPoolInterface
         foreach ($keys as $key) {
             /** @todo handle hit, ttl */
             $item = new CacheEntry($key);
-            if (isset($values[$key]) && $this->exist($values[$key])) {
+            if (isset($values[$key]) && $this->cache->exist($values[$key])) {
                 $item->set($values[$key]);
                 $item->hit();
             }
@@ -251,14 +251,5 @@ class CacheEntryPool implements CacheItemPoolInterface
             self::HASH_DB_PREFIX . "_{$poolSuffix}" :
             'DEFAULT_' . self::HASH_DB_PREFIX
         ;
-    }
-
-    private function exist(mixed $value): bool
-    {
-        if (is_string($value) && strlen($value) && $value === RedisEnhancedCache::DOES_NOT_EXIST) {
-            return false;
-        }
-
-        return true;
     }
 }

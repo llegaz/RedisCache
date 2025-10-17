@@ -149,9 +149,8 @@ class RedisEnhancedCache extends RedisCache
          * @todo check keys arguments are valid
          */
         array_walk($values, function (&$value) {
-            if (is_array($value) || is_object($value)) {
+            // we serialize all data (to differentiate with false returned by hget)
                 $value = serialize($value);
-            }
         });
 
         /**
@@ -182,7 +181,6 @@ class RedisEnhancedCache extends RedisCache
      */
     public function deleteFromPool(array $keys, string $pool): bool
     {
-        $cnt = count($keys);
         $payload = '';
         $keys = $this->checkKeysValidity($keys);
         array_walk($keys, function (&$key, $i) use (&$payload) {
@@ -202,7 +200,7 @@ class RedisEnhancedCache extends RedisCache
             $this->formatException($e);
         }
 
-        return $redisResponse === $cnt;
+        return $redisResponse >= 0;
     }
 
     /**
@@ -459,5 +457,14 @@ class RedisEnhancedCache extends RedisCache
     private function getAllkeys(): array
     {
         return $this->getRedis()->keys('*');
+    }
+
+    public function exist(mixed $value): bool
+    {
+        if (is_string($value) && strlen($value) && $value === RedisEnhancedCache::DOES_NOT_EXIST) {
+            return false;
+        }
+
+        return true;
     }
 }

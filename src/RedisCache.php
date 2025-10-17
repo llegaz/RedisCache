@@ -203,7 +203,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
      * @param mixed $default
      * @return mixed
      */
-    private function get2(mixed $key, mixed $default = null): mixed
+    private function getWithNonStrKey(mixed $key, mixed $default = null): mixed
     {
         return $this->get($this->checkKeyValidity($key), $default);
     }
@@ -244,7 +244,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             }
         } catch (\Throwable $t) {
             if (!count($values)) {
-                array_fill(0, count($keys), $default);
+                $values = array_fill(0, count($keys), $default);
             }
             $this->formatException($t);
         } finally {
@@ -480,6 +480,16 @@ class RedisCache extends RedisAdapter implements CacheInterface
         return $key;
     }
 
+    /**
+     * value is either a serialized string or a nil value returned from Redis server
+     * (predis / php-redis implementations either return null, false or "nil" directly
+     * 
+     * @param mixed $value
+     * @return bool
+     */
+    protected function isValueSet(mixed $value): bool {
+        
+    }
     /**
      * begin redis communication
      *
