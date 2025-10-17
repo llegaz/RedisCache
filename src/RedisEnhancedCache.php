@@ -42,6 +42,10 @@ class RedisEnhancedCache extends RedisCache
      */
     public function fetchFromPool(mixed $key, string $pool): mixed
     {
+        
+        /***
+         * finish to implment serializes properly you mofo
+         */
 
         switch (gettype($key)) {
             case 'integer':
@@ -148,9 +152,12 @@ class RedisEnhancedCache extends RedisCache
          * @todo need better handling on serialization and its reverse method in fetches.
          * @todo check keys arguments are valid
          */
+        /***
+         * finish to implment serializes properly you mofo
+         */
         array_walk($values, function (&$value) {
             // we serialize all data (to differentiate with false returned by hget)
-                $value = serialize($value);
+            $value = serialize($value);
         });
 
         /**

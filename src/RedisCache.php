@@ -483,12 +483,13 @@ class RedisCache extends RedisAdapter implements CacheInterface
     /**
      * value is either a serialized string or a nil value returned from Redis server
      * (predis / php-redis implementations either return null, false or "nil" directly
-     * 
+     *
      * @param mixed $value
      * @return bool
      */
-    protected function isValueSet(mixed $value): bool {
-        
+    protected function isValueSet(mixed $value): bool
+    {
+
     }
     /**
      * begin redis communication
