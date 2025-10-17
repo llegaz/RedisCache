@@ -72,7 +72,8 @@ class CacheEntryPool implements CacheItemPoolInterface
     public function clear(): bool
     {
         $e = new \Exception();
-        dump("pool cleared by : ", $e->getTrace()[1]["function"]);
+        dump('pool cleared by : ', $e->getTrace()[1]['function']);
+
         try {
             $this->cache->set($this->poolName, null);
             $this->cache->delete($this->poolName);

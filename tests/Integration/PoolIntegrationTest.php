@@ -60,7 +60,7 @@ class PoolIntegrationTest extends CachePoolTest
 
     /**
      * meh
-     * 
+     *
      * @return array
      */
     public static function invalidArrayKeys()
@@ -81,7 +81,7 @@ class PoolIntegrationTest extends CachePoolTest
      */
 
     /**
-     * 
+     *
      * @return CacheItemPoolInterface
      */
     public function createCachePool(): CacheItemPoolInterface
