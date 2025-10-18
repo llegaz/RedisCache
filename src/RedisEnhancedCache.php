@@ -11,6 +11,12 @@ use LLegaz\Cache\Exception\InvalidKeyException;
  * This is built on top of PSR-16 implementation to complete it for PSR-6 CacheEntries Pools.
  * My implementation is based on Redis Hashes implying some technical limitations.
  *
+ * 
+ * 
+ * Here we use the Hash implementation from redis. Expiration Time is set with the setHsetPoolExpiration method
+ * on the entire Hash Set HASH_DB_PREFIX. $suffix (private HSET Pool in Redis, specified with $suffix
+ * with those methods you can store and retrieve specific data linked together in a separate data set)
+ * 
  *
  * @package RedisCache
  * @author Laurent LEGAZ <laurent@legaz.eu>
@@ -44,8 +50,11 @@ class RedisEnhancedCache extends RedisCache
     {
         
         /***
-         * finish to implment serializes properly you mofo
+         * finish to implment unserializes properly you mofo
+         * @todo remove hexist
+         * use :
          */
+        //return unserialize($this->getRedis()->hget($pool, $key));
 
         switch (gettype($key)) {
             case 'integer':
@@ -208,63 +217,6 @@ class RedisEnhancedCache extends RedisCache
         }
 
         return $redisResponse >= 0;
-    }
-
-    /**
-     * Here we use the Hash implementation from redis. Expiration Time is set with the setHsetPoolExpiration method
-     * on the entire Hash Set HASH_DB_PREFIX. $suffix (private HSET Pool in Redis, specified with $suffix
-     * with those methods you can store and retrieve specific data linked together in a separate data set)
-     *
-     * @todo rework this
-     *
-     * @param string $key
-     * @param mixed  $data string, object and array are preferred
-     * @param string $pool the pool's name
-     * @return bool
-     * @throws ConnectionLostException
-     */
-    public function serializeToPool(string $key, mixed $data, string $pool): bool
-    {
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
-
-        $serializeData = serialize($data);
-
-        if (!empty($serializeData)) {
-            $redisResponse = $this->getRedis()->hset($pool, $key, $serializeData);
-
-            return ($redisResponse >= 0) ? true : false;
-        }
-
-        return false;
-    }
-
-    /**
-     * Here we use the Hash implementation from redis. Expiration Time is set with the setHsetPoolExpiration method
-     * on the entire Hash Set HASH_DB_PREFIX. $suffix (private HSET Pool in Redis, specified with $suffix
-     * with those methods you can store and retrieve specific data linked together in a separate data set)
-     *
-     * @todo rework this
-     *
-     * @param string $key
-     * @param string $pool the pool's name
-     * @return mixed <p> The converted value is returned, and can be a boolean,
-     * integer, float, string,
-     * array or object.
-     * </p>
-     * <p>
-     * In case the passed string is not unserializable, <b>FALSE</b> is returned and
-     * <b>E_NOTICE</b> is issued.
-     * @throws ConnectionLostException
-     */
-    public function unserializeFromPool(string $key, string $pool)
-    {
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
-
-        return unserialize($this->getRedis()->hget($pool, $key));
     }
 
     /**
