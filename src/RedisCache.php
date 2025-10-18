@@ -178,10 +178,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             if (!is_string($value)) {
                 $toReturn = $default;
             } else {
-                $toReturn = @unserialize($value);
-                if ($toReturn === false && $value !== 'b:0;') {
-                    $toReturn = $value;
-                }
+                $this->setCorrectValue($value);
             }
         } catch (\Throwable $t) {
             $toReturn = $default;
@@ -236,10 +233,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
                 if (!is_string($value)) {
                     $value = $default;
                 } else {
-                    $tmp = @unserialize($value);
-                    if ($tmp !== false || $value === 'b:0;') {
-                        $value = $tmp;
-                    }
+                    $this->setCorrectValue($value);
                 }
             }
         } catch (\Throwable $t) {
@@ -418,7 +412,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
      * @return void
      * @throws InvalidArgumentException
      */
-    protected function checkKeyValuePair(string $key, mixed &$value): void
+    protected function checkKeyValuePair(string &$key, mixed &$value): void
     {
         $this->checkKeyValidity($key);
         if (!is_string($value)) {
@@ -433,7 +427,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
      * @return void
      * @throws InvalidArgumentException
      */
-    protected function checkKeyValidity(mixed $key): void
+    protected function checkKeyValidity(mixed &$key): void
     {
         if (!is_string($key)) {
             $key = $this->keyToString($key);
@@ -481,16 +475,26 @@ class RedisCache extends RedisAdapter implements CacheInterface
     }
 
     /**
-     * value is either a serialized string or a nil value returned from Redis server
-     * (predis / php-redis implementations either return null, false or "nil" directly
+     * value is either a serialized thing as a string or directly a string
+     * or false if not set correctly(empty or null string) but this case
+     * <b>SHOULD</b> be handled beforehand
      *
      * @param mixed $value
      * @return bool
      */
-    protected function isValueSet(mixed $value): bool
-    {
-
+    protected function setCorrectValue(string &$value): void {
+        try {
+            $tmp = unserialize($value);
+        } catch (\Throwable $t) {
+            $tmp = false;
+        } finally {
+            if ($tmp === false && $value !== 'b:0;') {
+                return; // do nothing $value was a simple string
+            }
+            $value = $tmp;
+        }
     }
+
     /**
      * begin redis communication
      *

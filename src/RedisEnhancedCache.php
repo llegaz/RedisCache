@@ -111,9 +111,11 @@ class RedisEnhancedCache extends RedisCache
             case 'string':
                 $this->checkKeyValidity($key);
                 $this->begin();
-                if ($this->getRedis()->hexists($pool, $key)) {
+                $value = $this->getRedis()->hget($pool, $key);
+                if (is_string($value)) {
+                    $value = $this->setCorrectValue($value);
 
-                    return $this->getRedis()->hget($pool, $key);
+                    return $value;
                 }
 
                 break;
@@ -125,8 +127,10 @@ class RedisEnhancedCache extends RedisCache
                         array_values($key),
                         array_values($this->getRedis()->hmget($pool, $key))
                     );
-                    array_walk($data, function (&$value, $key) use ($pool) {
-                        if (!$this->getRedis()->hexists($pool, $key)) {
+                    array_walk($data, function (&$value) use ($this) {
+                        if (is_string($value)) {
+                            $value = $this->setCorrectValue($value);
+                        } else {
                             $value = self::DOES_NOT_EXIST;
                         }
                     });
