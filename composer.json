@@ -48,7 +48,7 @@
         "puf":"@phpunit-func-suite",
         "cs":"@phpcsfixer",
         "test": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full",
-        "test-only": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full --filter PoolIntegrationTest::testDeleteItems",
+        "test-only": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full --filter PoolIntegrationTest::testGetItem",
         "test-psr16": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full --filter CacheIntegrationTest",
         "test-psr6": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full --filter PoolIntegrationTest",
         "phpunit" : "./vendor/bin/phpunit --colors=always --configuration ./phpunit.xml --testsuite unit",
