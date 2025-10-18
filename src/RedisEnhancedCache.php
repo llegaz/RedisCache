@@ -7,7 +7,9 @@ namespace LLegaz\Cache;
 use LLegaz\Cache\Exception\InvalidKeyException;
 
 /**
- * Class RedisEnhancedCache
+ * ------------------------------------------------------------------------------------------------------------
+ * | Class RedisEnhancedCache                                                                                 |
+ * ------------------------------------------------------------------------------------------------------------
  * This is built on top of PSR-16 implementation to complete it for PSR-6 CacheEntries Pools.
  * My implementation is based on Redis Hashes implying some technical limitations.
  *
@@ -17,7 +19,13 @@ use LLegaz\Cache\Exception\InvalidKeyException;
  * on the entire Hash Set HASH_DB_PREFIX. $suffix (private HSET Pool in Redis, specified with $suffix
  * with those methods you can store and retrieve specific data linked together in a separate data set)
  * 
- *
+ * 
+ * 
+ * It is to be noted that we use different terminology here  from Redis project in the case of a HASH.
+ * for us : pool = key and key = field, but it is only semantic differences...
+ * ------------------------------------------------------------------------------------------------------------
+ * 
+ * 
  * @package RedisCache
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
@@ -25,10 +33,55 @@ class RedisEnhancedCache extends RedisCache
 {
     public const DOES_NOT_EXIST = '%=%=% item does not exist %=%=%';
 
+
     /**
-     * It is to be noted that we use different terminology here  from Redis project in the case of a HASH.
-     * for us : pool = key and key = field
-     * but it is only semantic...
+     * @todo rework this
+     *
+     *
+     * @param array $values A flat array of key => value pairs to store in GIVEN POOL name
+     * @param string $pool the pool name
+     * @return bool True on success
+     * @throws LLegaz\Redis\Exception\ConnectionLostException
+     * @throws LLegaz\Redis\Exception\LocalIntegrityException
+     */
+    public function storeToPool(array $values, string $pool): bool
+    {
+        $this->begin();
+
+        /**
+         * @todo enhance keys / values treatment (see / homogenize with RedisCache::setMultiple and RedisCache::checkKeysValidity)
+         * @todo need better handling on serialization and its reverse method in fetches.
+         * @todo check keys arguments are valid
+         */
+        /***
+         * finish to implment serializes properly you mofo
+         */
+        array_walk($values, function (&$value) {
+            // we serialize all data (to differentiate with false returned by hget)
+            $value = serialize($value);
+        });
+
+        /**
+         * @todo rework exception handling and returns (yup rework that below)
+         */
+        dump('store to pool :', $values);
+
+        $cnt = count($values);
+        if ($cnt > 1) {
+            return $this->getRedis()->hmset($pool, $values) == 'OK';
+        } elseif ($cnt === 1) {
+            $key = array_keys($values)[0];
+            $value = isset($key) ? $values[$key] : (isset($values[0]) ? $values[0] : null);
+            if (isset($value)) {
+                return $this->getRedis()->hset($pool, $key, $value) == 'OK';
+            }
+
+        }
+
+    }
+
+    /**
+     * 
      *
      *
      * @todo rework this
@@ -140,52 +193,6 @@ class RedisEnhancedCache extends RedisCache
         }
 
         return $this->getRedis()->hgetall($pool);
-    }
-
-    /**
-     * @todo rework this
-     *
-     *
-     * @param array $values A flat array of key => value pairs to store in GIVEN POOL name
-     * @param string $pool the pool name
-     * @return bool True on success
-     * @throws LLegaz\Redis\Exception\ConnectionLostException
-     * @throws LLegaz\Redis\Exception\LocalIntegrityException
-     */
-    public function storeToPool(array $values, string $pool): bool
-    {
-        $this->begin();
-
-        /**
-         * @todo enhance keys / values treatment (see / homogenize with RedisCache::setMultiple and RedisCache::checkKeysValidity)
-         * @todo need better handling on serialization and its reverse method in fetches.
-         * @todo check keys arguments are valid
-         */
-        /***
-         * finish to implment serializes properly you mofo
-         */
-        array_walk($values, function (&$value) {
-            // we serialize all data (to differentiate with false returned by hget)
-            $value = serialize($value);
-        });
-
-        /**
-         * @todo rework exception handling and returns (yup rework that below)
-         */
-        dump('store to pool :', $values);
-
-        $cnt = count($values);
-        if ($cnt > 1) {
-            return $this->getRedis()->hmset($pool, $values) == 'OK';
-        } elseif ($cnt === 1) {
-            $key = array_keys($values)[0];
-            $value = isset($key) ? $values[$key] : (isset($values[0]) ? $values[0] : null);
-            if (isset($value)) {
-                return $this->getRedis()->hset($pool, $key, $value) == 'OK';
-            }
-
-        }
-
     }
 
     /**
