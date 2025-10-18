@@ -13,19 +13,19 @@ use LLegaz\Cache\Exception\InvalidKeyException;
  * This is built on top of PSR-16 implementation to complete it for PSR-6 CacheEntries Pools.
  * My implementation is based on Redis Hashes implying some technical limitations.
  *
- * 
- * 
+ *
+ *
  * Here we use the Hash implementation from redis. Expiration Time is set with the setHsetPoolExpiration method
  * on the entire Hash Set HASH_DB_PREFIX. $suffix (private HSET Pool in Redis, specified with $suffix
  * with those methods you can store and retrieve specific data linked together in a separate data set)
- * 
- * 
- * 
+ *
+ *
+ *
  * It is to be noted that we use different terminology here  from Redis project in the case of a HASH.
  * for us : pool = key and key = field, but it is only semantic differences...
  * ------------------------------------------------------------------------------------------------------------
- * 
- * 
+ *
+ *
  * @package RedisCache
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
@@ -51,21 +51,20 @@ class RedisEnhancedCache extends RedisCache
         /**
          * @todo enhance keys / values treatment (see / homogenize with RedisCache::setMultiple and RedisCache::checkKeysValidity)
          * @todo need better handling on serialization and its reverse method in fetches.
-         * @todo check keys arguments are valid
          */
-        /***
-         * finish to implment serializes properly you mofo
+        /**
+         * check keys arguments are valid, and values are all stored as <b>strings</b>
          */
-        array_walk($values, function (&$value) {
-            // we serialize all data (to differentiate with false returned by hget)
-            $value = serialize($value);
+        array_walk($values, function (&$value, &$key) use ($this) {
+
+            $this->checkKeyValuePair($key, $value);
         });
 
-        /**
-         * @todo rework exception handling and returns (yup rework that below)
-         */
         dump('store to pool :', $values);
 
+        /**
+         * @todo rework exception handling and returns
+         */
         $cnt = count($values);
         if ($cnt > 1) {
             return $this->getRedis()->hmset($pool, $values) == 'OK';
@@ -75,13 +74,11 @@ class RedisEnhancedCache extends RedisCache
             if (isset($value)) {
                 return $this->getRedis()->hset($pool, $key, $value) == 'OK';
             }
-
         }
-
     }
 
     /**
-     * 
+     *
      *
      *
      * @todo rework this
@@ -101,7 +98,7 @@ class RedisEnhancedCache extends RedisCache
      */
     public function fetchFromPool(mixed $key, string $pool): mixed
     {
-        
+
         /***
          * finish to implment unserializes properly you mofo
          * @todo remove hexist
