@@ -53,7 +53,7 @@ class RedisEnhancedCache extends RedisCache
          * check keys arguments are valid, and values are all stored as <b>strings</b>
          */
         $self = $this;
-        array_walk($values, function (&$value, &$key) use ($self) {
+        array_walk($values, function (&$value, $key) use ($self) {
 
             $self->checkKeyValuePair($key, $value);
         });

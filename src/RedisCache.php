@@ -417,7 +417,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
      * @return void
      * @throws InvalidArgumentException
      */
-    protected function checkKeyValuePair(string &$key, mixed &$value): void
+    protected function checkKeyValuePair(string $key, mixed &$value): void
     {
         $this->checkKeyValidity($key);
         if (!is_string($value)) {
@@ -426,7 +426,9 @@ class RedisCache extends RedisAdapter implements CacheInterface
     }
 
     /**
-     * @todo yes rework this and checkKeysValidity too to better integrate object and scalar
+     * passing by reference here is only needed when the key given isn't already a string
+     * 
+     * @todo check special cases (or special implementation) when key isn't a string
      *
      * @param string $key
      * @return void
@@ -456,7 +458,6 @@ class RedisCache extends RedisAdapter implements CacheInterface
 
         $newKeys = [];
         foreach ($keys as $key) {
-            $key = $this->keyToString($key);
             $this->checkKeyValidity($key);
             $newKeys[] = $key;
         }
