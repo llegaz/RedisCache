@@ -31,9 +31,6 @@ use LLegaz\Cache\Exception\InvalidKeyException;
  */
 class RedisEnhancedCache extends RedisCache
 {
-    public const DOES_NOT_EXIST = '%=%=% item does not exist %=%=%';
-
-
     /**
      * @todo rework this
      *
@@ -55,9 +52,10 @@ class RedisEnhancedCache extends RedisCache
         /**
          * check keys arguments are valid, and values are all stored as <b>strings</b>
          */
-        array_walk($values, function (&$value, &$key) use ($this) {
+        $self = $this;
+        array_walk($values, function (&$value, &$key) use ($self) {
 
-            $this->checkKeyValuePair($key, $value);
+            $self->checkKeyValuePair($key, $value);
         });
 
         dump('store to pool :', $values);
@@ -127,11 +125,13 @@ class RedisEnhancedCache extends RedisCache
                         array_values($key),
                         array_values($this->getRedis()->hmget($pool, $key))
                     );
-                    array_walk($data, function (&$value) use ($this) {
+                    $self = $this;
+                    $label = self::DOES_NOT_EXIST;
+                    array_walk($data, function (&$value) use ($self, $label) {
                         if (is_string($value)) {
-                            $value = $this->setCorrectValue($value);
+                            $value = $self->setCorrectValue($value);
                         } else {
-                            $value = self::DOES_NOT_EXIST;
+                            $value = $label;
                         }
                     });
                     if (count($data)) {
@@ -424,14 +424,5 @@ class RedisEnhancedCache extends RedisCache
     private function getAllkeys(): array
     {
         return $this->getRedis()->keys('*');
-    }
-
-    public function exist(mixed $value): bool
-    {
-        if (is_string($value) && strlen($value) && $value === RedisEnhancedCache::DOES_NOT_EXIST) {
-            return false;
-        }
-
-        return true;
     }
 }

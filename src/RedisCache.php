@@ -48,6 +48,8 @@ class RedisCache extends RedisAdapter implements CacheInterface
 
     public const VERY_LONG_EXPIRATION_TIME = 7776000; // 90 days
 
+    public const DOES_NOT_EXIST = '%=%=% item does not exist %=%=%';
+
     public function __construct(
         string $host = RedisClientInterface::DEFAULTS['host'],
         int $port = RedisClientInterface::DEFAULTS['port'],
@@ -178,7 +180,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             if (!is_string($value)) {
                 $toReturn = $default;
             } else {
-                $this->setCorrectValue($value);
+                $toReturn = $this->setCorrectValue($value);
             }
         } catch (\Throwable $t) {
             $toReturn = $default;
@@ -233,7 +235,10 @@ class RedisCache extends RedisAdapter implements CacheInterface
                 if (!is_string($value)) {
                     $value = $default;
                 } else {
-                    $this->setCorrectValue($value);
+                    $value = $this->setCorrectValue($value);
+                    if (!$this->exist($value)) {
+                        $value = $default;
+                    }
                 }
             }
         } catch (\Throwable $t) {
@@ -482,17 +487,30 @@ class RedisCache extends RedisAdapter implements CacheInterface
      * @param mixed $value
      * @return bool
      */
-    protected function setCorrectValue(string &$value): void {
+    public function setCorrectValue(string &$value): mixed
+    {
         try {
-            $tmp = unserialize($value);
+            $tmp = @unserialize(trim($value));
         } catch (\Throwable $t) {
-            $tmp = false;
+            $this->formatException($t);
+
+            return self::DOES_NOT_EXIST;
         } finally {
-            if ($tmp === false && $value !== 'b:0;') {
-                return; // do nothing $value was a simple string
+            if ($tmp !== false || ($tmp === false && $value === 'b:0;')) {
+                $value = $tmp;
             }
-            $value = $tmp;
+
+            return $value;
         }
+    }
+
+    public function exist(mixed $value): bool
+    {
+        if (is_string($value) && strlen($value) && $value === self::DOES_NOT_EXIST) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
