@@ -59,7 +59,11 @@ class PoolIntegrationTest extends CachePoolTest
     }
 
     /**
-     * meh
+     * Yup this isn't optimal but I've only 2 restricted key scenario when keys 
+     * are forced into strings type
+     * (which is the case thanks to PSR-6 v3 from <b>psr/cache</b> repository).
+     * 
+     * @link https://github.com/php-fig/cache The <b>psr/cache</b> repository.
      *
      * @return array
      */
