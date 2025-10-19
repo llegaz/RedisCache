@@ -51,6 +51,8 @@ class RedisEnhancedCache extends RedisCache
          */
         /**
          * check keys arguments are valid, and values are all stored as <b>strings</b>
+         * 
+         * @todo omg are you that tired bro ? replace this shit with a foreach, :face_palm:
          */
         $self = $this;
         array_walk($values, function (&$value, $key) use ($self) {
@@ -137,6 +139,9 @@ class RedisEnhancedCache extends RedisCache
                     );
                     $self = $this;
                     $label = self::DOES_NOT_EXIST;
+                    /**
+                     * @todo same remark here use a freaking foreach !
+                     */
                     array_walk($data, function (&$value) use ($self, $label) {
                         if (is_string($value)) {
                             $value = $self->setCorrectValue($value);
