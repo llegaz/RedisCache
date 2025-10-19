@@ -427,7 +427,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
 
     /**
      * passing by reference here is only needed when the key given isn't already a string
-     * 
+     *
      * @todo check special cases (or special implementation) when key isn't a string
      *
      * @param string $key
