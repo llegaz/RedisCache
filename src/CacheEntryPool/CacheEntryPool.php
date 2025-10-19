@@ -121,6 +121,7 @@ class CacheEntryPool implements CacheItemPoolInterface
         //dump('getItem', $key, $value);
         /** @todo handle hit, ttl */
         $item = new CacheEntry($key);
+        dump('getItem: ' . $key . ' - ' . $value);
         if ($this->cache->exist($value)) {
             $item->set($value);
             $item->hit();
@@ -237,6 +238,12 @@ class CacheEntryPool implements CacheItemPoolInterface
         }
 
         return $this->cache->storeToPool($deferred, $this->poolName);
+    }
+
+
+    public function printCachePool(): string
+    {
+        return $this->cache->printCacheHash($this->poolName);
     }
 
     /**

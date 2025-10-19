@@ -205,20 +205,12 @@ class RedisEnhancedCache extends RedisCache
      */
     public function deleteFromPool(array $keys, string $pool): bool
     {
-        $payload = '';
         $keys = $this->checkKeysValidity($keys);
-        array_walk($keys, function (&$key, $i) use (&$payload) {
-            if (is_string($key)) {
-                if ($i !== 0) {
-                    $payload .= ' ';
-                }
-                $payload .= $key;
-            }
-        });
+        $params = array_merge([$pool], $keys);
         $this->begin();
 
         try {
-            $redisResponse = $this->getRedis()->hdel($pool, $payload);
+            $redisResponse = call_user_func_array([$this->getRedis(), 'hdel'], $params);
         } catch (Exception $e) {
             $redisResponse = false;
             $this->formatException($e);
@@ -272,6 +264,8 @@ class RedisEnhancedCache extends RedisCache
     public function printCacheHash(string $pool, $silent = false): string
     {
         $data = $this->fetchAllFromPool($pool);
+        dump("from printCacheHash", $data);
+
 
         /**
          * @todo - rework this
@@ -285,6 +279,8 @@ class RedisEnhancedCache extends RedisCache
                 echo $key . '  -  ' . $value . PHP_EOL;
             }
         }
+
+        dump("from printCacheHash to return - " . (strlen($toReturn) ? $toReturn : "\$toReturn  is empty"));
 
         return $toReturn;
     }
