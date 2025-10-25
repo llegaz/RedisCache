@@ -196,6 +196,10 @@ class CacheEntryPool implements CacheItemPoolInterface
     /**
      * Persists a cache item immediately.
      *
+     * <b>CRITICAL</b>: if an expiration time, a ttl or expiration date is set, THEN the
+     * <b>ENTIRE pool </b> will be expired ! Thus deleting all the pool's key values (hash fields).
+     * @caution @warning
+     *
      * @param CacheItemInterface $item
      *   The cache item to save.
      *
@@ -205,7 +209,18 @@ class CacheEntryPool implements CacheItemPoolInterface
     public function save(CacheItemInterface $item): bool
     {
         //dump("save", $item);
-        return $this->cache->storeToPool([$item->getKey() => $item->get()], $this->poolName);
+        $bln = $this->cache->storeToPool([$item->getKey() => $item->get()], $this->poolName);
+        if ($bln && $item instanceof CacheEntry && $item->getTTL() > 0) {
+            /**
+             * /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
+             * /!\  expires entire pool!  /!\
+             * /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
+             */
+            //dump('/!\  expires entire pool!  /!\\', $this->poolName, $item->getTTL());
+            $bln = $this->cache->setHsetPoolExpiration($this->poolName, $item->getTTL());
+        }
+
+        return $bln;
     }
 
     /**
