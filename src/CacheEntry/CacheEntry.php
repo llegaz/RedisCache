@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LLegaz\Cache\Entry;
 
+use LLegaz\Cache\RedisCache;
 use LLegaz\Cache\Utils;
 
 class CacheEntry extends AbstractCacheEntry
@@ -11,9 +12,7 @@ class CacheEntry extends AbstractCacheEntry
     private string $key;
     private mixed $value = null;
     private bool $isHit = false;
-    private ?int $ttl;
-    private bool $isTimeStamp;
-
+    private ?int $ttl = -1;
 
     public function __construct(string $key)
     {
@@ -28,11 +27,13 @@ class CacheEntry extends AbstractCacheEntry
      */
     public function expiresAfter(int|\DateInterval|null $time): static
     {
-        // hexpire
         if ($time instanceof \DateInterval) {
             $this->ttl = Utils::dateIntervalToSeconds($time);
-        } else {
+        } elseif (is_int($time)) {
             $this->ttl = $time;
+        } else {
+            // null case
+            $this->ttl = RedisCache::DAY_EXPIRATION_TIME; // 24h
         }
 
         $this->isTimeStamp = false;
@@ -43,8 +44,12 @@ class CacheEntry extends AbstractCacheEntry
     public function expiresAt(?\DateTimeInterface $expiration): static
     {
         // hexpireat
-        $this->ttl = $expiration->getTimestamp();
-        $this->isTimeStamp = true;
+        if ($expiration) {
+            $this->ttl = $expiration->getTimestamp();
+        } else {
+            // null case
+            $this->ttl = RedisCache::DAY_EXPIRATION_TIME; // 24h
+        }
 
         return $this;
     }
@@ -81,19 +86,6 @@ class CacheEntry extends AbstractCacheEntry
         $this->value = $value;
 
         return $this;
-    }
-
-    /**
-     * if true = expireAt
-     *
-     *
-     * this bool seems useless @todo : remove it
-     *
-     * @return bool
-     */
-    public function isTimeStamp(): bool
-    {
-        return $this->isTimeStamp;
     }
 
     /**
