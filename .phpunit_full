@@ -1,4 +1,7 @@
 <?php
+/**
+ * @todo reword tests suite
+ */
 require_once './.phpunit';
 define('SKIP_FUNCTIONAL_TESTS', false);
 define('SKIP_INTEGRATION_TESTS', false);

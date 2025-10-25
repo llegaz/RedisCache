@@ -6,6 +6,7 @@ namespace LLegaz\Cache\Tests\Integration;
 
 use Cache\IntegrationTests\SimpleCacheTest;
 use LLegaz\Cache\RedisCache as SUT;
+use LLegaz\Cache\Tests\TestState;
 use Psr\SimpleCache\CacheInterface;
 use TypeError;
 
@@ -64,10 +65,10 @@ class CacheIntegrationTest extends SimpleCacheTest
     }
 
     /**
-     * Yup this isn't optimal but I've only 2 restricted key scenario when keys 
+     * Yup this isn't optimal but I've only 2 restricted key scenario when keys
      * are forced into strings type
      * (which is the case thanks to PSR-16 v3 from <b>psr/simple-cache</b> repository).
-     * 
+     *
      * @link https://github.com/php-fig/simple-cache The <b>psr/simple-cache</b> repository.
      *
      * @return array
@@ -303,15 +304,24 @@ class CacheIntegrationTest extends SimpleCacheTest
 
     public function createSimpleCache(): CacheInterface
     {
-        /*
         $sut = new SUT();
+        $client = $sut->getRedis();
         // test with persistent co
-        $sut = new SUT('localhost', 6379, null, 'tcp', 0, true);
-        dump($sut->getRedis());
+        /*$sut = new SUT('localhost', 6379, null, 'tcp', 0, true);
+        dump($sut->getRedis());*/
+
+        /**
+         * display adapter class used (Predis or php-redis)
+         */
+        if (!TestState::$adapterClassDisplayed) {
+            TestState::$adapterClassDisplayed = true;
+            dump($client->toString() . ' adapter used.');
+            /*   $this->assertTrue(TestState::$adapterClassDisplayed);
+               $this->assertTrue($sut instanceof \LLegaz\Redis\RedisAdapter);
+               $this->assertTrue($client instanceof \LLegaz\Redis\RedisClientInterface);*/
+        }
 
         return $sut;
-*/
-        return new SUT();
     }
 
 }

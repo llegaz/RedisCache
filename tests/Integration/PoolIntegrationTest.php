@@ -7,6 +7,7 @@ namespace LLegaz\Cache\Tests\Integration;
 use Cache\IntegrationTests\CachePoolTest;
 use LLegaz\Cache\Pool\CacheEntryPool as SUT;
 use LLegaz\Cache\RedisEnhancedCache;
+use LLegaz\Cache\Tests\TestState;
 use Psr\Cache\CacheItemPoolInterface;
 
 if (!defined('SKIP_INTEGRATION_TESTS')) {
@@ -59,10 +60,10 @@ class PoolIntegrationTest extends CachePoolTest
     }
 
     /**
-     * Yup this isn't optimal but I've only 2 restricted key scenario when keys 
+     * Yup this isn't optimal but I've only 2 restricted key scenario when keys
      * are forced into strings type
      * (which is the case thanks to PSR-6 v3 from <b>psr/cache</b> repository).
-     * 
+     *
      * @link https://github.com/php-fig/cache The <b>psr/cache</b> repository.
      *
      * @return array
@@ -91,6 +92,14 @@ class PoolIntegrationTest extends CachePoolTest
     public function createCachePool(): CacheItemPoolInterface
     {
         $cache = new RedisEnhancedCache();
+
+        /**
+         * display adapter class used (Predis or php-redis)
+         */
+        if (!TestState::$adapterClassDisplayed) {
+            TestState::$adapterClassDisplayed = true;
+            dump($cache->getRedis()->toString() . ' adapter used.');
+        }
 
         return new SUT($cache);
     }
