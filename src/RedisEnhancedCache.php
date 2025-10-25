@@ -51,7 +51,7 @@ class RedisEnhancedCache extends RedisCache
          */
         /**
          * check keys arguments are valid, and values are all stored as <b>strings</b>
-         * 
+         *
          * @todo omg are you that tired bro ? replace this shit with a foreach, :face_palm:
          */
         $self = $this;
@@ -78,7 +78,8 @@ class RedisEnhancedCache extends RedisCache
                 dd('I think it could be problematic');
             }
             if ($value) {
-                dump('store to pool : '. $key . ' - '. $value);
+                dump('store to pool : ' . $key . ' - ' . $value);
+
                 //hset should returns the number of fields stored for a single key (always one here)
                 return $this->getRedis()->hset($pool, $key, $value) === 1;
             }
@@ -279,7 +280,7 @@ class RedisEnhancedCache extends RedisCache
     public function printCacheHash(string $pool, $silent = false): string
     {
         $data = $this->fetchAllFromPool($pool);
-        dump("from printCacheHash", $data);
+        dump('from printCacheHash', $data);
 
 
         /**
@@ -295,7 +296,7 @@ class RedisEnhancedCache extends RedisCache
             }
         }
 
-        dump("from printCacheHash to return - " . (strlen($toReturn) ? $toReturn : "\$toReturn  is empty"));
+        dump('from printCacheHash to return - ' . (strlen($toReturn) ? $toReturn : '$toReturn  is empty'));
 
         return $toReturn;
     }
