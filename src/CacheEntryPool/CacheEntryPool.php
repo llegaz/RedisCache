@@ -77,6 +77,8 @@ class CacheEntryPool implements CacheItemPoolInterface
         try {
             $this->cache->set($this->poolName, null);
             $this->cache->delete($this->poolName);
+            unset($this->deferredItems);
+            $this->deferredItems = [];
         } catch (Exception $e) {
             return false;
         }
@@ -117,14 +119,18 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     public function getItem(string $key): CacheItemInterface
     {
-        $value = $this->cache->fetchFromPool($key, $this->poolName);
-        //dump('getItem', $key, $value);
-        /** @todo handle hit, ttl */
-        $item = new CacheEntry($key);
-        dump('getItem: ' . $key . ' - ' . (is_string($value) ? $value : print_r($value)));
-        if ($this->cache->exist($value)) {
-            $item->set($value);
+        /** @todo handle hit, ttl, refacto */
+        if (isset($this->deferredItems[$key]) && ($this->deferredItems[$key] instanceof CacheEntry)) {
+            $item = $this->deferredItems[$key];
             $item->hit();
+        } else {
+            $value = $this->cache->fetchFromPool($key, $this->poolName);
+            $item = new CacheEntry($key);
+            dump('getItem: ' . $key . ' - ' . (is_string($value) ? $value : print_r($value)));
+            if ($this->cache->exist($value)) {
+                $item->set($value);
+                $item->hit();
+            }
         }
 
         return $item;
@@ -153,15 +159,20 @@ class CacheEntryPool implements CacheItemPoolInterface
         $values = $this->cache->fetchFromPool($keys, $this->poolName);
         //dump($values);
         foreach ($keys as $key) {
-            /** @todo handle hit, ttl */
-            $item = new CacheEntry($key);
-            if (isset($values[$key]) && $this->cache->exist($values[$key])) {
-                $item->set($values[$key]);
+            /** @todo handle hit, ttl and refacto */
+            if (isset($this->deferredItems[$key])) {
+                $item = $this->deferredItems[$key];
                 $item->hit();
+            } else {
+                $item = new CacheEntry($key);
+                if (isset($values[$key]) && $this->cache->exist($values[$key])) {
+                    $item->set($values[$key]);
+                    $item->hit();
+                }
             }
             //$items[] = $item;
             /**
-             * because of his code (wrong)
+             * because of this code (that is wrong IMHO)
              * https://github.com/php-cache/integration-tests/blob/fb7d78718f1e5bbfd7c63e5c5734000999ac7366/src/CachePoolTest.php#L208C40-L208C44
              */
             $items[$key] = $item;
@@ -189,7 +200,7 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     public function hasItem(string $key): bool
     {
-        return $this->cache->hasInPool($key, $this->poolName);
+        return isset($this->deferredItems[$key]) || $this->cache->hasInPool($key, $this->poolName);
 
     }
 
@@ -208,7 +219,11 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     public function save(CacheItemInterface $item): bool
     {
-        //dump("save", $item);
+        if ($this->isExpired($item)) {
+            return false;
+        }
+
+        dump('save', $item);
         $bln = $this->cache->storeToPool([$item->getKey() => $item->get()], $this->poolName);
         if ($bln && $item instanceof CacheEntry && $item->getTTL() > 0) {
             /**
@@ -234,7 +249,7 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     public function saveDeferred(CacheItemInterface $item): bool
     {
-        $this->deferredItems[] = $item;
+        $this->deferredItems[$item->getKey()] = $item;
 
         return true;
     }
@@ -247,12 +262,7 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     public function commit(): bool
     {
-        $deferred = [];
-        foreach ($this->deferredItems as $item) {
-            $deferred[$item->getKey()] = $item->get();
-        }
-
-        return $this->cache->storeToPool($deferred, $this->poolName);
+        return $this->cache->storeToPool($this->deferredItems, $this->poolName);
     }
 
 
@@ -273,5 +283,10 @@ class CacheEntryPool implements CacheItemPoolInterface
             self::HASH_DB_PREFIX . "_{$poolSuffix}" :
             'DEFAULT_' . self::HASH_DB_PREFIX
         ;
+    }
+
+    private function isExpired(CacheEntry $item): bool
+    {
+        return !($item instanceof CacheEntry) || $item->getTTL() === 0;
     }
 }
