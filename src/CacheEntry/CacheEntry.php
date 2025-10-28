@@ -30,7 +30,11 @@ class CacheEntry extends AbstractCacheEntry
         if ($time instanceof \DateInterval) {
             $this->ttl = Utils::dateIntervalToSeconds($time);
         } elseif (is_int($time)) {
-            $this->ttl = $time;
+            if ($time <= 0) {
+                $this->ttl = 0;
+            } else {
+                $this->ttl = $time;
+            }
         } else {
             // null case
             $this->ttl = RedisCache::DAY_EXPIRATION_TIME; // 24h
@@ -43,9 +47,12 @@ class CacheEntry extends AbstractCacheEntry
 
     public function expiresAt(?\DateTimeInterface $expiration): static
     {
-        // hexpireat
         if ($expiration) {
-            $this->ttl = $expiration->getTimestamp();
+            if (Utils::getNow()->diff($expiration)->invert >= 0) {
+                $this->ttl = 0;
+            } else {
+                $this->ttl = $expiration->getTimestamp();
+            }
         } else {
             // null case
             $this->ttl = RedisCache::DAY_EXPIRATION_TIME; // 24h

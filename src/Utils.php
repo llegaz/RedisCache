@@ -8,6 +8,18 @@ use DateTimeImmutable;
 
 class Utils
 {
+    private static DateTimeImmutable $NOW;
+    private static int $called = 0;
+
+    public static function getNow(): DateTimeImmutable
+    {
+        if (self::$called++ === 0) {
+            self::$NOW = new \DateTimeImmutable('NOW');
+        }
+
+        return self::$NOW;
+    }
+
     /**
      * return time to live in seconds
      *
