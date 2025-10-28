@@ -60,7 +60,7 @@ class RedisEnhancedCache extends RedisCache
             $self->checkKeyValuePair($key, $value);
         });
 
-        //dump('store to pool :', $values);
+        dump('store to pool :', $values);
 
         /**
          * @todo rework exception handling and returns

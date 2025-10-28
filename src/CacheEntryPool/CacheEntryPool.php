@@ -63,6 +63,11 @@ class CacheEntryPool implements CacheItemPoolInterface
         $this->poolName = $this->getPoolName($pool ?? '');
     }
 
+    public function __destruct()
+    {
+        $this->commit();
+    }
+
     /**
      * Deletes all items in the pool.
      *
@@ -88,16 +93,25 @@ class CacheEntryPool implements CacheItemPoolInterface
 
     public function deleteItem(string $key): bool
     {
+        if ($this->isDeferred($key)) {
+            unset ($this->deferredItems[$key]);
+
+            return $this->isDeferred($key);
+        }
+
         return $this->deleteItems([$key]);
 
     }
 
     public function deleteItems(array $keys): bool
     {
-        $bln = $this->cache->deleteFromPool($keys, $this->poolName);
-        dump('deleteItems', $keys, $bln);
+        foreach ($keys as $key) {
+            if ($this->isDeferred($key)) {
+                unset ($this->deferredItems[$key]);
+            }
+        }
 
-        return  $bln;/*$this->cache->deleteFromPool($keys, $this->poolName);*/
+        return $this->cache->deleteFromPool($keys, $this->poolName);
 
     }
 
@@ -120,7 +134,7 @@ class CacheEntryPool implements CacheItemPoolInterface
     public function getItem(string $key): CacheItemInterface
     {
         /** @todo handle hit, ttl, refacto */
-        if (isset($this->deferredItems[$key]) && ($this->deferredItems[$key] instanceof CacheEntry)) {
+        if ($this->isDeferred($key)) {
             $item = $this->deferredItems[$key];
             $item->hit();
         } else {
@@ -160,7 +174,7 @@ class CacheEntryPool implements CacheItemPoolInterface
         //dump($values);
         foreach ($keys as $key) {
             /** @todo handle hit, ttl and refacto */
-            if (isset($this->deferredItems[$key])) {
+            if ($this->isDeferred($key)) {
                 $item = $this->deferredItems[$key];
                 $item->hit();
             } else {
@@ -249,9 +263,13 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     public function saveDeferred(CacheItemInterface $item): bool
     {
-        $this->deferredItems[$item->getKey()] = $item;
+        if (!$this->isExpired($item)) {
+            $this->deferredItems[$item->getKey()] = $item;
 
-        return true;
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -262,9 +280,21 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     public function commit(): bool
     {
-        return $this->cache->storeToPool($this->deferredItems, $this->poolName);
-    }
+        if (!count($this->deferredItems)) {
 
+            return true;
+        }
+
+        foreach ($this->deferredItems as $key => $item) {
+            if (!$this->isExpired($item)) {
+                $deferred[$key] = $item->get();
+            }
+            unset($this->deferredItems[$key]);
+        }
+        $this->deferredItems = [];
+
+        return $this->cache->storeToPool($deferred, $this->poolName);
+    }
 
     public function printCachePool(): string
     {
@@ -288,5 +318,10 @@ class CacheEntryPool implements CacheItemPoolInterface
     private function isExpired(CacheEntry $item): bool
     {
         return !($item instanceof CacheEntry) || $item->getTTL() === 0;
+    }
+
+    private function isDeferred(string $key): bool
+    {
+        return isset($this->deferredItems[$key]) && ($this->deferredItems[$key] instanceof CacheEntry);
     }
 }
