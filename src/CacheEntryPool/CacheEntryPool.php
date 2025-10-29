@@ -94,7 +94,7 @@ class CacheEntryPool implements CacheItemPoolInterface
     public function deleteItem(string $key): bool
     {
         if ($this->isDeferred($key)) {
-            unset ($this->deferredItems[$key]);
+            unset($this->deferredItems[$key]);
 
             return $this->isDeferred($key);
         }
@@ -107,7 +107,7 @@ class CacheEntryPool implements CacheItemPoolInterface
     {
         foreach ($keys as $key) {
             if ($this->isDeferred($key)) {
-                unset ($this->deferredItems[$key]);
+                unset($this->deferredItems[$key]);
             }
         }
 
@@ -133,20 +133,21 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     public function getItem(string $key): CacheItemInterface
     {
+        dump($this->isDeferred($key));
         /** @todo handle hit, ttl, refacto */
         if ($this->isDeferred($key)) {
-            $item = $this->deferredItems[$key];
+            $item = clone $this->deferredItems[$key];
             $item->hit();
         } else {
             $value = $this->cache->fetchFromPool($key, $this->poolName);
             $item = new CacheEntry($key);
-            dump('getItem: ' . $key . ' - ' . (is_string($value) ? $value : print_r($value)));
             if ($this->cache->exist($value)) {
                 $item->set($value);
                 $item->hit();
             }
         }
 
+        dump('getItem: ' . $item->getKey(). ' - TTL= ' . $item->getTTL() . ' - ' . (is_string($item->get()) ? $item->get() : print_r($item->get())));
         return $item;
 
     }
@@ -175,7 +176,7 @@ class CacheEntryPool implements CacheItemPoolInterface
         foreach ($keys as $key) {
             /** @todo handle hit, ttl and refacto */
             if ($this->isDeferred($key)) {
-                $item = $this->deferredItems[$key];
+                $item = clone $this->deferredItems[$key];
                 $item->hit();
             } else {
                 $item = new CacheEntry($key);
@@ -263,10 +264,12 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     public function saveDeferred(CacheItemInterface $item): bool
     {
-        if (!$this->isExpired($item)) {
-            $this->deferredItems[$item->getKey()] = $item;
+        if (!isset($this->deferredItems[$item->getKey()]) && !$this->isExpired($item)) {
+            $this->deferredItems[$item->getKey()] = clone $item;
 
             return true;
+        } elseif (isset($this->deferredItems[$item->getKey()]) && $this->isExpired($item)) {
+            unset($this->deferredItems[$item->getKey()]);
         }
 
         return false;
