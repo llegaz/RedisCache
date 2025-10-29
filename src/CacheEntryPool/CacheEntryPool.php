@@ -133,7 +133,6 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     public function getItem(string $key): CacheItemInterface
     {
-        dump($this->isDeferred($key));
         /** @todo handle hit, ttl, refacto */
         if ($this->isDeferred($key)) {
             $item = clone $this->deferredItems[$key];
@@ -148,6 +147,7 @@ class CacheEntryPool implements CacheItemPoolInterface
         }
 
         dump('getItem: ' . $item->getKey(). ' - TTL= ' . $item->getTTL() . ' - ' . (is_string($item->get()) ? $item->get() : print_r($item->get())));
+        dump($item);
         return $item;
 
     }
@@ -234,6 +234,7 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     public function save(CacheItemInterface $item): bool
     {
+        dump('savi,ng', $this->isExpired($item), $item);
         if ($this->isExpired($item)) {
             return false;
         }
@@ -264,11 +265,11 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     public function saveDeferred(CacheItemInterface $item): bool
     {
-        if (!isset($this->deferredItems[$item->getKey()]) && !$this->isExpired($item)) {
+        if (!$this->isExpired($item)) {
             $this->deferredItems[$item->getKey()] = clone $item;
 
             return true;
-        } elseif (isset($this->deferredItems[$item->getKey()]) && $this->isExpired($item)) {
+        } elseif (isset($this->deferredItems[$item->getKey()])) {
             unset($this->deferredItems[$item->getKey()]);
         }
 

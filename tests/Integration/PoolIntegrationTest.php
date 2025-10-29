@@ -99,6 +99,9 @@ class PoolIntegrationTest extends CachePoolTest
         if (!TestState::$adapterClassDisplayed) {
             TestState::$adapterClassDisplayed = true;
             dump($cache->getRedis()->toString() . ' adapter used.');
+            /**
+             * @todo remove sleep
+             */
             sleep(1);
         }
 
