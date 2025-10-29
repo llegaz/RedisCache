@@ -316,6 +316,7 @@ class CacheIntegrationTest extends SimpleCacheTest
         if (!TestState::$adapterClassDisplayed) {
             TestState::$adapterClassDisplayed = true;
             dump($client->toString() . ' adapter used.');
+            sleep(1);
             /*   $this->assertTrue(TestState::$adapterClassDisplayed);
                $this->assertTrue($sut instanceof \LLegaz\Redis\RedisAdapter);
                $this->assertTrue($client instanceof \LLegaz\Redis\RedisClientInterface);*/

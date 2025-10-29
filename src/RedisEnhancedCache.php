@@ -81,7 +81,7 @@ class RedisEnhancedCache extends RedisCache
                 dump('store to pool : ' . $key . ' - ' . $value);
 
                 //hset should returns the number of fields stored for a single key (always one here)
-                return $this->getRedis()->hset($pool, $key, $value) === 1;
+                return $this->getRedis()->hset($pool, $key, $value) >= 0;
             }
         }
 
