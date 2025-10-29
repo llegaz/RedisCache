@@ -48,7 +48,7 @@ class CacheEntry extends AbstractCacheEntry
     public function expiresAt(?\DateTimeInterface $expiration): static
     {
         if ($expiration) {
-            if (Utils::getNow()->diff($expiration)->invert >= 0) {
+            if (Utils::getNow()->diff($expiration)->invert > 0) {
                 $this->ttl = 0;
             } else {
                 $this->ttl = $expiration->getTimestamp();
