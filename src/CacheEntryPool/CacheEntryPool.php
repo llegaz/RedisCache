@@ -145,9 +145,9 @@ class CacheEntryPool implements CacheItemPoolInterface
                 $item->hit();
             }
         }
+/*        dump('getItem: ' . $item->getKey(). ' - TTL= ' . $item->getTTL() . ' - ' . (is_string($item->get()) ? $item->get() : print_r($item->get())));
+        dump($item);*/
 
-        dump('getItem: ' . $item->getKey(). ' - TTL= ' . $item->getTTL() . ' - ' . (is_string($item->get()) ? $item->get() : print_r($item->get())));
-        dump($item);
         return $item;
 
     }
@@ -248,6 +248,8 @@ class CacheEntryPool implements CacheItemPoolInterface
              * /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
              * /!\  expires entire pool!  /!\
              * /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
+             * 
+             * @todo maybe throw a PHP warning here ?
              */
             //dump('/!\  expires entire pool!  /!\\', $this->poolName, $item->getTTL());
             $bln = $this->cache->setHsetPoolExpiration($this->poolName, $item->getTTL());
@@ -294,6 +296,9 @@ class CacheEntryPool implements CacheItemPoolInterface
         foreach ($this->deferredItems as $key => $item) {
             if (!$this->isExpired($item)) {
                 $deferred[$key] = $item->get();
+            } else {
+                // clear cache of expired item
+                $this->deleteItem($item->getKey());
             }
             unset($this->deferredItems[$key]);
         }
