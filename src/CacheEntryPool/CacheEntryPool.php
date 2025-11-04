@@ -76,8 +76,8 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     public function clear(): bool
     {
-        $e = new \Exception();
-        dump('pool cleared by : ', $e->getTrace()[1]['function']);
+        /*$e = new \Exception();
+        dump('pool cleared by : ', $e->getTrace()[1]['function']);*/
 
         try {
             $this->cache->set($this->poolName, null);
@@ -263,7 +263,6 @@ class CacheEntryPool implements CacheItemPoolInterface
     {
         if ($this->isExpired($item)) {
             $this->deleteItem($item->getKey());
-            dump($item->getKey() . ' deleted bc expired');
 
             return false;
         }
