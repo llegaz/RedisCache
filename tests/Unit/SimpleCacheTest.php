@@ -354,7 +354,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
 
     protected function getSelfClient()
     {
-        $this->predisClient;
+        return $this->predisClient;
     }
 
 }
