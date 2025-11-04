@@ -4,21 +4,24 @@ declare(strict_types=1);
 
 namespace LLegaz\Cache;
 
-use DateTimeImmutable;
-
 class Utils
 {
+    /**
+     * @todo clean here
+     */
+    // beautifully ugly
+    /*
     private static DateTimeImmutable $NOW;
     private static int $called = 0;
 
     public static function getNow(): DateTimeImmutable
     {
         if (self::$called++ === 0) {
-            self::$NOW = new \DateTimeImmutable('NOW');
+            self::$NOW = new DateTimeImmutable('NOW');
         }
 
         return self::$NOW;
-    }
+    }*/
 
     /**
      * return time to live in seconds
@@ -28,7 +31,7 @@ class Utils
      */
     public static function dateIntervalToSeconds(\DateInterval $ttl): int
     {
-        $reference = new DateTimeImmutable();
+        $reference = new \DateTimeImmutable();
         $endTime = $reference->add($ttl);
 
         return $endTime->getTimestamp() - $reference->getTimestamp();

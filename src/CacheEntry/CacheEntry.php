@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace LLegaz\Cache\Entry;
 
+use DateInterval;
+use DateTimeImmutable;
+use DateTimeInterface;
 use LLegaz\Cache\RedisCache;
 use LLegaz\Cache\Utils;
 
@@ -13,6 +16,7 @@ class CacheEntry extends AbstractCacheEntry
     private mixed $value = null;
     private bool $isHit = false;
     private ?int $ttl = -1;
+    private ?DateTimeInterface $dlc = null;
 
     public function __construct(string $key)
     {
@@ -25,9 +29,9 @@ class CacheEntry extends AbstractCacheEntry
      * @param int|\DateInterval|null $time
      * @return static
      */
-    public function expiresAfter(int|\DateInterval|null $time): static
+    public function expiresAfter(int|DateInterval|null $time): static
     {
-        if ($time instanceof \DateInterval) {
+        if ($time instanceof DateInterval) {
             $this->ttl = Utils::dateIntervalToSeconds($time);
         } elseif (is_int($time)) {
             if ($time <= 0) {
@@ -39,16 +43,15 @@ class CacheEntry extends AbstractCacheEntry
             // null case
             $this->ttl = RedisCache::DAY_EXPIRATION_TIME; // 24h
         }
-
-        $this->isTimeStamp = false;
+        $this->setDLC();
 
         return $this;
     }
 
-    public function expiresAt(?\DateTimeInterface $expiration): static
+    public function expiresAt(?DateTimeInterface $expiration): static
     {
         if ($expiration) {
-            if (Utils::getNow()->diff($expiration)->invert > 0) {
+            if ((new DateTimeImmutable())->diff($expiration)->invert > 0) {
                 $this->ttl = 0;
             } else {
                 $this->ttl = $expiration->getTimestamp();
@@ -57,6 +60,7 @@ class CacheEntry extends AbstractCacheEntry
             // null case
             $this->ttl = RedisCache::DAY_EXPIRATION_TIME; // 24h
         }
+        $this->setDLC();
 
         return $this;
     }
@@ -103,6 +107,25 @@ class CacheEntry extends AbstractCacheEntry
     public function getTTL(): int
     {
         return $this->ttl;
+    }
+
+    public function isExpiredFromDLC(): bool
+    {
+        if ($this->dlc) {
+            return (new DateTimeImmutable())->diff($this->dlc)->invert > 0;
+        }
+
+        return false;
+    }
+
+    public function getDLC(): ?DateTimeInterface
+    {
+        return $this->dlc;
+    }
+
+    private function setDLC()
+    {
+        $this->dlc = (new \DateTime((new DateTimeImmutable())->format(DateTimeInterface::ISO8601)))->add(new DateInterval("PT{$this->ttl}S"));
     }
 
 }

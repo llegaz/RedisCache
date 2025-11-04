@@ -352,7 +352,8 @@ class SimpleCacheTest extends RedisAdapterTestBase
         $this->assertTrue($this->cache->setMultiple($values, $ttl));
     }
 
-    protected function getSelfClient() {
+    protected function getSelfClient()
+    {
         $this->predisClient;
     }
 
