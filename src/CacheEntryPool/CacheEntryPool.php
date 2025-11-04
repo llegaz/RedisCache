@@ -234,12 +234,14 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     public function save(CacheItemInterface $item): bool
     {
-        dump('savi,ng', $this->isExpired($item), $item);
         if ($this->isExpired($item)) {
+            $this->deleteItem($item->getKey());
+            dump($item->getKey() . ' deleted bc expired');
+
             return false;
         }
 
-        dump('save', $item);
+        //dump('save', $item);
         $bln = $this->cache->storeToPool([$item->getKey() => $item->get()], $this->poolName);
         if ($bln && $item instanceof CacheEntry && $item->getTTL() > 0) {
             /**
