@@ -133,11 +133,23 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     public function getItem(string $key): CacheItemInterface
     {
-        /** @todo handle hit, ttl, refacto */
+
+        /**
+         * if item is saved in the <b>deferred</b> pool and not expired we retrieve it
+         * else we try to retrieve it from the "normal" pool.
+         */
+        $item = null;
         if ($this->isDeferred($key)) {
-            $item = clone $this->deferredItems[$key];
-            $item->hit();
-        } else {
+            if ($this->deferredItems[$key]->isExpiredFromDLC()) {
+                unset($this->deferredItems[$key]);
+                $this->deleteItem($key);
+            } else {
+                $item = clone $this->deferredItems[$key];
+                $item->hit();
+            }
+        }
+
+        if (!$item) {
             $value = $this->cache->fetchFromPool($key, $this->poolName);
             $item = new CacheEntry($key);
             if ($this->cache->exist($value)) {
@@ -145,8 +157,8 @@ class CacheEntryPool implements CacheItemPoolInterface
                 $item->hit();
             }
         }
-/*        dump('getItem: ' . $item->getKey(). ' - TTL= ' . $item->getTTL() . ' - ' . (is_string($item->get()) ? $item->get() : print_r($item->get())));
-        dump($item);*/
+        /*        dump('getItem: ' . $item->getKey(). ' - TTL= ' . $item->getTTL() . ' - ' . (is_string($item->get()) ? $item->get() : print_r($item->get())));
+                dump($item);*/
 
         return $item;
 
@@ -174,11 +186,21 @@ class CacheEntryPool implements CacheItemPoolInterface
         $values = $this->cache->fetchFromPool($keys, $this->poolName);
         //dump($values);
         foreach ($keys as $key) {
-            /** @todo handle hit, ttl and refacto */
+            /**
+             * if item is saved in the <b>deferred</b> pool and not expired we retrieve it
+             * else we try to retrieve it from the "normal" pool.
+             */
+            $item = null;
             if ($this->isDeferred($key)) {
-                $item = clone $this->deferredItems[$key];
-                $item->hit();
-            } else {
+                if ($this->deferredItems[$key]->isExpiredFromDLC()) {
+                    unset($this->deferredItems[$key]);
+                    $this->deleteItem($key);
+                } else {
+                    $item = clone $this->deferredItems[$key];
+                    $item->hit();
+                }
+            }
+            if (!$item) {
                 $item = new CacheEntry($key);
                 if (isset($values[$key]) && $this->cache->exist($values[$key])) {
                     $item->set($values[$key]);
@@ -215,6 +237,11 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     public function hasItem(string $key): bool
     {
+        if ($this->isDeferred($key) && $this->deferredItems[$key]->isExpiredFromDLC()) {
+            unset($this->deferredItems[$key]);
+            $this->deleteItem($key);
+        }
+
         return isset($this->deferredItems[$key]) || $this->cache->hasInPool($key, $this->poolName);
 
     }
@@ -248,7 +275,7 @@ class CacheEntryPool implements CacheItemPoolInterface
              * /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
              * /!\  expires entire pool!  /!\
              * /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
-             * 
+             *
              * @todo maybe throw a PHP warning here ?
              */
             //dump('/!\  expires entire pool!  /!\\', $this->poolName, $item->getTTL());
