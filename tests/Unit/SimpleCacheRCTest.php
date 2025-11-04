@@ -363,4 +363,9 @@ class SimpleCacheRCTest extends RedisAdapterTestBase
         ;
         $this->assertTrue($this->cache->set($key, 'bbbbbbbbbbbbbbbbbbbb', 1337));
     }
+
+    protected function getSelfClient() {
+        $this->redisClient;
+    }
+
 }
