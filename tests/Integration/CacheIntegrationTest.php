@@ -18,6 +18,9 @@ if (!defined('SKIP_INTEGRATION_TESTS')) {
  * Test PSR-16 implementation
  *
  * check @link https://github.com/php-cache/integration-tests
+ * 
+ * 
+ * @todo clone those in order to test persistent connections too
  */
 class CacheIntegrationTest extends SimpleCacheTest
 {
@@ -46,6 +49,7 @@ class CacheIntegrationTest extends SimpleCacheTest
 
     protected function setUp(): void
     {
+        //dump($this->cache->getRedisClientID()); // persistent co
         if (SKIP_INTEGRATION_TESTS) {
             // don't forget that tests are deleoppers' tools (and not only an approval seal)
             $this->markTestSkipped('INTEGRATION TESTS are skipped by default when executing Units tests only.');
@@ -315,6 +319,7 @@ class CacheIntegrationTest extends SimpleCacheTest
          */
         if (!TestState::$adapterClassDisplayed) {
             TestState::$adapterClassDisplayed = true;
+            fwrite(STDERR, PHP_EOL);
             dump($client->toString() . ' adapter used.');
             /**
              * @todo remove sleep

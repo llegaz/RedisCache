@@ -18,6 +18,9 @@ if (!defined('SKIP_INTEGRATION_TESTS')) {
  * Test PSR-6 implementation
  *
  * check @link https://github.com/php-cache/integration-tests
+ * 
+ * 
+ * @todo clone those in order to test persistent connections too
  */
 class PoolIntegrationTest extends CachePoolTest
 {
@@ -98,6 +101,7 @@ class PoolIntegrationTest extends CachePoolTest
          */
         if (!TestState::$adapterClassDisplayed) {
             TestState::$adapterClassDisplayed = true;
+            fwrite(STDERR, PHP_EOL);
             dump($cache->getRedis()->toString() . ' adapter used.');
             /**
              * @todo remove sleep
