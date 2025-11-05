@@ -76,9 +76,6 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     public function clear(): bool
     {
-        /*$e = new \Exception();
-        dump('pool cleared by : ', $e->getTrace()[1]['function']);*/
-
         try {
             $this->cache->set($this->poolName, null);
             $this->cache->delete($this->poolName);
@@ -189,7 +186,7 @@ class CacheEntryPool implements CacheItemPoolInterface
     {
         $items = [];
         $values = $this->cache->fetchFromPool($keys, $this->poolName);
-        //dump($values);
+
         foreach ($keys as $key) {
             /**
              * if item is saved in the <b>deferred</b> pool and not expired we retrieve it
@@ -286,7 +283,6 @@ class CacheEntryPool implements CacheItemPoolInterface
             return false;
         }
 
-        //dump('save', $item);
         $bln = $this->cache->storeToPool([$item->getKey() => $item->get()], $this->poolName);
         if ($bln && $item instanceof CacheEntry && $item->getTTL() > 0) {
             /**
@@ -296,7 +292,6 @@ class CacheEntryPool implements CacheItemPoolInterface
              *
              * @todo maybe throw a PHP warning here ?
              */
-            //dump('/!\  expires entire pool!  /!\\', $this->poolName, $item->getTTL());
             $bln = $this->cache->setHsetPoolExpiration($this->poolName, $item->getTTL());
         }
 

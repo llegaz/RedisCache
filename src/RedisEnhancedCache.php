@@ -60,8 +60,6 @@ class RedisEnhancedCache extends RedisCache
             $self->checkKeyValuePair($key, $value);
         });
 
-        //dump('store to pool :', $values);
-
         /**
          * @todo rework exception handling and returns
          */
@@ -78,8 +76,6 @@ class RedisEnhancedCache extends RedisCache
                 dd('I think it could be problematic');
             }
             if ($value) {
-                //dump('store to pool : ' . $key . ' - ' . $value);
-
                 //hset should returns the number of fields stored for a single key (always one here)
                 return $this->getRedis()->hset($pool, $key, $value) >= 0;
             }
