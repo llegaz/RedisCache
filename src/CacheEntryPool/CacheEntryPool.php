@@ -140,11 +140,16 @@ class CacheEntryPool implements CacheItemPoolInterface
          */
         $item = null;
         if ($this->isDeferred($key)) {
-            if ($this->deferredItems[$key]->isExpiredFromDLC()) {
-                unset($this->deferredItems[$key]);
-                $this->deleteItem($key);
+            $item = clone $this->deferredItems[$key];
+            if ($item->isExpiredFromDLC()) {
+                /**
+                 *  if item is expired return it without hit (= miss),
+                 *  the item deletion (expiration) in real pool is handled in next commit
+                 */
+                //unset($this->deferredItems[$key]);
+                //$this->deleteItem($key);
+                $item->miss();
             } else {
-                $item = clone $this->deferredItems[$key];
                 $item->hit();
             }
         }
@@ -192,11 +197,16 @@ class CacheEntryPool implements CacheItemPoolInterface
              */
             $item = null;
             if ($this->isDeferred($key)) {
-                if ($this->deferredItems[$key]->isExpiredFromDLC()) {
-                    unset($this->deferredItems[$key]);
-                    $this->deleteItem($key);
+                $item = clone $this->deferredItems[$key];
+                if ($item->isExpiredFromDLC()) {
+                    /**
+                     *  if item is expired return it without hit (= miss),
+                     *  the item deletion (expiration) in real pool is handled in next commit
+                     */
+                    //unset($this->deferredItems[$key]);
+                    //$this->deleteItem($key);
+                    $item->miss();
                 } else {
-                    $item = clone $this->deferredItems[$key];
                     $item->hit();
                 }
             }
@@ -237,12 +247,21 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     public function hasItem(string $key): bool
     {
-        if ($this->isDeferred($key) && $this->deferredItems[$key]->isExpiredFromDLC()) {
-            unset($this->deferredItems[$key]);
-            $this->deleteItem($key);
+        if ($this->isDeferred($key)) {
+            if ($this->deferredItems[$key]->isExpiredFromDLC()) {
+                /**
+                 *  if item is expired we should handle the item deletion (expiration)
+                 *  from the real pool in a future commit
+                 */
+                //unset($this->deferredItems[$key]);
+                //$this->deleteItem($key);
+                return false;
+            } else {
+                return true;
+            }
         }
 
-        return isset($this->deferredItems[$key]) || $this->cache->hasInPool($key, $this->poolName);
+        return $this->cache->hasInPool($key, $this->poolName);
 
     }
 
@@ -295,6 +314,9 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     public function saveDeferred(CacheItemInterface $item): bool
     {
+        /**
+         * @todo handle commit history for return value
+         */
         if (!$this->isExpired($item)) {
             $this->deferredItems[$item->getKey()] = clone $item;
 
@@ -354,7 +376,7 @@ class CacheEntryPool implements CacheItemPoolInterface
 
     private function isExpired(CacheEntry $item): bool
     {
-        return !($item instanceof CacheEntry) || $item->getTTL() === 0;
+        return !($item instanceof CacheEntry) || $item->getTTL() === 0 || $item->isExpiredFromDLC();
     }
 
     private function isDeferred(string $key): bool

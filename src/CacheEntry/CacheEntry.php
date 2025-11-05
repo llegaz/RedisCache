@@ -88,6 +88,13 @@ class CacheEntry extends AbstractCacheEntry
         return $this;
     }
 
+    public function miss(): static
+    {
+        $this->isHit = false;
+
+        return $this;
+    }
+
     public function set($value): static
     {
         /*$type = gettype($value);
