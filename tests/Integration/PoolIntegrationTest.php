@@ -75,12 +75,6 @@ class PoolIntegrationTest extends CachePoolTest
     {
         return [
             [''],
-            [''],
-            [''],
-            [''],
-            [''],
-            [''],
-            [''],
         ];
     }
 
