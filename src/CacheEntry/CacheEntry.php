@@ -60,6 +60,9 @@ class CacheEntry extends AbstractCacheEntry
             // null case
             $this->ttl = RedisCache::DAY_EXPIRATION_TIME; // 24h
         }
+        /**
+         * @todo optimization required here (pass $expiration as parameter)
+         */
         $this->setDLC();
 
         return $this;

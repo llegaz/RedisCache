@@ -14,10 +14,14 @@ use LLegaz\Cache\Exception\InvalidKeyException;
  * My implementation is based on Redis Hashes implying some technical limitations.
  *
  *
- *
+ *<b>CRITICAL</b>:
  * Here we use the Hash implementation from redis. Expiration Time is set with the setHsetPoolExpiration method
  * on the entire Hash Set HASH_DB_PREFIX. $suffix (private HSET Pool in Redis, specified with $suffix
  * with those methods you can store and retrieve specific data linked together in a separate data set)
+ * THUS THE ENTIRE POOL (redis hash) is EXPIRED as there is no way to expire a hash field per field only
+ * the firsts redis server versions.
+ * 
+ * @todo test valkey and reddict
  *
  *
  *
@@ -236,8 +240,7 @@ class RedisEnhancedCache extends RedisCache
      *
      *
      *
-     * Expiration Time is set with this method on the entire Hash Set <b>HASH_DB_PREFIX</b> concatenate
-     * with a private <b>$pool</b>
+     * Expiration Time is set with this method on the entire Redis Hash : <b>the pool $pool argument given</b>.
      *
      * <b> Caution: expired Hash SET will EXPIRE ALL SUBKEYS as well (even more recent entries)</b>
      *
