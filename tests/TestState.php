@@ -17,8 +17,8 @@ class TestState
 
     /**
      * keep the persistent connection to redis server id
-     * 
+     *
      * @var int
      */
-    public static int $pid;
+    public static int $pid = 0;
 }
