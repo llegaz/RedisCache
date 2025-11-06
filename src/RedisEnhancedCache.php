@@ -20,7 +20,7 @@ use LLegaz\Cache\Exception\InvalidKeyException;
  * with those methods you can store and retrieve specific data linked together in a separate data set)
  * THUS THE ENTIRE POOL (redis hash) is EXPIRED as there is no way to expire a hash field per field only
  * the firsts redis server versions.
- * 
+ *
  * @todo test valkey and reddict
  *
  *
