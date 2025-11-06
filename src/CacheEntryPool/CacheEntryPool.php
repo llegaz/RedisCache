@@ -14,12 +14,12 @@ use Psr\Cache\CacheItemPoolInterface;
  *
  * Our Redis <code>CacheEntryPool</code> will typically be a <a href="https://redis.io/glossary/redis-hashes/">redis hash</a>
  *
- * <b>CRITICAL</b>: 
+ * <b>CRITICAL</b>:
  * this brings limitation on expiration part so take it into account for your future design
  * (expiration on an entire pool only, redis version 7.4 (not free?) has the feature to hexpire fields inside a hash)
  *
  *
- * 
+ *
  * @todo homogenize rework documentation through this package
  * --
  * @todo dig into Redict ? (or just respect Salvatore's vision, see below)
@@ -291,7 +291,7 @@ class CacheEntryPool implements CacheItemPoolInterface
         $bln = $this->cache->storeToPool([$item->getKey() => $item->get()], $this->poolName);
         if ($bln && $item instanceof CacheEntry && $item->getTTL() > 0) {
             /**
-             * <b>CRITICAL</b>: 
+             * <b>CRITICAL</b>:
              * /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
              * /!\  expires entire pool!  /!\
              * /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
@@ -355,20 +355,20 @@ class CacheEntryPool implements CacheItemPoolInterface
 
         /**
          * <b>CRITICAL</b>:
-         * 
-         * Yes we are not handling expiration on bulked save here 
+         *
+         * Yes we are not handling expiration on bulked save here
          * it is because expire the entire hash (the pool)
          * is not ideal, it is a "temporary" workaround for now to pass
          * cache integration tests..
-         * I may disable the feature depending on the redis version used 
+         * I may disable the feature depending on the redis version used
          * (as newer versions of redis do support hash field expiration but are
          *  no more free to use). For now there is only a <b>disclaimer</b>.
-         * 
+         *
          * I will also have to dig in, and test this package with Valkey...
          * (maybe fork this package and make it exclusive to Valkey ?)
-         * 
+         *
          * @todo dig in, and test this package with Valkey
-         * @link https://valkey.io/blog/hash-fields-expiration Valkey 
+         * @link https://valkey.io/blog/hash-fields-expiration Valkey
          */
         return $this->cache->storeToPool($deferred, $this->poolName);
     }

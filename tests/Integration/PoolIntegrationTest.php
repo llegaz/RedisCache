@@ -18,8 +18,8 @@ if (!defined('SKIP_INTEGRATION_TESTS')) {
  * Test PSR-6 implementation
  *
  * check @link https://github.com/php-cache/integration-tests
- * 
- * 
+ *
+ *
  * @todo clone those in order to test persistent connections too
  */
 class PoolIntegrationTest extends CachePoolTest
