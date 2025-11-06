@@ -15,11 +15,11 @@ if (!defined('SKIP_INTEGRATION_TESTS')) {
 }
 
 /**
- * Test PSR-16 implementation
+ * Test PSR-16 implementation with <b>Persistent Connections</b>
  *
  * check @link https://github.com/php-cache/integration-tests
  */
-class CacheIntegrationTest extends SimpleCacheTest
+class CacheIntegrationWithPCTest extends SimpleCacheTest
 {
     private static string $bigKey = '';
 
@@ -298,9 +298,15 @@ class CacheIntegrationTest extends SimpleCacheTest
 
     public function createSimpleCache(): CacheInterface
     {
-        $sut = new SUT();
+        $sut = new SUT('localhost', 6379, null, 'tcp', 0, true);
         $client = $sut->getRedis();
 
+        /**
+         * handle persistent conn id
+         */
+        if (!TestState::$pid) {
+
+        }
         /**
          * display adapter class used (Predis or php-redis)
          */
@@ -308,6 +314,9 @@ class CacheIntegrationTest extends SimpleCacheTest
             TestState::$adapterClassDisplayed = true;
             fwrite(STDERR, PHP_EOL);
             dump($client->toString() . ' adapter used.');
+            /*   $this->assertTrue(TestState::$adapterClassDisplayed);
+               $this->assertTrue($sut instanceof \LLegaz\Redis\RedisAdapter);
+               $this->assertTrue($client instanceof \LLegaz\Redis\RedisClientInterface);*/
         }
 
         return $sut;

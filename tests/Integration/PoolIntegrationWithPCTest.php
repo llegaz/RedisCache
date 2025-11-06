@@ -15,11 +15,11 @@ if (!defined('SKIP_INTEGRATION_TESTS')) {
 }
 
 /**
- * Test PSR-6 implementation
+ * Test PSR-6 implementation with <b>Persistent Connections</b>
  *
  * check @link https://github.com/php-cache/integration-tests
  */
-class PoolIntegrationTest extends CachePoolTest
+class PoolIntegrationWithPCTest extends CachePoolTest
 {
     /**
      * @before
@@ -85,7 +85,15 @@ class PoolIntegrationTest extends CachePoolTest
      */
     public function createCachePool(): CacheItemPoolInterface
     {
-        $cache = new RedisEnhancedCache();
+        $cache = new RedisEnhancedCache('localhost', 6379, null, 'tcp', 0, true);
+
+        /**
+         * handle persistent conn id
+         */
+        if (!TestState::$pid) {
+
+        }
+        /**
 
         /**
          * display adapter class used (Predis or php-redis)
