@@ -14,4 +14,11 @@ namespace LLegaz\Cache\Tests;
 class TestState
 {
     public static $adapterClassDisplayed = false;
+
+    /**
+     * keep the persistent connection to redis server id
+     * 
+     * @var int
+     */
+    public static int $pid;
 }

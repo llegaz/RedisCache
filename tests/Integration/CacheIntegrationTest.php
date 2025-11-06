@@ -82,13 +82,6 @@ class CacheIntegrationTest extends SimpleCacheTest
         return [
             [''],
             [self::$bigKey],
-            [''],
-            [self::$bigKey],
-            [''],
-            [self::$bigKey],
-            [''],
-            [self::$bigKey],
-            [''],
         ];
     }
 
