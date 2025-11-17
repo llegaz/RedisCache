@@ -55,14 +55,11 @@ class RedisEnhancedCache extends RedisCache
          */
         /**
          * check keys arguments are valid, and values are all stored as <b>strings</b>
-         *
-         * @todo omg are you that tired bro ? replace this shit with a foreach, :face_palm:
          */
-        $self = $this;
-        array_walk($values, function (&$value, $key) use ($self) {
-
-            $self->checkKeyValuePair($key, $value);
-        });
+        foreach ($values as $key => $value) {
+            $this->checkKeyValuePair($key, $value);
+            $values[$key] = $value;
+        }
 
         /**
          * @todo rework exception handling and returns
@@ -138,18 +135,14 @@ class RedisEnhancedCache extends RedisCache
                         array_values($key),
                         array_values($this->getRedis()->hmget($pool, $key))
                     );
-                    $self = $this;
-                    $label = self::DOES_NOT_EXIST;
-                    /**
-                     * @todo same remark here use a freaking foreach !
-                     */
-                    array_walk($data, function (&$value) use ($self, $label) {
+
+                    foreach ($data as $key => $value) {
                         if (is_string($value)) {
-                            $value = $self->setCorrectValue($value);
+                            $data[$key] = $this->setCorrectValue($value);
                         } else {
-                            $value = $label;
+                            $data[$key] = self::DOES_NOT_EXIST;
                         }
-                    });
+                    }
                     if (count($data)) {
 
                         return $data;
