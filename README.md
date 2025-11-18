@@ -1,4 +1,12 @@
 # Redis Cache
+This project is build upon my first redis open PHP project [Redis Adapter](https://packagist.org/packages/llegaz/redis-adapter)
+Thanks to it you can use either [Predis](https://github.com/predis/predis) client or native [PHP Redis](https://github.com/phpredis/phpredis/) client in a transparently way.
+
+If PHP redis is installed
+```bash
+$ apt-get install php8.x-redis
+```
+These implementations will use it or fallback on Predis client.
 
 ## Install
 ```bash
