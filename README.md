@@ -8,12 +8,12 @@ composer install
 
 ## PSR-6
 PSR-6 implementation is my implementation of `Caching Interface` from the PHP FIG [www.php-fig.org/psr/psr-6](https://www.php-fig.org/psr/psr-6)
-It is far from perfect and as of now (first versions ofg this implementation) you should now than pool expiration are available but by pool's fields expiration are not !
-I will try to test and implement a pool key expiration using [Valkey.io](https://valkey.io) in a near future but my first draft is: if you expire a pool key it will expire your entire pool SO BE EXTA CAUTIAUX WITH THAT !
+It is far from perfect and as of now (first versions of this implementation) you should be aware that pool expiration are available but by pool's fields expiration are not really !
+I will try to test and implement a pool key expiration for [Valkey.io](https://valkey.io) in a near future but my first draft is: if you expire a pool key it will expire your entire pool SO BE EXTRA CAUTIOUS WITH THAT !
 
 
 ### Caution
-**if you expire a pool key it will expire your entire pool SO BE EXTA CAUTIAUX WITH THAT !**
+**if you expire a pool key it will expire your entire pool SO BE EXTRA CAUTIOUS WITH THAT !**
 
 ### Basic usage
 ```php
@@ -52,21 +52,22 @@ My `Simple Cache` implementation PHP FIG PSR-16 [www.php-fig.org/psr/psr-16](htt
     $cache->setMultiple(['key1' => [], 'key1' => 'value1', 'key2' => 'value2', 'key3' => 'value3', 'key4' => 'value4'], 90); // 1m30s expiration on each key
     if ($cache->has('key1') && $cache->has('key4')) {
         $array = $cache->getMultiple(['key1', 'key1', 'key4']));
-        var_dump(count($array)); // 2
+        var_dump(count($array)); // int(2)
+        var_dump($array); // array(2) { ["key1"]=> string(6) "value1" ["key4"]=> string(6) "value4" }
     }
 ```
 
 ## Configuration
 ```php
-$cache = new LLegaz\Cache\RedisCache('localhost', 6379, null, 'tcp', 0, false);
+$cache = new LLegaz\Cache\RedisCache();
 ```
 is equivalent to
 ```php
-$cache = new LLegaz\Cache\RedisCache();
+$cache = new LLegaz\Cache\RedisCache('127.0.0.1');
 ```
 or
 ```php
-$cache = new LLegaz\Cache\RedisCache('127.0.0.1');
+$cache = new LLegaz\Cache\RedisCache('localhost', 6379, null, 'tcp', 0, false); // the nulled field is the Redis password in clear text (here no pwd)
 ```
 
 ### Persistent connection
