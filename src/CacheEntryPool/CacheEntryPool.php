@@ -56,7 +56,6 @@ class CacheEntryPool implements CacheItemPoolInterface
     protected const HASH_DB_PREFIX = 'Cache_Pool';
 
     /**
-     * @todo use Psr\SimpleCache\CacheInterface ?
      *
      * @param Psr\SimpleCache\CacheInterface $cache
      * @param string|null $pool

@@ -372,6 +372,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             $ttl = Utils::dateIntervalToSeconds($ttl);
         }
 
+        /** @todo - refactor this (maybe use Predis/Redis Clients) */
         try {
             $redisResponse = false;
             if ($this->getRedis()->toString() === RedisClientInterface::PHP_REDIS) {
