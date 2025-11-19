@@ -382,7 +382,6 @@ class RedisEnhancedCache extends RedisCache
     }
 
     /**
-     * @todo rework this
      *
      * print everything in Cache Store for the selected Database
      * (except HSET entries)
@@ -395,15 +394,13 @@ class RedisEnhancedCache extends RedisCache
         if (!$this->isConnected()) {
             $this->throwCLEx();
         }
-        $toReturn = '';
-        $nl       = PHP_EOL;
+        $keyValuePairs = $this->getAllCacheStoreAsArray();
+        $toReturn      = '';
+        $nl            = PHP_EOL;
 
-        /** @todo disgusting smell to get rid of
-         *       (better reusing getAllCacheStoreAsArray above method)
-         */
-        foreach ($this->getAllkeys() as $key) {
+        foreach ($keyValuePairs as $key => $value) {
+            dump('getAllCacheStoreAsString  key='.$key, $value);
             try {
-                $value = $this->get($key);
                 $toReturn .= sprintf(
                     'Key: %s  -  Value:%sTTL = %s',
                     $key,
