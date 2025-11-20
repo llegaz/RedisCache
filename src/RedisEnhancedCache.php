@@ -414,16 +414,4 @@ class RedisEnhancedCache extends RedisCache
 
         return $toReturn;
     }
-
-    /**
-     *
-     * disclaimer: <b>DO NOT USE EXECPT IN DEBUGGING SCENARIO</b> this redis call is too intensive in O(n) complexity
-     * so the more keys the more blocking it is for all redis clients trying to access the redis db
-     *
-     * @return array all the keys in redis (for a selected db ?)
-     */
-    private function getAllkeys(): array
-    {
-        return $this->getRedis()->keys('*');
-    }
 }
