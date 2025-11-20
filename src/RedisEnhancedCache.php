@@ -313,21 +313,6 @@ class RedisEnhancedCache extends RedisCache
     }
 
     /**
-     * @todo rework this
-     *
-     * @param string $key
-     * @return int
-     */
-    public function getTtl(string $key): int
-    {
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
-
-        return $this->getRedis()->ttl($key);
-    }
-
-    /**
      * @param string $pool the pool's name
      * @return array
      * @throws ConnectionLostException
