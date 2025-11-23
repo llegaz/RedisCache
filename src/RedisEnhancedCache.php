@@ -313,21 +313,6 @@ class RedisEnhancedCache extends RedisCache
     }
 
     /**
-     * @param string $pool the pool's name
-     * @return array
-     * @throws ConnectionLostException
-     */
-    public function getPoolKeys(string $pool): array
-    {
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
-
-        return $this->getRedis()->hkeys($pool);
-    }
-
-
-    /**
      * @todo rework this
      *
      * key => value array is returned corresponding accurately to the redis cache set
