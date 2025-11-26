@@ -257,41 +257,6 @@ class RedisEnhancedCache extends RedisCache
         return ($redisResponse === 1) ? true : false;
     }
 
-    /**
-     * -- debug utilities methods --
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     * @todo rework all these
-     */
-    public function printCacheHash(string $pool, $silent = false): string
-    {
-        $data = $this->fetchAllFromPool($pool);
-        dump('from printCacheHash', $data);
-
-
-        /**
-         * @todo - rework this
-         */
-        $toReturn = '';
-
-        foreach ($data as $key => $value) {
-            if ($silent) {
-                $toReturn .= sprintf('Key:  -  %s  -' . PHP_EOL . 'Value: ' . PHP_EOL . '%s' . PHP_EOL . PHP_EOL, $key, unserialize($value) ?? $value);
-            } else {
-                echo $key . '  -  ' . $value . PHP_EOL;
-            }
-        }
-
-        dump('from printCacheHash to return - ' . (strlen($toReturn) ? $toReturn : '$toReturn  is empty'));
-
-        return $toReturn;
-    }
 
     /**
      * @todo rework this
