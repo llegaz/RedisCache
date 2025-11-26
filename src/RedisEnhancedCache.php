@@ -257,31 +257,6 @@ class RedisEnhancedCache extends RedisCache
         return ($redisResponse === 1) ? true : false;
     }
 
-
-    /**
-     * @todo rework this
-     *
-     * key => value array is returned corresponding accurately to the redis cache set
-     *
-     * @return array
-     * @throws ConnectionLostException
-     */
-    public function getAllCacheStoreAsArray()
-    {
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
-        $keys = $this->getAllkeys();
-        $keys = array_values($keys);
-        $result = [];
-
-        if (count($keys)) {
-            $result = $this->getMultiple($keys);
-        }
-
-        return $result;
-    }
-
     /**
      *
      * print everything in Cache Store for the selected Database
