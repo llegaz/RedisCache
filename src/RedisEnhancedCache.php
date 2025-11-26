@@ -261,25 +261,6 @@ class RedisEnhancedCache extends RedisCache
     /**
      * @todo rework this
      *
-     * print only cache keys set
-     *
-     * @return null
-     * @throws ConnectionLostException
-     */
-    public function printCacheKeys()
-    {
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
-
-        foreach ($this->getRedis()->keys('*') as $key => $value) {
-            echo $key . '  -  ' . $value . PHP_EOL;
-        }
-    }
-
-    /**
-     * @todo rework this
-     *
      * key => value array is returned corresponding accurately to the redis cache set
      *
      * @return array
