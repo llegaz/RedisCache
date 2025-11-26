@@ -36,6 +36,12 @@ use LLegaz\Cache\Exception\InvalidKeyException;
 class RedisEnhancedCache extends RedisCache
 {
     /**
+     * @caution - modify this ONLY if you modify symetrically the default pool name
+     *           returned in <code>CacheEntryPool::getPoolName</code> protected method
+     */
+    private const DEFAULT_POOL = 'DEFAULT_Cache_Pool';
+
+    /**
      * @todo rework this
      *
      *
@@ -45,7 +51,7 @@ class RedisEnhancedCache extends RedisCache
      * @throws LLegaz\Redis\Exception\ConnectionLostException
      * @throws LLegaz\Redis\Exception\LocalIntegrityException
      */
-    public function storeToPool(array $values, string $pool): bool
+    public function storeToPool(array $values, string $pool = self::DEFAULT_POOL): bool
     {
         $this->begin();
 
@@ -104,7 +110,7 @@ class RedisEnhancedCache extends RedisCache
      * @throws LLegaz\Redis\Exception\LocalIntegrityException
      * @throws LLegaz\Cache\Exception\InvalidKeyException
      */
-    public function fetchFromPool(mixed $key, string $pool): mixed
+    public function fetchFromPool(mixed $key, string $pool = self::DEFAULT_POOL): mixed
     {
 
         /***
@@ -133,6 +139,9 @@ class RedisEnhancedCache extends RedisCache
                     $this->begin();
                     $data = array_combine(
                         array_values($key),
+                        /**
+                         * @todo Test this scenario please
+                         */
                         array_values($this->getRedis()->hmget($pool, $key))
                     );
 
@@ -165,7 +174,7 @@ class RedisEnhancedCache extends RedisCache
      * @throws LLegaz\Redis\Exception\ConnectionLostException
      * @throws LLegaz\Redis\Exception\LocalIntegrityException
      */
-    public function hasInPool(string $key, string $pool): bool
+    public function hasInPool(string $key, string $pool = self::DEFAULT_POOL): bool
     {
         $this->checkKeyValidity($key);
         $this->begin();
@@ -196,7 +205,7 @@ class RedisEnhancedCache extends RedisCache
      * @return array
      * @throws LLegaz\Redis\Exception\ConnectionLostException
      */
-    public function fetchAllFromPool(string $pool): array
+    public function fetchAllFromPool(string $pool = self::DEFAULT_POOL): array
     {
         if (!$this->isConnected()) {
             $this->throwCLEx();
@@ -212,7 +221,7 @@ class RedisEnhancedCache extends RedisCache
      * @return bool True on success
      * @throws ConnectionLostException
      */
-    public function deleteFromPool(array $keys, string $pool): bool
+    public function deleteFromPool(array $keys, string $pool = self::DEFAULT_POOL): bool
     {
         $keys = $this->checkKeysValidity($keys);
         $params = array_merge([$pool], $keys);
@@ -242,7 +251,7 @@ class RedisEnhancedCache extends RedisCache
      * @return bool
      * @throws ConnectionLostException
      */
-    public function setHsetPoolExpiration(string $pool, int $expirationTime = self::HOURS_EXPIRATION_TIME): bool
+    public function setHsetPoolExpiration(string $pool = self::DEFAULT_POOL, int $expirationTime = self::HOURS_EXPIRATION_TIME): bool
     {
         if (!$this->isConnected()) {
             $this->throwCLEx();
