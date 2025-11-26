@@ -256,38 +256,4 @@ class RedisEnhancedCache extends RedisCache
 
         return ($redisResponse === 1) ? true : false;
     }
-
-    /**
-     *
-     * print everything in Cache Store for the selected Database
-     * (except HSET entries)
-     *
-     * @return string
-     * @throws ConnectionLostException
-     */
-    public function getAllCacheStoreAsString(): string
-    {
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
-        $keyValuePairs = $this->getAllCacheStoreAsArray();
-        $toReturn      = '';
-        $nl            = PHP_EOL;
-
-        foreach ($keyValuePairs as $key => $value) {
-            dump('getAllCacheStoreAsString  key='.$key, $value);
-            try {
-                $toReturn .= sprintf(
-                    'Key: %s  -  Value:%sTTL = %s',
-                    $key,
-                    $nl . $value . $nl,
-                    $this->getTtl($key) . $nl . $nl
-                );
-            } catch (Throwable $t) {
-                continue;
-            }
-        }
-
-        return $toReturn;
-    }
 }
