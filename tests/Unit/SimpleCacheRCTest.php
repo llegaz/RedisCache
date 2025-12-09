@@ -284,6 +284,11 @@ class SimpleCacheRCTest extends RedisAdapterTestBase
         $this->assertTrue($this->cache->set($key, 'bbbbbbbbbbbbbbbbbbbb'));
     }
 
+    /**
+     *
+     * @todo rework this
+     * 
+
     public function testSetMultiple()
     {
         $values = ['do:exist1' => 'value1', 'do:exist2' => 'value2'];
