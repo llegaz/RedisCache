@@ -47,7 +47,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
                 'flushall',
                 'flushdb',
                 'set',
-                //'mset',
+                'mset',
                 ])
             ->getMock()
         ;
@@ -278,7 +278,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
      * @link https://medium.com/@dotcom.software/unit-testing-closures-the-right-way-b982fc833bfa
      *
      * to redefine another object to emulate transaction part from predis and test behavior inside (mset, expire, etc.)
-     */
+     
     public function testSetMultiple()
     {
         $values = ['do:exist1' => 'value1', 'do:exist2' => 'value2'];

@@ -19,6 +19,9 @@ use Psr\SimpleCache\CacheInterface;
  *
  *@todo I think we will have to refactor here too in order to pass the RedisAdapter as a parameter
  *      or keep it as a class attribute ?
+ * 
+ * @note I have also have some concerns on keys because redis can handle Bytes and we are only handling
+ * strings (contracts from Psr\SimpleCache v3.0.0 interface) which is totally fine for my own use cases but...
  *
  * @package RedisCache
  * @author Laurent LEGAZ <laurent@legaz.eu>
@@ -351,15 +354,10 @@ class RedisCache extends RedisAdapter implements CacheInterface
             throw new InvalidValuesException('RedisCache says "invalid keys/values set"');
         }
 
-        /** @todo - refactor this (maybe use Predis/Redis Clients) */
         $newValues = [];
         foreach ($values as $key => $value) {
-            if (is_scalar($key)) {
-                $key = (string) $key;
-            } elseif (is_object($key) || is_array($key)) {
-                $key = spl_object_hash($key);
-            } elseif (!is_string($key)) {
-                throw new InvalidKeyException();
+            if (!is_string($key)) {
+                $key = $this->keyToString($key);
             }
             $this->checkKeyValuePair($key, $value);
             $newValues[$key] = $value;
@@ -372,42 +370,12 @@ class RedisCache extends RedisAdapter implements CacheInterface
             $ttl = Utils::dateIntervalToSeconds($ttl);
         }
 
-        /** @todo - refactor this (maybe use Predis/Redis Clients) */
         try {
-            $redisResponse = false;
-            if ($this->getRedis()->toString() === RedisClientInterface::PHP_REDIS) {
-                $this->getRedis()->multi(\Redis::PIPELINE); // begin transaction
-                $redisResponse = $this->getRedis()->mset($newValues);
-                if ($ttl !== self::FOREVER && $ttl >= 0) {
-                    foreach ($newValues as $key => $value) {
-                        $this->getRedis()->expire($key, $ttl);
-                    }
-                }
-                $this->getRedis()->exec();
-            } else { // predis fallback
-                $options = [
-                    'cas' => true, // Initialize with support for CAS operations
-                    'retry' => 3, // Number of retries on aborted transactions, after
-                        // which the client bails out with an exception.
-                ];
-                $this->getRedis()->transaction($options, function ($t) use ($newValues, $ttl, &$redisResponse) {
-                    $redisResponse = $t->mset($newValues);
-
-                    if ($ttl !== self::FOREVER && $ttl >= 0) {
-                        foreach ($newValues as $key => $value) {
-                            $t->expire($key, $ttl);
-                        }
-                    }
-                });
-            }
+            $redisResponse = $this->getRedis()->msett($newValues, $ttl);
         } catch (\Throwable $t) {
             $this->formatException($t);
         } finally {
-            if ($redisResponse instanceof Status) {
-                return $redisResponse->getPayload() === 'OK';
-            } else {
-                return $redisResponse !== false;
-            }
+            return $redisResponse;
         }
     }
 
