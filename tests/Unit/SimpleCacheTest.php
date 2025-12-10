@@ -15,8 +15,8 @@ use Predis\Response\Status;
  *
  * expect 1 more client command (list) because of the integrity check
  * (units are in forced paranoid mode for now @todo mb rework this here and in adapter)
- * 
- * 
+ *
+ *
  * @todo
  * @todo   REWORK UNITS (especially those with multiple sets)
  * @todo
@@ -283,7 +283,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
      * @link https://medium.com/@dotcom.software/unit-testing-closures-the-right-way-b982fc833bfa
      *
      * to redefine another object to emulate transaction part from predis and test behavior inside (mset, expire, etc.)
-     
+
     public function testSetMultiple()
     {
         $values = ['do:exist1' => 'value1', 'do:exist2' => 'value2'];
@@ -310,7 +310,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
 
     /**
      * @todo maybe enhance logger testing
-     
+
     public function testSetWithTtl()
     {
         $key = 'testTTL';
@@ -331,7 +331,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
 
     /**
      * @todo test TTL with DateInterval too !!!
-     
+
     public function testSetMultipleWithTtl()
     {
         $values = ['do:exist1' => 'value1', 'do:exist2' => 'value2'];
@@ -358,7 +358,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
     }
 
     /**
-     * 
+     *
      * @return type
      */
     protected function getSelfClient()
