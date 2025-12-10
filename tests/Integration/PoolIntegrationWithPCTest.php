@@ -97,7 +97,7 @@ class PoolIntegrationWithPCTest extends CachePoolTest
 
         /**
          * display adapter class used (Predis or php-redis)
-         * 
+         *
          * @todo work to display this before php units and test suite start
          */
         if (!TestState::$adapterClassDisplayed) {
