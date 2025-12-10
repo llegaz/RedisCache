@@ -13,6 +13,10 @@ use Predis\Response\Status;
 /**
  * Test PSR-16 implementation with phpredis client
  *
+ * @todo
+ * @todo   REWORK UNITS (especially those with multiple sets)
+ * @todo
+ * 
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
 class SimpleCacheRCTest extends RedisAdapterTestBase
@@ -314,7 +318,7 @@ class SimpleCacheRCTest extends RedisAdapterTestBase
 
     /**
      * @todo test TTL with DateInterval too
-     */
+     *
     public function testSetMultipleWithTtl()
     {
         $values = ['do:exist1' => 'value1', 'do:exist2' => 'value2'];
@@ -336,7 +340,7 @@ class SimpleCacheRCTest extends RedisAdapterTestBase
             ->method('expire')
             ->willReturnCallback(function (string $key, int $i) use ($matcher, $expected, $ttl) {
                 $this->assertLessThanOrEqual(\count($expected), $matcher->numberOfInvocations());
-                /** we could replace this by an <code>in_array</code> generic check */
+                // we could replace this by an <code>in_array</code> generic check 
                 match ($matcher->numberOfInvocations()) {
                     1 =>  $this->assertEquals($expected[0], $key),
                     2 =>  $this->assertEquals($expected[1], $key),
@@ -352,6 +356,9 @@ class SimpleCacheRCTest extends RedisAdapterTestBase
         $this->assertTrue($this->cache->setMultiple($values, $ttl));
     }
 
+    /**
+     * 
+     *
     public function testSetWithTtl()
     {
         $key = 'testTTL';
@@ -369,6 +376,10 @@ class SimpleCacheRCTest extends RedisAdapterTestBase
         $this->assertTrue($this->cache->set($key, 'bbbbbbbbbbbbbbbbbbbb', 1337));
     }
 
+    /**
+     * 
+     * @return type
+     */
     protected function getSelfClient()
     {
         return $this->redisClient;

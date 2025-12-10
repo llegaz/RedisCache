@@ -88,7 +88,7 @@ class PoolIntegrationWithPCTest extends CachePoolTest
         $cache = new RedisEnhancedCache('localhost', 6379, null, 'tcp', 0, true);
 
         /**
-         * handle persistent conn id
+         * @todo handle persistent conn id
          */
         if (!TestState::$pid) {
 
