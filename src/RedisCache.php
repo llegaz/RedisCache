@@ -21,8 +21,10 @@ use Psr\SimpleCache\CacheInterface;
  * Class RedisCache
  * PSR-16 implementation - Underlying Redis data type used is STRING
  *
- *@todo I think we will have to refactor here too in order to pass the RedisAdapter as a parameter
- *      or keep it as a class attribute ?
+ * @todo I think we will have to refactor here too in order to pass the RedisAdapter as a parameter
+ *       or keep it as a class attribute ?
+ * 
+ * @todo and also clean and harmonize all those <code>$redisResponse</code>
  * 
  * @note I have also have some concerns on keys because redis can handle Bytes and we are only handling
  * strings (contracts from Psr\SimpleCache v3.0.0 interface) which is totally fine for my own use cases but...
@@ -378,6 +380,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             $redisResponse = $this->getRedis()->multipleSet($newValues, $ttl);
         } catch (\Throwable $t) {
             $this->formatException($t);
+            $redisResponse = false;
         } finally {
             return $redisResponse;
         }
