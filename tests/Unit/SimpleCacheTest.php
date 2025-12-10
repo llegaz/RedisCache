@@ -15,6 +15,11 @@ use Predis\Response\Status;
  *
  * expect 1 more client command (list) because of the integrity check
  * (units are in forced paranoid mode for now @todo mb rework this here and in adapter)
+ * 
+ * 
+ * @todo
+ * @todo   REWORK UNITS (especially those with multiple sets)
+ * @todo
  *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
@@ -305,7 +310,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
 
     /**
      * @todo maybe enhance logger testing
-     */
+     
     public function testSetWithTtl()
     {
         $key = 'testTTL';
@@ -326,7 +331,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
 
     /**
      * @todo test TTL with DateInterval too !!!
-     */
+     
     public function testSetMultipleWithTtl()
     {
         $values = ['do:exist1' => 'value1', 'do:exist2' => 'value2'];
@@ -352,6 +357,10 @@ class SimpleCacheTest extends RedisAdapterTestBase
         $this->assertTrue($this->cache->setMultiple($values, $ttl));
     }
 
+    /**
+     * 
+     * @return type
+     */
     protected function getSelfClient()
     {
         return $this->predisClient;

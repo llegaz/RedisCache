@@ -9,6 +9,10 @@ use LLegaz\Cache\Exception\InvalidKeysException;
 use LLegaz\Cache\Exception\InvalidValuesException;
 use LLegaz\Redis\RedisAdapter;
 use LLegaz\Redis\RedisClientInterface;
+/**
+ * @todo refactor to hide those status and logic bound either to predis and php-redis
+ *      (use adapter project client classes like mset => multipleSet method)
+ */
 use Predis\Response\Status;
 use Psr\Log\LoggerInterface;
 use Psr\SimpleCache\CacheInterface;
@@ -371,7 +375,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
         }
 
         try {
-            $redisResponse = $this->getRedis()->msett($newValues, $ttl);
+            $redisResponse = $this->getRedis()->multipleSet($newValues, $ttl);
         } catch (\Throwable $t) {
             $this->formatException($t);
         } finally {

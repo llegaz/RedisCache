@@ -302,7 +302,7 @@ class CacheIntegrationWithPCTest extends SimpleCacheTest
         $client = $sut->getRedis();
 
         /**
-         * handle persistent conn id
+         * @todo handle persistent conn id
          */
         if (!TestState::$pid) {
 
