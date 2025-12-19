@@ -24,19 +24,20 @@ I will try to test and implement a pool key expiration for [Valkey.io](https://v
 **if you expire a pool key it will expire your entire pool SO BE EXTRA CAUTIOUS WITH THAT !**
 
 ### Basic usage
+Of course you should do cleaner, proper implementation, the below example is not production ready, it is simplified and given ONLY for the sake of example !
 ```php
 $cache = new LLegaz\Cache\RedisEnhancedCache();
-$cart = new \LLegaz\Cache\Pool\CacheEntryPool($cache);
-$user = new \LLegaz\Cache\Pool\CacheEntryPool($cache, 'lolo');
+// retrieve user_id as $id
+$user = new \LLegaz\Cache\Pool\CacheEntryPool($cache, 'user_data' . $id);
+$cart = new \LLegaz\Cache\Pool\CacheEntryPool($cache 'user_cart' . $id);
 
-$id = $user->getItem('id');
-if ($id->isHit()) {
-    $item = $cart->getItem('banana:' . $id->get());
-    $item->set('mixed value');
+if ($this->bananaAdded()) {
+    $item = $cart->getItem('product:banana');
+    $item->set(['count' => 3, 'unit_price' => .33, 'kg_price' => 1.99, 'total_price' => 0]]); // yeah today bananas are free
     $cart->save($item);
-} else {
-    $id->set('the lolo id');
-    $user->save($id);
+    $cartItem = $user->getItem('cart');
+    // increment $cartItem here
+    $user->save($cartItem);
 }
 ```
 
