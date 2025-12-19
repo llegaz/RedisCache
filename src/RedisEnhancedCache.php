@@ -22,7 +22,7 @@ use LLegaz\Cache\Exception\InvalidKeyException;
  * the firsts redis server versions.
  *
  * @todo test valkey and reddict
- * 
+ *
  * @todo and also clean and harmonize all those <code>$redisResponse</code>
  *
  *
@@ -43,7 +43,8 @@ class RedisEnhancedCache extends RedisCache
     private const DEFAULT_POOL = 'DEFAULT_Cache_Pool';
 
     /**
-     * @todo rework this
+     * @todo rework this ?
+     * @todo document this
      *
      *
      * @param array $values A flat array of key => value pairs to store in GIVEN POOL name
@@ -59,13 +60,14 @@ class RedisEnhancedCache extends RedisCache
         /**
          * @todo enhance keys / values treatment (see / homogenize with RedisCache::setMultiple and RedisCache::checkKeysValidity)
          * @todo need better handling on serialization and its reverse method in fetches.
-         */
-        /**
+         * @todo maybe we can do something cleaner
+         * 
+         * 
          * check keys arguments are valid, and values are all stored as <b>strings</b>
          */
         foreach ($values as $key => $value) {
             $this->checkKeyValuePair($key, $value);
-            $values[$key] = $value;
+            $values[$key] = $value; // I mean.. complexity is hidden here (data value are serialized)
         }
 
         /**
@@ -78,10 +80,10 @@ class RedisEnhancedCache extends RedisCache
             $key = array_keys($values)[0];
             $value = isset($key) ? $values[$key] : (isset($values[0]) ? $values[0] : null);
             if (!$this->exist($value)) {
-                /***
-                 * @todo investiguate
+                /**
+                 * @todo test this specific scenario (maybe apply it to hmset ?)
                  */
-                dd('I think it could be problematic');
+                $this->throwUEx('The value: '. $value . ' isn\'t accepted'); // because all values are authorized except this predefined value to sort actual exisiting values internally...
             }
             if ($value) {
                 //hset should returns the number of fields stored for a single key (always one here)
@@ -93,16 +95,9 @@ class RedisEnhancedCache extends RedisCache
     }
 
     /**
-     *
-     *
-     *
-     * @todo rework this
-     *
-     * @hint Redis return mostly strings with hget or hmget, maybe we should use serialize to preserve type
-     *
-     * @todo implement serialize with serializeToPool and cable those methods for the <code>CacheEntryPool</code> class to use it
-     *
-     *
+     * @todo document this (and the rest)
+     * 
+     * 
      *
      * @param int|string|array $key
      * @param string $pool the pool's name
@@ -113,14 +108,6 @@ class RedisEnhancedCache extends RedisCache
      */
     public function fetchFromPool(mixed $key, string $pool = self::DEFAULT_POOL): mixed
     {
-
-        /***
-         * finish to implment unserializes properly you mofo
-         * @todo remove hexist
-         * use :
-         */
-        //return unserialize($this->getRedis()->hget($pool, $key));
-
         switch (gettype($key)) {
             case 'integer':
             case 'string':
@@ -140,9 +127,6 @@ class RedisEnhancedCache extends RedisCache
                     $this->begin();
                     $data = array_combine(
                         array_values($key),
-                        /**
-                         * @todo Test this scenario please
-                         */
                         array_values($this->getRedis()->hmget($pool, $key))
                     );
 
@@ -168,6 +152,7 @@ class RedisEnhancedCache extends RedisCache
     }
 
     /**
+     * @todo document this
      *
      * @param string $key
      * @param string $pool
@@ -199,23 +184,7 @@ class RedisEnhancedCache extends RedisCache
     }
 
     /**
-     * @todo rework this
-     *
-     *
-     * @param string $pool the pool's name
-     * @return array
-     * @throws LLegaz\Redis\Exception\ConnectionLostException
-     */
-    public function fetchAllFromPool(string $pool = self::DEFAULT_POOL): array
-    {
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
-
-        return $this->getRedis()->hgetall($pool);
-    }
-
-    /**
+     * @todo document this
      *
      * @param array $keys
      * @param string $pool the pool's name
@@ -239,13 +208,12 @@ class RedisEnhancedCache extends RedisCache
     }
 
     /**
-     * @todo rework this
-     *
-     *
-     *
      * Expiration Time is set with this method on the entire Redis Hash : <b>the pool $pool argument given</b>.
      *
      * <b> Caution: expired Hash SET will EXPIRE ALL SUBKEYS as well (even more recent entries)</b>
+     *
+     *
+     * @todo investigate hash field expiration (valkey.io)
      *
      * @param string $pool the pool's name
      * @param int    $expirationTime
