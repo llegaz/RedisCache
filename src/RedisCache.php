@@ -9,10 +9,6 @@ use LLegaz\Cache\Exception\InvalidKeysException;
 use LLegaz\Cache\Exception\InvalidValuesException;
 use LLegaz\Redis\RedisAdapter;
 use LLegaz\Redis\RedisClientInterface;
-/**
- * @todo refactor to hide those status and logic bound either to predis and php-redis
- *      (use adapter project client classes like mset => multipleSet method)
- */
 use Predis\Response\Status;
 use Psr\Log\LoggerInterface;
 use Psr\SimpleCache\CacheInterface;
@@ -21,11 +17,16 @@ use Psr\SimpleCache\CacheInterface;
  * Class RedisCache
  * PSR-16 implementation - Underlying Redis data type used is STRING
  *
+ * 
  * @todo I think we will have to refactor here too in order to pass the RedisAdapter as a parameter
  *       or keep it as a class attribute ?
  *
+ * 
+ * @todo refactor to hide those predis Status and logic bound either to predis and php-redis
+ *      (use adapter project client classes like mset => multipleSet method)
  * @todo and also clean and harmonize all those <code>$redisResponse</code>
  *
+ * 
  * @note I have also have some concerns on keys because redis can handle Bytes and we are only handling
  * strings (contracts from Psr\SimpleCache v3.0.0 interface) which is totally fine for my own use cases but...
  *
@@ -200,6 +201,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
     }
 
     /**
+     * @todo remove this
      * @todo No, no, no ! Nein, nein, nein, don't do that here !
      * we need another layer (another project ?) but it is NOT priority
      *
@@ -404,7 +406,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
     /**
      * passing by reference here is only needed when the key given isn't already a string
      *
-     * @todo check special cases (or special implementation) when key isn't a string
+     * @todo check special cases (or special implementation) when key isn't a string ? (or not)
      *
      * @param string $key
      * @return void
@@ -464,7 +466,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
      * @param mixed $value
      * @return bool
      */
-    public function setCorrectValue(string &$value): mixed
+    protected function setCorrectValue(string &$value): mixed
     {
         try {
             $tmp = @unserialize(trim($value));

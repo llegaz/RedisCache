@@ -22,7 +22,8 @@ use LLegaz\Cache\Exception\InvalidKeyException;
  * the firsts redis server versions.
  *
  * @todo test valkey and reddict
- *
+ * 
+ * @todo and also clean and harmonize all those <code>$redisResponse</code>
  *
  *
  * It is to be noted that we use different terminology here  from Redis project in the case of a HASH.
