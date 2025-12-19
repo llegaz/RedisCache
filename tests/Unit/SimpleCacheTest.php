@@ -20,6 +20,7 @@ use Predis\Response\Status;
  * @todo
  * @todo   REWORK UNITS (especially those with multiple sets)
  * @todo
+ * @todo rename this class to RedisCacheTest to clarify
  *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */

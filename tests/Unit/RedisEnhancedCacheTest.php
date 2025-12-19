@@ -14,7 +14,7 @@ namespace LLegaz\Cache\Tests\Unit;
  *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
-class RedisCacheTest extends SimpleCacheTest
+class RedisEnhancedCacheTest extends SimpleCacheTest
 {
     /**
      * @todo Test RedisEnhancedCache::fetchFromPool  in depth !
@@ -34,6 +34,6 @@ class RedisCacheTest extends SimpleCacheTest
     /*
         public function setHsetPoolExpiration(string $pool, int $expirationTime = self::HOURS_EXPIRATION_TIME): bool
         public function deleteFromPool(array $keys, string $pool): bool
-        public function storeToPool(array $values, string $pool): bool    => multiple scenarios !!
+        public function storeToPool(array $values, string $pool): bool    => multiple scenarios !! (test with RedisCache::DOES_NOT_EXIST var)
     */
 }
