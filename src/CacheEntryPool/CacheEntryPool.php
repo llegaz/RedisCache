@@ -53,8 +53,6 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     private array $deferredItems = [];
 
-    protected const HASH_DB_PREFIX = 'Cache_Pool';
-
     /**
      *
      * @param Psr\SimpleCache\CacheInterface $cache
@@ -386,8 +384,8 @@ class CacheEntryPool implements CacheItemPoolInterface
     protected function getPoolName(string $poolSuffix): string
     {
         return strlen($poolSuffix) ?
-            self::HASH_DB_PREFIX . "_{$poolSuffix}" :
-            'DEFAULT_' . self::HASH_DB_PREFIX
+            RedisEnhancedCache::HASH_DB_PREFIX . "_{$poolSuffix}" :
+            RedisEnhancedCache::DEFAULT_POOL
         ;
     }
 
