@@ -60,6 +60,19 @@ class RedisCache extends RedisAdapter implements CacheInterface
 
     public const DOES_NOT_EXIST = '%=%=% item does not exist %=%=%';
 
+    /**
+    * Maximum key length: 8KB
+    *
+    * Permissive by design. We trust developers to make appropriate choices.
+    *
+    * PSR-16 permits extended lengths ("MAY support longer lengths").
+    * 8KB accommodates URL-based keys and other realistic scenarios while
+    * remaining reasonable for Redis performance.
+    *
+    * If you need stricter validation, implement it at your application layer.
+    */
+    private const MAX_KEY_LENGTH = 8192;
+
     public function __construct(
         string $host = RedisClientInterface::DEFAULTS['host'],
         int $port = RedisClientInterface::DEFAULTS['port'],
@@ -418,15 +431,32 @@ class RedisCache extends RedisAdapter implements CacheInterface
         if (!is_string($key)) {
             $key = $this->keyToString($key);
         }
+
         $len = strlen($key);
-        if (!$len) {
-            throw new InvalidKeyException('RedisCache says "Empty Key is forbidden"');
+
+        // Empty keys are ambiguous
+        if ($len === 0) {
+            throw new InvalidKeyException('Cache key cannot be empty');
         }
 
-        //100KB maximum key size (4MB is REALLY too much for my needs)
-        if ($len > 102400) {
-            throw new InvalidKeyException('RedisCache says "Key is too big"');
+        // Reasonable upper limit for performance
+        if ($len > self::MAX_KEY_LENGTH) {
+            throw new InvalidKeyException(
+                sprintf(
+                    'Cache key exceeds maximum length of %d characters (got %d)',
+                    self::MAX_KEY_LENGTH,
+                    $len
+                )
+            );
         }
+
+        // Whitespace causes issues in Redis CLI and debugging
+        if (preg_match('/\s/', $key)) {
+            throw new InvalidKeyException('Cache key cannot contain whitespace');
+        }
+
+        // That's it. Redis handles everything else.
+        // We trust you to know what you're doing.
     }
 
     protected function checkKeysValidity(iterable $keys): array

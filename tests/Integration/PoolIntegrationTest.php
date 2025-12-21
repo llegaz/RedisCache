@@ -46,7 +46,8 @@ class PoolIntegrationTest extends CachePoolTest
     public static function invalidKeys()
     {
         $bigKey = '';
-        for ($i = 102500; $i > 0; $i--) {
+        //36 KB
+        for ($i = 36864; $i > 0; $i--) {
             $bigKey .= 'a';
         }
 
@@ -54,6 +55,7 @@ class PoolIntegrationTest extends CachePoolTest
             self::invalidArrayKeys(),
             [
                 [''],
+                ['key with withespace'],
                 [$bigKey]
             ]
         );
@@ -71,6 +73,7 @@ class PoolIntegrationTest extends CachePoolTest
     public static function invalidArrayKeys()
     {
         return [
+            ['key with withespace'],
             [''],
         ];
     }

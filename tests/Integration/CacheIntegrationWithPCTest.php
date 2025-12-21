@@ -25,7 +25,8 @@ class CacheIntegrationWithPCTest extends SimpleCacheTest
 
     public static function setUpBeforeClass(): void
     {
-        for ($i = 102500; $i > 0; $i--) {
+        //36 KB
+        for ($i = 36864; $i > 0; $i--) {
             self::$bigKey .= 'a';
         }
         parent::setUpBeforeClass();
@@ -60,6 +61,7 @@ class CacheIntegrationWithPCTest extends SimpleCacheTest
             self::invalidArrayKeys(),
             [
                 [''],
+                ['key with withespace'],
                 [self::$bigKey]
             ]
         );
@@ -78,6 +80,7 @@ class CacheIntegrationWithPCTest extends SimpleCacheTest
     {
         return [
             [''],
+            ['key with withespace'],
             [self::$bigKey],
         ];
     }
