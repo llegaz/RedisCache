@@ -94,3 +94,59 @@ Stay tuned, by following me on github, for new features using [predis](https://g
 ---
 @see you space cowboy
 ---
+
+## Contributing
+
+We welcome contributions! This project follows **Git Flow** workflow.
+
+### Quick Start
+```bash
+# Create feature branch from develop
+git checkout -b feature/my-feature develop
+
+# Make changes and commit
+git commit -m "feat: add new feature"
+
+# Push and create Pull Request
+git push origin feature/my-feature
+```
+
+For complete guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md) which covers:
+- Git Flow workflow in detail
+- Development environment setup
+- Testing requirements and commands
+- Code quality standards (PSR-12, PHPStan)
+- Pull Request process and review timeline
+
+### Development Commands
+```bash
+# Install dependencies
+composer install
+
+# Run tests
+composer test:integration
+
+# Code quality
+composer cs:check    # Check style
+composer cs:fix      # Fix style
+composer stan        # Static analysis
+composer quality     # Run all checks
+```
+
+### CI/CD Status
+
+[![CI](https://github.com/llegaz/RedisCache/workflows/CI/badge.svg)](https://github.com/llegaz/RedisCache/actions)
+[![codecov](https://codecov.io/gh/llegaz/RedisCache/branch/main/graph/badge.svg)](https://codecov.io/gh/llegaz/RedisCache)
+
+**Automated testing on:**
+- 🐘 PHP 8.4.x, 8.5.x (latest stable versions)
+- 📦 Redis 7.2
+- 🔌 Both Predis and phpredis adapters
+
+All Pull Requests are automatically tested before merge.
+
+[View test results →](https://github.com/llegaz/RedisCache/actions)
+
+---
+
+**See you space cowboy...** 🚀

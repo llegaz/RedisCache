@@ -22,14 +22,14 @@ This project follows **Git Flow** for branch management.
 main
   ├─ Production-ready code
   ├─ Protected branch (no direct push allowed)
-  ├─ Only updated via Pull Requests
-  └─ Tagged with version numbers (v1.0.0, v1.1.0, etc.)
+  ├─ Updated only via Pull Requests
+  └─ Tagged with semantic versions (v1.0.0, v1.1.0, etc.)
 
 develop
-  ├─ Integration branch
+  ├─ Integration branch for ongoing development
   ├─ Latest development code
-  ├─ Feature branches merge here first
-  └─ Base for new features
+  ├─ Base branch for all new features
+  └─ Feature branches merge here first
 
 feature/*
   ├─ New features and improvements
@@ -39,35 +39,35 @@ feature/*
 hotfix/*
   ├─ Urgent production fixes
   ├─ Created from: main
-  └─ Merged into: both main and develop
+  └─ Merged into: both main AND develop
 
 release/*
-  ├─ Release preparation
+  ├─ Release preparation and version bumps
   ├─ Created from: develop
-  └─ Merged into: both main and develop
+  └─ Merged into: both main AND develop
 ```
 
-### Visual Flow
+### Visual Workflow
 ```
-feature/new-feature
+feature/awesome-feature
        ↓
     [commit & push]
        ↓
     [GitHub Actions runs tests] 🧪
        ↓
-    [Create Pull Request to develop]
+    [Create Pull Request → develop]
        ↓
-    [Tests run again] 🧪
+    [Tests run on PR] 🧪
        ↓
     [Code Review] 👀
        ↓
     [Merge to develop] ✅
        ↓
-    develop (stable)
+    develop (stable integration branch)
        ↓
-    [Create Pull Request to main]
+    [Create Pull Request → main]
        ↓
-    [Tests run] 🧪
+    [Final tests run] 🧪
        ↓
     [Merge to main] ✅
        ↓
@@ -80,33 +80,33 @@ feature/new-feature
 
 ### Starting a New Feature
 ```bash
-# 1. Make sure you have the latest develop
+# 1. Ensure you have the latest develop branch
 git checkout develop
 git pull origin develop
 
-# 2. Create a feature branch
+# 2. Create a new feature branch
 git checkout -b feature/my-awesome-feature
 
 # 3. Make your changes
-# ... edit files ...
+# ... edit files, write code ...
 
-# 4. Commit your changes
+# 4. Commit your changes using Conventional Commits format
 git add .
 git commit -m "feat: add awesome feature"
 
-# 5. Push your branch
+# 5. Push your feature branch to GitHub
 git push origin feature/my-awesome-feature
 
 # 6. Open a Pull Request on GitHub
-#    Source: feature/my-awesome-feature
-#    Target: develop
+#    Source branch: feature/my-awesome-feature
+#    Target branch: develop
+#
+# GitHub Actions will automatically run tests on your PR! ✅
 ```
-
-**GitHub Actions will automatically run tests!** ✅
 
 ### Release Process
 ```bash
-# 1. When develop is stable and ready for release
+# 1. Ensure develop branch is stable and ready for release
 git checkout develop
 git pull origin develop
 
@@ -114,52 +114,50 @@ git pull origin develop
 git checkout -b release/1.2.0
 
 # 3. Update version in composer.json and CHANGELOG.md
-# ... make version updates ...
+# ... make version changes ...
+git add composer.json CHANGELOG.md
 git commit -m "chore: bump version to 1.2.0"
 
-# 4. Push and create PR to main
+# 4. Push release branch and create Pull Request to main
 git push origin release/1.2.0
+# Open PR on GitHub: release/1.2.0 → main
 
-# 5. Create PR on GitHub: release/1.2.0 → main
-#    Tests will run ✅
-#    After approval, merge to main
-
-# 6. Tag the release
+# 5. After PR approval and merge to main, tag the release
 git checkout main
 git pull origin main
 git tag -a v1.2.0 -m "Release version 1.2.0"
 git push origin v1.2.0
 
-# 7. Merge main back to develop
+# 6. Merge main back to develop to keep branches in sync
 git checkout develop
 git merge main
 git push origin develop
 ```
 
-### Hotfix Process (Urgent Bug)
+### Hotfix Process (Urgent Production Bug)
 ```bash
-# 1. Create hotfix from main
+# 1. Create hotfix branch from main
 git checkout main
 git pull origin main
-git checkout -b hotfix/critical-bug-fix
+git checkout -b hotfix/critical-security-fix
 
-# 2. Fix the bug
+# 2. Fix the urgent bug
 # ... fix code ...
-git commit -m "fix: resolve critical security issue"
+git add .
+git commit -m "fix: resolve critical security vulnerability"
 
-# 3. Push and create PR to main
-git push origin hotfix/critical-bug-fix
+# 3. Push hotfix branch and create Pull Request to main
+git push origin hotfix/critical-security-fix
+# Open PR on GitHub: hotfix/critical-security-fix → main
 
-# 4. Create PR: hotfix/critical-bug-fix → main
-#    Tests run, after approval: merge
-
-# 5. Also merge to develop to keep in sync
+# 4. After merge to main, also merge to develop to keep in sync
 git checkout develop
 git merge main
 git push origin develop
 
-# 6. Tag the hotfix release
+# 5. Tag the hotfix release
 git checkout main
+git pull origin main
 git tag -a v1.2.1 -m "Hotfix version 1.2.1"
 git push origin v1.2.1
 ```
@@ -170,10 +168,15 @@ git push origin v1.2.1
 
 ### Prerequisites
 
-- **PHP:** 8.2 or 8.3
+- **PHP:** 8.4 or 8.5 (latest stable versions)
 - **Redis:** 7.0 or higher
 - **Composer:** 2.x
 - **PHP Extensions:** `redis`, `json`, `mbstring`
+
+**PHP 8.5 Information:**
+- Released: November 20, 2024
+- Current stable: 8.5.x
+- New features: Pipe operator (`|>`), URI extension, performance improvements
 
 ### Local Installation
 ```bash
@@ -181,10 +184,10 @@ git push origin v1.2.1
 git clone https://github.com/llegaz/RedisCache.git
 cd RedisCache
 
-# 2. Install dependencies
+# 2. Install Composer dependencies
 composer install
 
-# 3. Start Redis (using Docker)
+# 3. Start Redis server (using Docker)
 docker run -d -p 6379:6379 redis:7.2-alpine
 
 # 4. Verify setup by running tests
@@ -192,6 +195,8 @@ composer test:integration
 ```
 
 ### Environment Variables
+
+Configure these environment variables for local testing:
 ```bash
 # Redis host (default: 127.0.0.1)
 export REDIS_HOST=localhost
@@ -199,10 +204,10 @@ export REDIS_HOST=localhost
 # Redis port (default: 6379)
 export REDIS_PORT=6379
 
-# Redis adapter (predis or phpredis)
+# Redis adapter: 'predis' or 'phpredis'
 export REDIS_ADAPTER=phpredis
 
-# Persistent connection (true or false)
+# Enable persistent connection: 'true' or 'false'
 export REDIS_PERSISTENT=false
 ```
 
@@ -212,7 +217,7 @@ export REDIS_PERSISTENT=false
 
 ### Available Test Commands
 ```bash
-# Run integration tests (requires Redis)
+# Run integration tests (requires Redis server running)
 composer test:integration
 
 # Run unit tests (no Redis required)
@@ -221,70 +226,93 @@ composer test:unit
 # Run all tests
 composer test
 
-# Generate coverage report
+# Generate HTML coverage report (opens in browser)
 composer test:coverage
-# → Opens coverage/index.html in your browser
 ```
 
-### CI Testing
+### Continuous Integration
 
-Tests run automatically on:
-- ✅ Every push to `develop`
-- ✅ Every Pull Request
-- ✅ PHP versions: 8.2 and 8.3
+Tests run automatically on GitHub Actions for:
+- ✅ Every push to `develop` branch
+- ✅ Every Pull Request to `main` or `develop`
+- ✅ PHP versions: 8.4.x and 8.5.x (latest patches)
 - ✅ Redis version: 7.2
 
-You can view test results in the [Actions tab](https://github.com/llegaz/RedisCache/actions).
+View test results and build status: [GitHub Actions](https://github.com/llegaz/RedisCache/actions)
 
 ---
 
 ## Code Quality Standards
 
-### Coding Standards
+### Standards
 
-- **Style:** PSR-12
+- **Code Style:** PSR-12
 - **Static Analysis:** PHPStan Level 8
-- **Testing:** PHPUnit with minimum 80% coverage
+- **Testing:** PHPUnit with minimum 80% code coverage
+- **Documentation:** PHPDoc for all public methods
 
-### Before Committing
+### Quality Check Commands
 ```bash
-# Check code style
+# Check code style (dry run - doesn't modify files)
 composer cs:check
 
-# Auto-fix code style issues
+# Automatically fix code style issues
 composer cs:fix
 
-# Run static analysis
+# Run static analysis with PHPStan
 composer stan
 
-# Run all quality checks
+# Run all quality checks at once
 composer quality
 ```
 
 ### Commit Message Format
 
-We follow [Conventional Commits](https://www.conventionalcommits.org/):
-```bash
-feat: add support for Valkey compatibility
-fix: resolve memory leak in persistent connections
-docs: update README with new examples
-test: add integration tests for Hash pools
-chore: update dependencies
-refactor: simplify key validation logic
-perf: optimize serialization performance
-style: fix code formatting
+This project follows [Conventional Commits](https://www.conventionalcommits.org/) specification:
+
+**Format:**
 ```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer]
+```
+
+**Types:**
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `test`: Test additions or modifications
+- `chore`: Maintenance tasks (dependencies, build, etc.)
+- `refactor`: Code refactoring without behavior changes
+- `perf`: Performance improvements
+- `style`: Code style changes (formatting, naming)
 
 **Examples:**
 ```bash
-# Good commits
-git commit -m "feat: add 8KB key length support"
-git commit -m "fix: handle whitespace in cache keys"
-git commit -m "docs: add CONTRIBUTING.md"
+# Feature addition
+git commit -m "feat: add support for 8KB key length limit"
 
-# Bad commits
+# Bug fix
+git commit -m "fix: handle whitespace correctly in cache keys"
+
+# Documentation
+git commit -m "docs: add contributing guidelines and CI setup"
+
+# Performance improvement
+git commit -m "perf: optimize serialization in storeToPool method"
+```
+
+**Bad examples (avoid these):**
+```bash
+# ❌ Too vague
 git commit -m "updates"
+
+# ❌ Not descriptive
 git commit -m "fixed stuff"
+
+# ❌ Work in progress (don't commit WIP to shared branches)
 git commit -m "WIP"
 ```
 
@@ -292,113 +320,150 @@ git commit -m "WIP"
 
 ## Pull Request Process
 
-### PR Checklist
+### Pre-submission Checklist
 
 Before submitting a Pull Request, ensure:
 
 - [ ] Code follows PSR-12 style guidelines
-- [ ] All tests pass locally
-- [ ] New tests added for new features
+- [ ] All tests pass locally (`composer test`)
+- [ ] New tests added for new features or bug fixes
 - [ ] Code coverage maintained or improved
-- [ ] CHANGELOG.md updated (if applicable)
-- [ ] Documentation updated (if applicable)
-- [ ] Commit messages follow Conventional Commits
+- [ ] Documentation updated if API changes
+- [ ] CHANGELOG.md updated for user-facing changes
+- [ ] Commits follow Conventional Commits format
+- [ ] `composer validate --strict` passes without errors
+- [ ] PHPStan analysis passes (`composer stan`)
 
 ### Creating a Pull Request
 
-1. **Push your branch** to GitHub
+**Step 1: Push your branch**
 ```bash
-   git push origin feature/my-feature
+git push origin feature/my-feature
 ```
 
-2. **Open Pull Request** on GitHub
-   - Go to: https://github.com/llegaz/RedisCache/pulls
-   - Click "New Pull Request"
-   - Select your branch
-   - Fill in the PR template
+**Step 2: Open Pull Request on GitHub**
+- Navigate to: https://github.com/llegaz/RedisCache/pulls
+- Click "New Pull Request"
+- Select your branch as source
+- Select `develop` as target (or `main` for hotfixes)
+- Fill in the Pull Request template
 
-3. **Wait for CI** 
-   - GitHub Actions will run tests automatically
-   - All checks must pass ✅
+**Step 3: Automated Checks**
+- GitHub Actions will automatically run the full test suite
+- All status checks must pass ✅ before merge
+- Review any failed checks and fix issues
 
-4. **Code Review**
-   - Maintainer will review your code
-   - Address any feedback
-   - Push updates to the same branch
+**Step 4: Code Review**
+- Wait for maintainer review (typically 2-3 days)
+- Address any feedback or requested changes
+- Push additional commits to the same branch
+- Tests will run again automatically
 
-5. **Merge**
-   - After approval and passing tests
-   - PR will be merged (usually squash merge)
-   - Your branch will be deleted
+**Step 5: Merge**
+- After approval and passing tests, PR will be merged
+- Merge strategy: usually squash and merge
+- Source branch will be automatically deleted after merge
 
-### PR Review Timeline
+### Review Timeline
 
-- **Initial review:** Within 2-3 days
-- **Follow-up:** Within 1-2 days after updates
+- **Initial review:** Within 2-3 business days
+- **Follow-up reviews:** Within 1-2 business days after updates
+- **Emergency hotfixes:** Within 24 hours
 
 ---
 
-## Setting Up Pre-commit Hooks (Optional)
+## Pre-commit Hooks (Optional but Recommended)
 
-Automatically run quality checks before each commit:
+Automatically run quality checks before each commit to catch issues early:
 
-**Create `.git/hooks/pre-commit`:**
+**Create `.git/hooks/pre-commit` file:**
 ```bash
 #!/bin/sh
 
-echo "🔍 Running pre-commit checks..."
+echo "🔍 Running pre-commit quality checks..."
 
 # Check code style
+echo "→ Checking code style (PSR-12)..."
 composer cs:check
 if [ $? -ne 0 ]; then
-    echo "❌ Code style check failed. Run: composer cs:fix"
+    echo "❌ Code style check failed."
+    echo "   Run 'composer cs:fix' to automatically fix issues."
     exit 1
 fi
 
 # Run static analysis
+echo "→ Running PHPStan static analysis..."
 composer stan
 if [ $? -ne 0 ]; then
     echo "❌ PHPStan analysis failed."
+    echo "   Fix the reported issues before committing."
     exit 1
 fi
 
 # Run tests
+echo "→ Running test suite..."
 composer test
 if [ $? -ne 0 ]; then
     echo "❌ Tests failed."
+    echo "   All tests must pass before committing."
     exit 1
 fi
 
 echo "✅ All pre-commit checks passed!"
+echo "   Proceeding with commit..."
 exit 0
 ```
 
-**Make it executable:**
+**Make the hook executable:**
 ```bash
 chmod +x .git/hooks/pre-commit
 ```
 
+**Note:** Pre-commit hooks are local to your repository clone and not tracked by Git.
+
 ---
 
-## Questions?
+## Questions and Support
+
+### Getting Help
 
 - 💬 **General Questions:** Open a [Discussion](https://github.com/llegaz/RedisCache/discussions)
-- 🐛 **Bug Reports:** Open an [Issue](https://github.com/llegaz/RedisCache/issues)
-- ✨ **Feature Requests:** Open an [Issue](https://github.com/llegaz/RedisCache/issues)
+- 🐛 **Bug Reports:** Open an [Issue](https://github.com/llegaz/RedisCache/issues) with bug report template
+- ✨ **Feature Requests:** Open an [Issue](https://github.com/llegaz/RedisCache/issues) with feature request template
 - 📧 **Direct Contact:** laurent@legaz.eu
+
+### Reporting Bugs
+
+When reporting bugs, please include:
+- PHP version (`php -v`)
+- Redis version
+- Adapter used (Predis or phpredis)
+- Steps to reproduce the issue
+- Expected vs actual behavior
+- Any relevant error messages or stack traces
+
+### Proposing Features
+
+When proposing new features:
+- Explain the use case and problem it solves
+- Describe the proposed solution
+- Consider backwards compatibility implications
+- Be open to feedback and alternative approaches
 
 ---
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the same license as the project (see [LICENSE](LICENSE)).
+By contributing to RedisCache, you agree that your contributions will be licensed under the same license as the project (see [LICENSE](LICENSE) file).
 
 ---
 
 ## Recognition
 
-All contributors will be recognized in the project README. Thank you for making RedisCache better! 🙏
+All contributors are recognized and listed in the project README. Thank you for helping make RedisCache better! 🙏
+
+Your contributions, whether code, documentation, bug reports, or feature ideas, are valued and appreciated.
 
 ---
 
-**Happy coding!** 🚀
+**See you space cowboy...** 🚀
