@@ -15,19 +15,17 @@ use LLegaz\Cache\Exception\InvalidKeyException;
  *
  *
  *<b>CRITICAL</b>:
- * Here we use the Hash implementation from redis. Expiration Time is set with the setHsetPoolExpiration method
- * on the entire Hash Set HASH_DB_PREFIX. $suffix (private HSET Pool in Redis, specified with $suffix
- * with those methods you can store and retrieve specific data linked together in a separate data set)
- * THUS THE ENTIRE POOL (redis hash) is EXPIRED as there is no way to expire a hash field per field only
- * the firsts redis server versions.
+ * Here we use the Hash implementation from redis. Expiration Time is set with the
+ * <code>setHsetPoolExpiration</code> method on the entire Hash Set:
+ * THUS THE ENTIRE POOL (redis hash) is EXPIRED as there is no way to expire a hash per field only
+ * with the firsts redis server versions.
+ * See below <b>Architecture Overview</b> for more information.
  *
- * @todo test valkey and reddict
+ * @todo test valkey (hash field expiration possible ?) and reddict
  *
  * @todo and also clean and harmonize all those <code>$redisResponse</code>
  *
  *
- * It is to be noted that we use different terminology here  from Redis project in the case of a HASH.
- * for us : pool = key and key = field, but it is only semantic differences...
  * ------------------------------------------------------------------------------------------------------------
  *
  * <b>Architecture Overview:</b>
@@ -42,11 +40,11 @@ use LLegaz\Cache\Exception\InvalidKeyException;
  *
  * <b>Terminology Mapping:</b>
  * <pre>
- * This Class    | Redis Native  | Description
- * --------------|---------------|------------------------------------------
- * Pool          | Key           | The Hash structure name
- * Key           | Field         | A field within the Hash
- * Value         | Value         | The data stored in a Hash field
+ *   |   This Clas     |   Redis Native   |    Description
+ *   |-----------------|------------------|--------------------------------------
+ *   | Pool            | Key              | The Hash structure name
+ *   | Key             | Field            | A field within the Hash
+ *   | Value           | Value            | The data stored in a Hash field
  * </pre>
  *
  * <b>Usage Example:</b>
@@ -81,17 +79,18 @@ use LLegaz\Cache\Exception\InvalidKeyException;
 class RedisEnhancedCache extends RedisCache
 {
     /**
-     * Default pool name used when no pool is specified in method calls.
+     * @var string
+     */
+    public const HASH_DB_PREFIX = 'Cache_Pool';
+
+    /**
      *
-     * This constant defines the fallback pool name that will be used throughout
-     * the application when methods are called without explicitly specifying a pool.
-     *
-     * @caution - modify this ONLY if you modify symetrically the default pool name
-     *           returned in <code>CacheEntryPool::getPoolName</code> protected method
+     * This constant defines the fallback pool name that will be used
+     *  when methods are called without explicitly specifying a pool.
      *
      * @var string
      */
-    private const DEFAULT_POOL = 'DEFAULT_Cache_Pool';
+    public const DEFAULT_POOL = 'DEFAULT_' . self::HASH_DB_PREFIX;
 
     /**
      * Stores multiple key-value pairs in a specified Redis Hash pool.
@@ -106,7 +105,7 @@ class RedisEnhancedCache extends RedisCache
      * - For empty array: Returns false without Redis operation
      *
      * <b>Data Processing:</b>
-     * - Keys are validated against PSR compliance rules
+     * - Keys are validated against PSR compliance rules (except for the ":" character which is accepted)
      * - Values are serialized using internal serialization mechanism
      * - Both keys and values undergo validation before storage
      *
@@ -114,17 +113,17 @@ class RedisEnhancedCache extends RedisCache
      * <code>
      * // Store user session data
      * $cache->storeToPool([
-     *     'session_id' => 'abc123',
+     *     'session_id' => 'def123',
+     *     'prev_session_id' => 'abc123',
      *     'user_id' => 456,
      *     'login_time' => time()
-     * ], 'user_sessions');
+     * ], 'user:456:session');
      *
      * // Store single configuration value
      * $cache->storeToPool(['app_version' => '2.1.0'], 'app_config');
      * </code>
      *
      * @todo rework this ?
-     * @todo document this
      * @todo enhance keys / values treatment (see / homogenize with RedisCache::setMultiple and RedisCache::checkKeysValidity)
      * @todo need better handling on serialization and its reverse method in fetches.
      * @todo maybe we can do something cleaner
@@ -133,7 +132,7 @@ class RedisEnhancedCache extends RedisCache
      *
      * @param array $values A flat array of key => value pairs to store in GIVEN POOL name
      *                      Keys must be strings or integers, values can be any serializable type
-     * @param string $pool the pool name - defaults to DEFAULT_POOL if not specified
+     * @param string $pool the pool name
      *
      * @return bool True on success, false on failure or when values array is empty
      *
@@ -189,7 +188,7 @@ class RedisEnhancedCache extends RedisCache
      * Retrieves one or more values from a specified Redis Hash pool.
      *
      * This method provides flexible retrieval of cache entries from a pool. It can fetch:
-     * - A single value when given a string or integer key
+     * - A single value when given a scalar or an object key
      * - Multiple values when given an array of keys
      *
      * All retrieved values are automatically unserialized to restore their original data types.
@@ -200,34 +199,15 @@ class RedisEnhancedCache extends RedisCache
      * - Non-existent keys: Replaced with DOES_NOT_EXIST constant in results
      * - Invalid parameters: Throws InvalidKeyException
      *
-     * <b>Usage Examples:</b>
-     * <code>
-     * // Fetch single value
-     * $username = $cache->fetchFromPool('user:123:name', 'user_data');
-     *
-     * // Fetch multiple values
-     * $userData = $cache->fetchFromPool([
-     *     'user:123:name',
-     *     'user:123:email',
-     *     'user:123:role'
-     * ], 'user_data');
-     *
-     * // Check if value exists
-     * if ($username !== RedisCache::DOES_NOT_EXIST) {
-     *     echo "Username: $username";
-     * }
-     * </code>
-     *
      * <b>Data Processing:</b>
      * - Values are automatically deserialized upon retrieval
      * - String values are converted back to their original types
      * - Missing values are marked with DOES_NOT_EXIST constant
      * - Array results maintain key association from input
      *
-     * @todo document this (and the rest)
      *
-     * @param int|string|array $key Single key (string/int) or array of keys to retrieve from the pool
-     * @param string $pool the pool's name - defaults to DEFAULT_POOL if not specified
+     * @param int|string|object|array $key Single key or array of keys to retrieve from the pool
+     * @param string $pool the pool's name
      *
      * @return mixed Single value, associative array of values, or DOES_NOT_EXIST constant
      *               - For single key: Returns the value or DOES_NOT_EXIST
@@ -313,10 +293,9 @@ class RedisEnhancedCache extends RedisCache
      * }
      * </code>
      *
-     * @todo document this
      *
      * @param string $key The key to check for existence in the pool
-     * @param string $pool The pool name - defaults to DEFAULT_POOL if not specified
+     * @param string $pool The pool name
      *
      * @return bool True if the key exists in the pool, false otherwise
      *
@@ -356,8 +335,7 @@ class RedisEnhancedCache extends RedisCache
      * Deletes one or more keys from a specified Redis Hash pool.
      *
      * This method removes cache entries from a pool using Redis HDEL command. It supports
-     * batch deletion of multiple keys in a single operation for efficiency. The method
-     * validates all keys before attempting deletion.
+     * batch deletion of multiple keys in a single operation for efficiency.
      *
      * <b>Behavior:</b>
      * - Uses Redis HDEL for atomic deletion
@@ -381,20 +359,16 @@ class RedisEnhancedCache extends RedisCache
      *     'user:123:email',
      *     'user:123:role'
      * ], 'user_data');
-     *
-     * // Clear specific cache entries after update
-     * $keysToInvalidate = ['product:456:price', 'product:456:stock'];
-     * $cache->deleteFromPool($keysToInvalidate, 'product_cache');
      * </code>
      *
-     * @todo document this
      *
-     * @param array $keys Array of key names to delete from the pool (must be strings or integers)
-     * @param string $pool the pool's name - defaults to DEFAULT_POOL if not specified
+     * @param array $keys Array of key names to delete from the pool (must be scalar or object,
+     *                                                          arrays aren't accepted for now)
+     * @param string $pool the pool's name
      *
      * @return bool True on success (returns true even if keys didn't exist), false on failure
      *
-     * @throws ConnectionLostException When Redis connection is lost during operation
+     * @throws ConnectionLostException If Redis connection was lost during operation
      * @throws InvalidKeyException When any key validation fails
      *
      * @see storeToPool() Method to store values in a pool
@@ -438,14 +412,11 @@ class RedisEnhancedCache extends RedisCache
      * <code>
      * // Set 1 hour expiration on user session pool
      * $cache->storeToPool(['session_id' => 'abc123'], 'user_sessions');
-     * $cache->setHsetPoolExpiration('user_sessions', 3600);
+     * $cache->setHsetPoolExpiration('user_sessions', RedisCache::HOUR_EXPIRATION_TIME);
      *
      * // Set 24 hour expiration on cache pool
      * $cache->storeToPool(['data' => $value], 'daily_cache');
-     * $cache->setHsetPoolExpiration('daily_cache', 86400);
-     *
-     * // Using class constant for default expiration
-     * $cache->setHsetPoolExpiration('temp_data', self::HOURS_EXPIRATION_TIME);
+     * $cache->setHsetPoolExpiration('daily_cache', RedisCache::DAY_EXPIRATION_TIME);
      * </code>
      *
      * <b>Best Practices:</b>
@@ -454,13 +425,15 @@ class RedisEnhancedCache extends RedisCache
      * - Use separate pools for data with different expiration requirements
      * - Consider using standard Redis keys instead of hashes if per-key expiration is needed
      *
-     * Expiration Time is set with this method on the entire Redis Hash : <b>the pool $pool argument given</b>.
      *
-     * <b> Caution: expired Hash SET will EXPIRE ALL SUBKEYS as well (even more recent entries)</b>
+     *
+     * <b> Caution: again, to expire an Hash SET (a pool) would EXPIRE ALL SUBKEYS as well
+     *             (all entries hash field, the entire pool will be cleared at the end of the TTL)</b>
      *
      * @todo investigate hash field expiration (valkey.io)
      *
-     * @param string $pool the pool's name - defaults to DEFAULT_POOL if not specified
+     *
+     * @param string $pool the pool's name
      * @param int $expirationTime Time in seconds until the pool expires (must be > 0)
      *                            Defaults to HOURS_EXPIRATION_TIME constant from parent class
      *
