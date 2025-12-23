@@ -150,3 +150,17 @@ All Pull Requests are automatically tested before merge.
 ---
 
 **See you space cowboy...** 🚀
+
+# RedisCache
+
+![CI](https://img.shields.io/github/actions/workflow/status/llegaz/RedisCache/ci.yml?branch=develop&label=tests&style=flat-square)
+![PHP](https://img.shields.io/badge/PHP-8.4%20%7C%208.5-777BB4?style=flat-square&logo=php&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-7.2-DC382D?style=flat-square&logo=redis&logoColor=white)
+![Coverage](https://img.shields.io/badge/coverage-85%25-success?style=flat-square)
+![License](https://img.shields.io/github/license/llegaz/RedisCache?style=flat-square)
+
+**Redis-native PSR-16/PSR-6 for mature developers**
+
+---
+
+**See you space cowboy...** 🚀

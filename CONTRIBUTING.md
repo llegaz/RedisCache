@@ -15,7 +15,7 @@ Thank you for your interest in contributing to RedisCache! 🎉
 
 ## Git Flow Workflow
 
-This project follows **Git Flow** for branch management.
+This project follows **A based rebase Git Flow** for branch management.
 
 ### Branch Structure
 ```
@@ -463,6 +463,32 @@ By contributing to RedisCache, you agree that your contributions will be license
 All contributors are recognized and listed in the project README. Thank you for helping make RedisCache better! 🙏
 
 Your contributions, whether code, documentation, bug reports, or feature ideas, are valued and appreciated.
+
+---
+
+
+**Checklist:**
+- [ ] Rebased on target branch
+- [ ] PSR-12 compliant
+- [ ] Tests pass
+- [ ] Coverage maintained
+- [ ] Docs updated
+- [ ] CHANGELOG updated
+- [ ] Clean commit history
+
+**Process:**
+1. Push branch (force push after rebase)
+2. Open PR on GitHub
+3. CI runs automatically
+4. Address review feedback
+5. Rebase again if develop changed
+6. Maintainer rebases and merges (no merge commits)
+
+## Questions
+
+- 💬 [Discussions](https://github.com/chegaz/RedisCache/discussions)
+- 🐛 [Issues](https://github.com/llegaz/RedisCache/issues)
+- 📧 laurent@legaz.eu
 
 ---
 
