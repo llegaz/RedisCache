@@ -18,7 +18,7 @@
         "redis"
     ],
     "require": {
-        "llegaz/redis-adapter": "~0.0.5",
+        "llegaz/redis-adapter": "~0.1",
         "psr/cache": "^3.0",
         "psr/simple-cache": "^3.0"
     },
