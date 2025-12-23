@@ -28,6 +28,9 @@
         "friendsofphp/php-cs-fixer": "~3.3",
         "cache/integration-tests": "dev-master"
     },
+    "suggest": {
+        "ext-redis": "^5.3"
+    },
     "autoload": {
         "psr-4": {
             "LLegaz\\Cache\\": "src/",
