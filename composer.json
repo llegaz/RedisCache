@@ -18,6 +18,7 @@
         "redis"
     ],
     "require": {
+        "php": ">=7.4",
         "llegaz/redis-adapter": "~0.1",
         "psr/cache": "^3.0",
         "psr/simple-cache": "^3.0"

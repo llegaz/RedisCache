@@ -104,7 +104,7 @@ class SimpleCacheRCTest extends RedisAdapterTestBase
     {
         $this->redisClient->expects($this->once())
             ->method('flushall')
-            ->willReturn(new Status('OK'))
+            ->willReturn(true)
         ;
         $this->assertTrue($this->cache->clear(true));
     }
@@ -114,7 +114,7 @@ class SimpleCacheRCTest extends RedisAdapterTestBase
         $this->integrityCheckCL();
         $this->redisClient->expects($this->once())
             ->method('flushdb')
-            ->willReturn(new Status('OK'))
+            ->willReturn(true)
         ;
         $this->assertTrue($this->cache->clear());
     }
@@ -283,7 +283,7 @@ class SimpleCacheRCTest extends RedisAdapterTestBase
         $this->redisClient->expects($this->once())
             ->method('set')
             ->with($key)
-            ->willReturn(new Status('OK'))
+            ->willReturn(true)
         ;
         $this->assertTrue($this->cache->set($key, 'bbbbbbbbbbbbbbbbbbbb'));
     }
