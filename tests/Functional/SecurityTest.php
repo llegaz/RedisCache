@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-use LLegaz\Cache\RedisCache as SUT;
 use LLegaz\Cache\Pool\CacheEntryPool;
+use LLegaz\Cache\RedisCache as SUT;
 use LLegaz\Cache\RedisEnhancedCache as SUT2;
 
 /**
  * @todo test PSR 6 class too
- * 
- * 
+ *
+ *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
 class SecurityTest extends \PHPUnit\Framework\TestCase
@@ -18,7 +18,8 @@ class SecurityTest extends \PHPUnit\Framework\TestCase
 
     protected CacheEntryPool $pool;
 
-    protected function setUp(): void {
+    protected function setUp(): void
+    {
         parent::setUp();
 
         $this->cache = new SUT();
@@ -56,7 +57,7 @@ class SecurityTest extends \PHPUnit\Framework\TestCase
 
     public function testSpecialCharactersDoNotCauseInjectionPSR6()
     {
-        
+
         // Attempt "injection-like" patterns
         $dangerousKeys = [
             'key\nFLUSHALL',
