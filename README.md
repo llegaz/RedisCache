@@ -172,4 +172,4 @@ All Pull Requests are automatically tested before merge.
 
 ---
 
-**See you space cowboy...** 🚀
+**@See** you space cowboy... 🚀

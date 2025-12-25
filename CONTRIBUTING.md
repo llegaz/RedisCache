@@ -492,4 +492,4 @@ Your contributions, whether code, documentation, bug reports, or feature ideas, 
 
 ---
 
-**See you space cowboy...** 🚀
+**@See** you space cowboy... 🚀
