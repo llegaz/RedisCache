@@ -2,13 +2,22 @@
 This project is build upon my first redis open PHP project [Redis Adapter](https://packagist.org/packages/llegaz/redis-adapter).
 Thanks to it you can use either [Predis](https://github.com/predis/predis) client or native [PHP Redis](https://github.com/phpredis/phpredis/) client in a transparent way.
 
+This implementation is quite safe and rely totally on RESP (REdis Serialization Protocol), implemented by Predis and the Redis PHP extension, through their standard API.
+
+## PSR divergences
+For now the reserved charachters `{}()/\@:` for the keys are supported entirely, it is an on purpose choice we made because PSR reserved those characters years ago and did nothing concrete with it, or nothing I have heard of.
+Moreover there are some real life example where those characters are cool to have (emails, urls, paths, and even redis proposed key format which is considered a good practise, e.g user:123).
+Finally, as there are no security constraints not to use those characters we made the choice not to follow PSR on this point and to support those chars `{}()/\@:` and we hope it will be well tolerated by the PHP developpers community.
+
+## Install
+
 If PHP redis is installed
 ```bash
 $ apt-get install php8.x-redis
 ```
 These implementations will use it or fallback on Predis client otherwise.
 
-## Install
+You can simply use composer to install this library:
 ```bash
 composer require llegaz/redis-cache
 composer install
