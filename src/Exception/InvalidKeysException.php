@@ -10,7 +10,7 @@ namespace LLegaz\Cache\Exception;
  */
 class InvalidKeysException extends InvalidArgumentException
 {
-    public function __construct(string $message = 'RedisCache says "Can\'t do shit with those keys"' . PHP_EOL, int $code = 400, \Throwable $previous = null)
+    public function __construct(string $message = 'RedisCache says "Can\'t do shit with those keys"' . PHP_EOL, int $code = 400, ?\Throwable $previous = null)
     {
         parent::__construct($message, $code, $previous);
     }

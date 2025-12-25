@@ -17,6 +17,9 @@ jobs:
       matrix:
         php: ['8.4', '8.5']
         adapter: ['predis', 'phpredis']
+        include:
+            -adapter: 'phpredis'
+            ext: 'redis'
     
     services:
       redis:
@@ -39,10 +42,10 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: json, mbstring${{ matrix.adapter == 'phpredis' && ', redis' || '' }}
-          coverage: xdebug
+          extensions: ${{ matrix.ext }}
+          coverage: "none"
           tools: composer:v2
-      
+
       # Step 3: Cache Composer dependencies (speeds up subsequent builds)
       - name: Cache Composer dependencies
         uses: actions/cache@v3
@@ -66,10 +69,16 @@ jobs:
           php -m | grep redis
           composer --version
       
-      # Step 7
+      # Step 7 info
       - name: Check code style (PSR-12)
         run: composer cs
       
       # Step 8: Run entire tests suite
       - name: Run all tests
         run: composer test
+
+        # Step 9 more info (dbg)
+      - name: Display versions
+        run: |
+          php -r 'foreach (get_loaded_extensions() as $extension) echo $extension . " " . phpversion($extension) . PHP_EOL;'
+          php -i
