@@ -20,6 +20,7 @@ use Psr\Cache\CacheItemPoolInterface;
  *
  *
  *
+ * @todo key validation is inconsistent
  * @todo homogenize rework documentation through this package
  * --
  * @todo dig into Redict ? (or just respect Salvatore's vision, see below)
@@ -89,6 +90,19 @@ class CacheEntryPool implements CacheItemPoolInterface
         return true;
     }
 
+    /**
+     * Removes the item from the pool.
+     *
+     * @param string $key
+     *   The key to delete.
+     *
+     * @throws InvalidArgumentException
+     *   If the $key string is not a legal value a \Psr\Cache\InvalidArgumentException
+     *   MUST be thrown.
+     *
+     * @return bool
+     *   True if the item was successfully removed. False if there was an error.
+     */
     public function deleteItem(string $key): bool
     {
         if ($this->isDeferred($key)) {
