@@ -73,11 +73,3 @@ jobs:
       # Step 8: Run entire tests suite
       - name: Run all tests
         run: composer test
-      
-      - name: Upload coverage to Codecov
-        if: matrix.php == '8.5'
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./coverage.xml
-          fail_ci_if_error: false
-          flags: php-${{ matrix.php }}
