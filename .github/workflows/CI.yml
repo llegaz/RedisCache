@@ -43,10 +43,6 @@ jobs:
           coverage: "none"
           tools: composer:v2
 
-      - name: Remove PHP Redis extension
-        if: ${{ matrix.adapter == 'predis' }}
-        run: sudo apt-get -y remove php${{ matrix.php }}-redis && echo $? && echo -e "\n php${{ matrix.php }}-redis removed\n"
-
       # Step 3: Cache Composer dependencies (speeds up subsequent builds)
       - name: Cache Composer dependencies
         uses: actions/cache@v3
@@ -69,17 +65,20 @@ jobs:
           php -v
           php -m | grep redis
           composer --version
+          php -r ' echo (in_array('redis', get_loaded_extensions()) ? "redis extension loaded" : "predis fallback"). PHP_EOL;'
+          php -i
 
       # Step 7 info
       - name: Check code style (PSR-12)
         run: composer cs
-      
-      # Step 8: Run entire tests suite
+
+        # Step 8: force remove php redis ext
+      - name: Remove PHP Redis extension
+        if: ${{ matrix.adapter == 'predis' }}
+        run: |
+          sudo apt-get -y remove php${{ matrix.php }}-redis
+          php -r ' echo (in_array('redis', get_loaded_extensions()) ? "redis extension loaded" : "predis fallback"). PHP_EOL;'
+
+      # Step 9: Run entire tests suite
       - name: Run all tests
         run: composer test
-
-        # Step 9 more info (dbg)
-      - name: Display versions
-        run: |
-          php -r 'foreach (get_loaded_extensions() as $extension) echo $extension . " " . phpversion($extension) . PHP_EOL;'
-          php -i
