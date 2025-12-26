@@ -39,7 +39,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: json, mbstring, :redis
+          extensions: json, mbstring, :opcache, :redis
           coverage: none
           tools: composer:v2
 
@@ -63,10 +63,10 @@ jobs:
       - name: Display versions
         run: |
           php -v
-          php -m | grep redis
+          #php -m | grep redis
           composer --version
-          php -r ' echo (in_array("redis", get_loaded_extensions()) ? "redis extension loaded" : "predis fallback"). PHP_EOL;'
-          php -i
+          #php -r ' echo (in_array("redis", get_loaded_extensions()) ? "redis extension loaded" : "predis fallback"). PHP_EOL;'
+          #php -i
 
       # Step 7 info
       - name: Check code style (PSR-12)
