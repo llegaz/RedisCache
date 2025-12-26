@@ -65,7 +65,7 @@ jobs:
           php -v
           php -m | grep redis
           composer --version
-          php -r ' echo (in_array('redis', get_loaded_extensions()) ? "redis extension loaded" : "predis fallback"). PHP_EOL;'
+          php -r ' echo (in_array("redis", get_loaded_extensions()) ? "redis extension loaded" : "predis fallback"). PHP_EOL;'
           php -i
 
       # Step 7 info
@@ -77,7 +77,7 @@ jobs:
         if: ${{ matrix.adapter == 'predis' }}
         run: |
           sudo apt-get -y remove php${{ matrix.php }}-redis
-          php -r ' echo (in_array('redis', get_loaded_extensions()) ? "redis extension loaded" : "predis fallback"). PHP_EOL;'
+          php -r ' echo (in_array("redis", get_loaded_extensions()) ? "redis extension loaded" : "predis fallback"). PHP_EOL;'
 
       # Step 9: Run entire tests suite
       - name: Run all tests
