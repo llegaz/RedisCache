@@ -76,7 +76,8 @@ jobs:
       - name: Install PHP Redis extension
         if: ${{ matrix.adapter == 'phpredis' }}
         run: |
-          sudo apt-get -y install php${{ matrix.php }}-redis
+          sudo apt-get update
+          sudo apt-get -y install php${{ matrix.php }}-common php${{ matrix.php }}-opcache php${{ matrix.php }}-redis
           php -r ' echo (in_array("redis", get_loaded_extensions()) ? "redis extension loaded" : "predis fallback"). PHP_EOL;'
 
       # Step 9: Run entire tests suite
