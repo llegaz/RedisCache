@@ -39,7 +39,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: none
+          extensions: json, mbstring, :redis
           coverage: none
           tools: composer:v2
 
