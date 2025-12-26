@@ -39,8 +39,8 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: redis
-          coverage: "none"
+          extensions: none
+          coverage: none
           tools: composer:v2
 
       # Step 3: Cache Composer dependencies (speeds up subsequent builds)
@@ -72,11 +72,11 @@ jobs:
       - name: Check code style (PSR-12)
         run: composer cs
 
-        # Step 8: force remove php redis ext
-      - name: Remove PHP Redis extension
-        if: ${{ matrix.adapter == 'predis' }}
+        # Step 8: manual installation php redis ext
+      - name: Install PHP Redis extension
+        if: ${{ matrix.adapter == 'phpredis' }}
         run: |
-          sudo apt-get -y remove php${{ matrix.php }}-redis
+          sudo apt-get -y install php${{ matrix.php }}-redis
           php -r ' echo (in_array("redis", get_loaded_extensions()) ? "redis extension loaded" : "predis fallback"). PHP_EOL;'
 
       # Step 9: Run entire tests suite
