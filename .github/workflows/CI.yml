@@ -39,10 +39,13 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          if: ${{ matrix.adapter == 'phpredis' }}
           extensions: redis
           coverage: "none"
           tools: composer:v2
+
+      - name: Remove PHP Redis extension
+        if: ${{ matrix.adapter == 'predis' }}
+        run: apt-get -y remove php${{ matrix.php }}-redis && echo $? && echo -e "\n php${{ matrix.php }}-redis removed\n"
 
       # Step 3: Cache Composer dependencies (speeds up subsequent builds)
       - name: Cache Composer dependencies
