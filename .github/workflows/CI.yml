@@ -1,4 +1,4 @@
-name: CI php-redis ext enabled
+name: CI
 
 on:
   push:
@@ -9,15 +9,20 @@ on:
 
 jobs:
   tests:
-    name: Tests (PHP ${{ matrix.php }} - phpredis adapter)
+    name: Tests (PHP ${{ matrix.php }} - ${{ matrix.adapter }})
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        php: ['8.2', '8.3','8.4', '8.5']
+        php: ['8.2', '8.3', '8.4', '8.5']
+        adapter: ['predis', 'phpredis']
 
     services:
+        
+        
+        
+        
       redis:
         image: redis:7.2-alpine
         ports:
@@ -32,13 +37,13 @@ jobs:
         # Step 1: Checkout repository code
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       # Step 2: Setup PHP with required extensions
       - name: Setup PHP ${{ matrix.php }}
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: json, mbstring, redis
+          extensions: json, mbstring, ${{ matrix.adapter == 'phpredis' && 'redis' || ':opcache, :redis' }}
           coverage: none
           tools: composer:v2
 
@@ -62,12 +67,9 @@ jobs:
       - name: Display versions
         run: |
           php -v
-          #php -m | grep redis
           composer --version
-          php -r ' echo (in_array("redis", get_loaded_extensions()) ? "redis extension loaded" : "predis fallback"). PHP_EOL;'
-          #php -i
 
-      # Step 7 info
+      # Step 7
       - name: Check code style (PSR-12)
         run: composer cs
 
