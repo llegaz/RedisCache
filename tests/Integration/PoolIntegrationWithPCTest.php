@@ -46,7 +46,8 @@ class PoolIntegrationWithPCTest extends CachePoolTest
     public static function invalidKeys()
     {
         $bigKey = '';
-        for ($i = 102500; $i > 0; $i--) {
+        //36 KB
+        for ($i = 36864; $i > 0; $i--) {
             $bigKey .= 'a';
         }
 
@@ -54,6 +55,7 @@ class PoolIntegrationWithPCTest extends CachePoolTest
             self::invalidArrayKeys(),
             [
                 [''],
+                ['key with withespace'],
                 [$bigKey]
             ]
         );
@@ -71,6 +73,7 @@ class PoolIntegrationWithPCTest extends CachePoolTest
     public static function invalidArrayKeys()
     {
         return [
+            ['key with withespace'],
             [''],
         ];
     }
@@ -97,7 +100,7 @@ class PoolIntegrationWithPCTest extends CachePoolTest
 
         /**
          * display adapter class used (Predis or php-redis)
-         * 
+         *
          * @todo work to display this before php units and test suite start
          */
         if (!TestState::$adapterClassDisplayed) {

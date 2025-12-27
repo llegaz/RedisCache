@@ -18,7 +18,8 @@
         "redis"
     ],
     "require": {
-        "llegaz/redis-adapter": "~0.0.5",
+        "php": ">=8.1",
+        "llegaz/redis-adapter": "~0.1",
         "psr/cache": "^3.0",
         "psr/simple-cache": "^3.0"
     },
@@ -27,6 +28,9 @@
         "symfony/var-dumper": "~6.4",
         "friendsofphp/php-cs-fixer": "~3.3",
         "cache/integration-tests": "dev-master"
+    },
+    "suggest": {
+        "ext-redis": "^5.3"
     },
     "autoload": {
         "psr-4": {
@@ -50,7 +54,7 @@
         "pufv":"@phpunit-func-verbose",
         "cs":"@phpcsfixer",
         "test": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full",
-        "test-only": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full --filter CacheIntegrationTest::testSetMultiple",
+        "test-only": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full --filter SecurityTest::testSpecialCharactersDoNotCauseInjection",
         "test-psr16": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full --filter CacheIntegrationTest",
         "test-psr6": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full --filter PoolIntegrationTest",
         "phpunit" : "./vendor/bin/phpunit --colors=always --configuration ./phpunit.xml --testsuite unit",

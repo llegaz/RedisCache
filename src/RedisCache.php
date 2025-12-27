@@ -9,10 +9,6 @@ use LLegaz\Cache\Exception\InvalidKeysException;
 use LLegaz\Cache\Exception\InvalidValuesException;
 use LLegaz\Redis\RedisAdapter;
 use LLegaz\Redis\RedisClientInterface;
-/**
- * @todo refactor to hide those status and logic bound either to predis and php-redis
- *      (use adapter project client classes like mset => multipleSet method)
- */
 use Predis\Response\Status;
 use Psr\Log\LoggerInterface;
 use Psr\SimpleCache\CacheInterface;
@@ -21,11 +17,16 @@ use Psr\SimpleCache\CacheInterface;
  * Class RedisCache
  * PSR-16 implementation - Underlying Redis data type used is STRING
  *
+ *
  * @todo I think we will have to refactor here too in order to pass the RedisAdapter as a parameter
  *       or keep it as a class attribute ?
- * 
+ *
+ *
+ * @todo refactor to hide those predis Status and logic bound either to predis and php-redis
+ *      (use adapter project client classes like mset => multipleSet method)
  * @todo and also clean and harmonize all those <code>$redisResponse</code>
- * 
+ *
+ *
  * @note I have also have some concerns on keys because redis can handle Bytes and we are only handling
  * strings (contracts from Psr\SimpleCache v3.0.0 interface) which is totally fine for my own use cases but...
  *
@@ -58,6 +59,19 @@ class RedisCache extends RedisAdapter implements CacheInterface
     public const VERY_LONG_EXPIRATION_TIME = 7776000; // 90 days
 
     public const DOES_NOT_EXIST = '%=%=% item does not exist %=%=%';
+
+    /**
+    * Maximum key length: 8KB
+    *
+    * Permissive by design. We trust developers to make appropriate choices.
+    *
+    * PSR-16 permits extended lengths ("MAY support longer lengths").
+    * 8KB accommodates URL-based keys and other realistic scenarios while
+    * remaining reasonable for Redis performance.
+    *
+    * If you need stricter validation, implement it at your application layer.
+    */
+    private const MAX_KEY_LENGTH = 8192;
 
     public function __construct(
         string $host = RedisClientInterface::DEFAULTS['host'],
@@ -200,6 +214,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
     }
 
     /**
+     * @todo remove this
      * @todo No, no, no ! Nein, nein, nein, don't do that here !
      * we need another layer (another project ?) but it is NOT priority
      *
@@ -387,6 +402,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
     }
 
     /**
+     * @todo maybe test this serialization process more in depth
      *
      * @param string $key
      * @param mixed $value
@@ -404,7 +420,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
     /**
      * passing by reference here is only needed when the key given isn't already a string
      *
-     * @todo check special cases (or special implementation) when key isn't a string
+     * @todo check special cases (or special implementation) when key isn't a string ? (or not)
      *
      * @param string $key
      * @return void
@@ -415,15 +431,32 @@ class RedisCache extends RedisAdapter implements CacheInterface
         if (!is_string($key)) {
             $key = $this->keyToString($key);
         }
+
         $len = strlen($key);
-        if (!$len) {
-            throw new InvalidKeyException('RedisCache says "Empty Key is forbidden"');
+
+        // Empty keys are ambiguous
+        if ($len === 0) {
+            throw new InvalidKeyException('Cache key cannot be empty');
         }
 
-        //100KB maximum key size (4MB is REALLY too much for my needs)
-        if ($len > 102400) {
-            throw new InvalidKeyException('RedisCache says "Key is too big"');
+        // Reasonable upper limit for performance
+        if ($len > self::MAX_KEY_LENGTH) {
+            throw new InvalidKeyException(
+                sprintf(
+                    'Cache key exceeds maximum length of %d characters (got %d)',
+                    self::MAX_KEY_LENGTH,
+                    $len
+                )
+            );
         }
+
+        // Whitespace causes issues in Redis CLI and debugging
+        if (preg_match('/\s/', $key)) {
+            throw new InvalidKeyException('Cache key cannot contain whitespace');
+        }
+
+        // That's it. Redis handles everything else.
+        // We trust you to know what you're doing.
     }
 
     protected function checkKeysValidity(iterable $keys): array
@@ -464,7 +497,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
      * @param mixed $value
      * @return bool
      */
-    public function setCorrectValue(string &$value): mixed
+    protected function setCorrectValue(string &$value): mixed
     {
         try {
             $tmp = @unserialize(trim($value));

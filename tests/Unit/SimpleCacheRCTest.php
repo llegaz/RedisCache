@@ -16,7 +16,7 @@ use Predis\Response\Status;
  * @todo
  * @todo   REWORK UNITS (especially those with multiple sets)
  * @todo
- * 
+ *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
 class SimpleCacheRCTest extends RedisAdapterTestBase
@@ -104,7 +104,7 @@ class SimpleCacheRCTest extends RedisAdapterTestBase
     {
         $this->redisClient->expects($this->once())
             ->method('flushall')
-            ->willReturn(new Status('OK'))
+            ->willReturn(true)
         ;
         $this->assertTrue($this->cache->clear(true));
     }
@@ -114,7 +114,7 @@ class SimpleCacheRCTest extends RedisAdapterTestBase
         $this->integrityCheckCL();
         $this->redisClient->expects($this->once())
             ->method('flushdb')
-            ->willReturn(new Status('OK'))
+            ->willReturn(true)
         ;
         $this->assertTrue($this->cache->clear());
     }
@@ -283,7 +283,7 @@ class SimpleCacheRCTest extends RedisAdapterTestBase
         $this->redisClient->expects($this->once())
             ->method('set')
             ->with($key)
-            ->willReturn(new Status('OK'))
+            ->willReturn(true)
         ;
         $this->assertTrue($this->cache->set($key, 'bbbbbbbbbbbbbbbbbbbb'));
     }
@@ -291,7 +291,7 @@ class SimpleCacheRCTest extends RedisAdapterTestBase
     /**
      *
      * @todo rework this
-     * 
+     *
 
     public function testSetMultiple()
     {
@@ -340,7 +340,7 @@ class SimpleCacheRCTest extends RedisAdapterTestBase
             ->method('expire')
             ->willReturnCallback(function (string $key, int $i) use ($matcher, $expected, $ttl) {
                 $this->assertLessThanOrEqual(\count($expected), $matcher->numberOfInvocations());
-                // we could replace this by an <code>in_array</code> generic check 
+                // we could replace this by an <code>in_array</code> generic check
                 match ($matcher->numberOfInvocations()) {
                     1 =>  $this->assertEquals($expected[0], $key),
                     2 =>  $this->assertEquals($expected[1], $key),
@@ -357,7 +357,7 @@ class SimpleCacheRCTest extends RedisAdapterTestBase
     }
 
     /**
-     * 
+     *
      *
     public function testSetWithTtl()
     {
@@ -377,10 +377,10 @@ class SimpleCacheRCTest extends RedisAdapterTestBase
     }
 
     /**
-     * 
+     *
      * @return type
      */
-    protected function getSelfClient()
+    protected function getSelfClient(): RedisClientInterface
     {
         return $this->redisClient;
     }
