@@ -49,9 +49,11 @@ jobs:
 
       # Step 3: Cache Composer dependencies (speeds up subsequent builds)
       - name: Cache Composer dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
-          path: ~/.composer/cache
+          path: |
+            vendor
+            ~/.composer/cache
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: ${{ runner.os }}-composer-
 
