@@ -2,13 +2,22 @@
 This project is build upon my first redis open PHP project [Redis Adapter](https://packagist.org/packages/llegaz/redis-adapter).
 Thanks to it you can use either [Predis](https://github.com/predis/predis) client or native [PHP Redis](https://github.com/phpredis/phpredis/) client in a transparent way.
 
+This implementation is quite safe and rely totally on RESP (REdis Serialization Protocol), implemented by Predis and the Redis PHP extension, through their standard API.
+
+## PSR divergences
+For now the reserved charachters `{}()/\@:` for the keys are supported entirely, it is an on purpose choice we made because PSR reserved those characters years ago and did nothing concrete with it, or nothing I have heard of.
+Moreover there are some real life example where those characters are cool to have (emails, urls, paths, and even redis proposed key format which is considered a good practise, e.g user:123).
+Finally, as there are no security constraints not to use those characters we made the choice not to follow PSR on this point and to support those chars `{}()/\@:` and we hope it will be well tolerated by the PHP developpers community.
+
+## Install
+
 If PHP redis is installed
 ```bash
 $ apt-get install php8.x-redis
 ```
 These implementations will use it or fallback on Predis client otherwise.
 
-## Install
+You can simply use composer to install this library:
 ```bash
 composer require llegaz/redis-cache
 composer install
@@ -24,19 +33,20 @@ I will try to test and implement a pool key expiration for [Valkey.io](https://v
 **if you expire a pool key it will expire your entire pool SO BE EXTRA CAUTIOUS WITH THAT !**
 
 ### Basic usage
+Of course you should do cleaner, proper implementation, the below example is not production ready, it is simplified and given ONLY for the sake of example !
 ```php
 $cache = new LLegaz\Cache\RedisEnhancedCache();
-$cart = new \LLegaz\Cache\Pool\CacheEntryPool($cache);
-$user = new \LLegaz\Cache\Pool\CacheEntryPool($cache, 'lolo');
+// retrieve user_id as $id
+$user = new \LLegaz\Cache\Pool\CacheEntryPool($cache, 'user_data' . $id);
+$cart = new \LLegaz\Cache\Pool\CacheEntryPool($cache 'user_cart' . $id);
 
-$id = $user->getItem('id');
-if ($id->isHit()) {
-    $item = $cart->getItem('banana:' . $id->get());
-    $item->set('mixed value');
+if ($this->bananaAdded()) {
+    $item = $cart->getItem('product:banana');
+    $item->set(['count' => 3, 'unit_price' => .33, 'kg_price' => 1.99, 'total_price' => 0]]); // yeah today bananas are free
     $cart->save($item);
-} else {
-    $id->set('the lolo id');
-    $user->save($id);
+    $cartItem = $user->getItem('cart');
+    // increment $cartItem here
+    $user->save($cartItem);
 }
 ```
 
@@ -85,11 +95,74 @@ $cache = new LLegaz\Cache\RedisCache('localhost', 6379, null, 'tcp', 0, true);
 
 
 ## Contributing
-You're welcome to propose things. I am open to criticism as long as it remains benevolent.
+
+We welcome contributions! This project follows **Git Flow** workflow.
+
+### Quick Start
+```bash
+# Create feature branch from develop
+git checkout -b feature/my-feature develop
+
+# Make changes and commit
+git commit -m "feat: add new feature"
+
+# Push and create Pull Request
+git push origin feature/my-feature
+```
+
+For complete guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md) which covers:
+- Git Flow workflow in detail
+- Development environment setup
+- Testing requirements and commands
+- Code quality standards (PSR-12, PHPStan)
+- Pull Request process and review timeline
+
+### Development Commands
+```bash
+# Install dependencies
+composer install
+
+# Run tests
+composer test:integration
+
+# Code quality
+composer cs:check    # Check style
+composer cs:fix      # Fix style
+composer stan        # Static analysis
+composer quality     # Run all checks
+```
+
+### CI/CD Status
+
+[![CI](https://github.com/llegaz/RedisCache/workflows/CI/badge.svg)](https://github.com/llegaz/RedisCache/actions)
+[![codecov](https://codecov.io/gh/llegaz/RedisCache/branch/main/graph/badge.svg)](https://codecov.io/gh/llegaz/RedisCache)
+
+**Automated testing on:**
+- 🐘 PHP 8.4.x, 8.5.x (latest stable versions)
+- 📦 Redis 7.2
+- 🔌 Both Predis and phpredis adapters
+
+All Pull Requests are automatically tested before merge.
+
+[View test results →](https://github.com/llegaz/RedisCache/actions)
 
 
-Stay tuned, by following me on github, for new features using [predis](https://github.com/predis/predis) and [PHP Redis](https://github.com/phpredis/phpredis/).
+
+# RedisCache
+
+![CI](https://img.shields.io/github/actions/workflow/status/llegaz/RedisCache/ci.yml?branch=develop&label=tests&style=flat-square)
+![PHP](https://img.shields.io/badge/PHP-8.4%20%7C%208.5-777BB4?style=flat-square&logo=php&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-7.2-DC382D?style=flat-square&logo=redis&logoColor=white)
+![Coverage](https://img.shields.io/badge/coverage-85%25-success?style=flat-square)
+![License](https://img.shields.io/github/license/llegaz/RedisCache?style=flat-square)
+
+**Redis-native PSR-16/PSR-6 for mature developers**
+
+
+
+Stay tuned, by following me on github, for new features using [predis](https://github.com/predis/predis) and [PHP Redis](https://github.com/phpredis/phpredis/).<br/>
+
 
 ---
-@see you space cowboy
----
+
+**@See you space cowboy...** 🚀
