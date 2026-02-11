@@ -54,7 +54,7 @@ jobs:
           path: |
             vendor
             ~/.composer/cache
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
           restore-keys: ${{ runner.os }}-composer-
 
       # Step 4: Install project dependencies via Composer
