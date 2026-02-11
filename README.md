@@ -95,16 +95,6 @@ $cache = new LLegaz\Cache\RedisCache('localhost', 6379, null, 'tcp', 0, true);
 
 
 ## Contributing
-You're welcome to propose things. I am open to criticism as long as it remains benevolent.
-
-
-Stay tuned, by following me on github, for new features using [predis](https://github.com/predis/predis) and [PHP Redis](https://github.com/phpredis/phpredis/).
-
----
-@see you space cowboy
----
-
-## Contributing
 
 We welcome contributions! This project follows **Git Flow** workflow.
 
@@ -156,9 +146,7 @@ All Pull Requests are automatically tested before merge.
 
 [View test results →](https://github.com/llegaz/RedisCache/actions)
 
----
 
-**See you space cowboy...** 🚀
 
 # RedisCache
 
@@ -170,6 +158,11 @@ All Pull Requests are automatically tested before merge.
 
 **Redis-native PSR-16/PSR-6 for mature developers**
 
+
+
+Stay tuned, by following me on github, for new features using [predis](https://github.com/predis/predis) and [PHP Redis](https://github.com/phpredis/phpredis/).<br/>
+
+
 ---
 
-**@See** you space cowboy... 🚀
+**@See you space cowboy...** 🚀
