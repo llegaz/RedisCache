@@ -55,11 +55,12 @@ jobs:
             vendor
             ~/.composer/cache
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
-          restore-keys: ${{ runner.os }}-composer-
+          restore-keys: |
+            ${{ runner.os }}-composer-
 
       # Step 4: Install project dependencies via Composer
       - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --no-interaction
+        run: composer install --prefer-dist --no-progress --no-interaction --no-suggest
 
       # Step 5: Validate composer.json and composer.lock structure
       - name: Validate composer files
