@@ -435,7 +435,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
         $len = strlen($key);
 
         // Empty keys are ambiguous
-        if ($len === 0) {
+        if (!$len) {
             throw new InvalidKeyException('Cache key cannot be empty');
         }
 
@@ -455,6 +455,10 @@ class RedisCache extends RedisAdapter implements CacheInterface
             throw new InvalidKeyException('Cache key cannot contain whitespace');
         }
 
+        /**
+         * @todo filter common forbidden chars between URL rfc and PSR-6/16 key definition
+         *      that is those 3: <code>\[]</code>
+         */
         // That's it. Redis handles everything else.
         // We trust you to know what you're doing.
     }
