@@ -5,9 +5,12 @@ Thanks to it you can use either [Predis](https://github.com/predis/predis) clien
 This implementation is quite safe and rely totally on RESP (REdis Serialization Protocol), implemented by Predis and the Redis PHP extension, through their standard API.
 
 ## PSR divergences
-For now the reserved charachters `{}()/\@:` for the keys are supported entirely, it is an on purpose choice we made because PSR reserved those characters years ago and did nothing concrete with it, or nothing I have heard of.
+For now some of the reserved charachters `()/@:` for the keys are supported entirely, it is an on purpose choice we made because PSR reserved those characters years ago and did nothing concrete with it, or nothing I have heard of.
 Moreover there are some real life example where those characters are cool to have (emails, urls, paths, and even redis proposed key format which is considered a good practise, e.g user:123).
-Finally, as there are no security constraints not to use those characters we made the choice not to follow PSR on this point and to support those chars `{}()/\@:` and we hope it will be well tolerated by the PHP developpers community.
+Finally, as there are no security constraints not to use those characters we made the choice not to follow PSR on this point and to support those chars `()/@:` and we hope it will be well tolerated by the PHP developpers community.
+A contrario we decided to not enable withespaces in keys to ease debugging and because it is not a redis standard (std_key:preferred:form) nor in URL RFC definition. And so we thought it as not a good practice, at least, for our use cases.
+But thoses choices are not engraved in marble and are totally still on the table to discussion.
+
 
 ## Install
 

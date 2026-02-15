@@ -7,7 +7,7 @@ use LLegaz\Cache\RedisCache as SUT;
 use LLegaz\Cache\RedisEnhancedCache as SUT2;
 
 /**
- * @todo test PSR 6 class too
+ * @todo trigger exception on "\" character
  *
  *
  * @author Laurent LEGAZ <laurent@legaz.eu>
@@ -36,7 +36,6 @@ class SecurityTest extends \PHPUnit\Framework\TestCase
     {
         // Attempt "injection-like" patterns
         $dangerousKeys = [
-            'key\nFLUSHALL',
             'key|FLUSHALL',
             'key`FLUSHALL`',
             'key$(FLUSHALL)',
@@ -60,7 +59,6 @@ class SecurityTest extends \PHPUnit\Framework\TestCase
 
         // Attempt "injection-like" patterns
         $dangerousKeys = [
-            'key\nFLUSHALL',
             'key|FLUSHALL',
             'key`FLUSHALL`',
             'key$(FLUSHALL)',

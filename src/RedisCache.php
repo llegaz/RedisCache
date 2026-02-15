@@ -9,6 +9,11 @@ use LLegaz\Cache\Exception\InvalidKeysException;
 use LLegaz\Cache\Exception\InvalidValuesException;
 use LLegaz\Redis\RedisAdapter;
 use LLegaz\Redis\RedisClientInterface;
+/**
+ * @todo refactor to hide those status and logic bound either to predis and php-redis
+ *      (use adapter project client classes like mset => multipleSet method)
+
+ */
 use Predis\Response\Status;
 use Psr\Log\LoggerInterface;
 use Psr\SimpleCache\CacheInterface;
@@ -24,7 +29,8 @@ use Psr\SimpleCache\CacheInterface;
  *
  * @todo refactor to hide those predis Status and logic bound either to predis and php-redis
  *      (use adapter project client classes like mset => multipleSet method)
- * @todo and also clean and harmonize all those <code>$redisResponse</code>
+ * 
+ * @todo also clean and harmonize all those <code>$redisResponse</code>
  *
  *
  * @note I have also have some concerns on keys because redis can handle Bytes and we are only handling
@@ -456,9 +462,14 @@ class RedisCache extends RedisAdapter implements CacheInterface
         }
 
         /**
-         * @todo filter common forbidden chars between URL rfc and PSR-6/16 key definition
-         *      that is those 3: <code>\[]</code>
+         *filter also common forbidden characters between URL RFC and PSR-6/16 key definition
+         * that is those 3: <code>\{}</code>, backslash and curly brackets
+         * we use square brackets in IPv6 based URLs...
+         *  
          */
+        if (preg_match('/[\\\\{}]/', $key)) {
+            throw new InvalidKeyException('Cache key cannot contain backslash or curly bracket');
+        }
         // That's it. Redis handles everything else.
         // We trust you to know what you're doing.
     }
