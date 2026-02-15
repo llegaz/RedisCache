@@ -80,7 +80,15 @@ class CacheIntegrationTest extends SimpleCacheTest
     {
         return [
             [''],
+            ['{str'],
+            ['rand{'],
+            ['rand{str'],
+            ['rand}str'],
+            ['rand\\str'],
             ['key with withespace'],
+            ['key   with    tabs'],
+            ['key' . PHP_EOL .'with' . PHP_EOL .'CRLF'],
+            ['key\nFLUSHALL'], // insecure key
             [self::$bigKey],
         ];
     }
@@ -109,6 +117,11 @@ class CacheIntegrationTest extends SimpleCacheTest
         );
     }
 
+    /**
+     * Type Error keys (psr/cache version 3)
+     * 
+     * @return type
+     */
     public static function invalidTEKeys()
     {
         return [
@@ -119,6 +132,8 @@ class CacheIntegrationTest extends SimpleCacheTest
     }
 
     /**
+     * @todo replace this by original one (or complete it with closure :shrug:)
+     * 
      * @return array
      */
     public static function invalidTtl()
