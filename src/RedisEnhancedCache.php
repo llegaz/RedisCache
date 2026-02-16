@@ -74,7 +74,7 @@ use LLegaz\Cache\Exception\InvalidKeyException;
  * @author Laurent LEGAZ <laurent@legaz.eu>
  * @version 1.0
  * @see RedisCache Parent class providing base Redis functionality
- * @see https://redis.io/docs/data-types/hashes/ Redis Hash documentation
+ * @see https://redis.io/docs/latest/develop/data-types/#hashes Redis Hash documentation
  */
 class RedisEnhancedCache extends RedisCache
 {
@@ -96,16 +96,9 @@ class RedisEnhancedCache extends RedisCache
      * Stores multiple key-value pairs in a specified Redis Hash pool.
      *
      * This method allows batch insertion of cache entries into a named pool using Redis Hash operations.
-     * All values are automatically serialized before storage to ensure consistency. The method uses
-     * HMSET for multiple values and HSET for single values to optimize Redis operations.
-     *
-     * <b>Behavior:</b>
-     * - For multiple values (count > 1): Uses Redis HMSET command
-     * - For single value (count === 1): Uses Redis HSET command
-     * - For empty array: Returns false without Redis operation
+     * All values are automatically serialized before storage to ensure consistency.
      *
      * <b>Data Processing:</b>
-     * - Keys are validated against PSR compliance rules (except for the ":" character which is accepted)
      * - Values are serialized using internal serialization mechanism
      * - Both keys and values undergo validation before storage
      *
@@ -193,15 +186,8 @@ class RedisEnhancedCache extends RedisCache
      *
      * All retrieved values are automatically unserialized to restore their original data types.
      *
-     * <b>Return Behavior:</b>
-     * - Single key (string/int): Returns the value or DOES_NOT_EXIST constant
-     * - Multiple keys (array): Returns associative array of key => value pairs
-     * - Non-existent keys: Replaced with DOES_NOT_EXIST constant in results
-     * - Invalid parameters: Throws InvalidKeyException
-     *
      * <b>Data Processing:</b>
      * - Values are automatically deserialized upon retrieval
-     * - String values are converted back to their original types
      * - Missing values are marked with DOES_NOT_EXIST constant
      * - Array results maintain key association from input
      *
@@ -273,12 +259,6 @@ class RedisEnhancedCache extends RedisCache
      * which is useful for conditional logic and validation operations. It uses Redis HEXISTS
      * command for optimal performance.
      *
-     * <b>Implementation Notes:</b>
-     * - Uses native Redis HEXISTS command for efficiency
-     * - Handles adapter differences between php-redis and predis clients
-     * - php-redis returns boolean true/false
-     * - predis returns integer 1/0
-     * - Both are normalized to boolean return value
      *
      * <b>Usage Examples:</b>
      * <code>
@@ -339,7 +319,6 @@ class RedisEnhancedCache extends RedisCache
      *
      * <b>Behavior:</b>
      * - Uses Redis HDEL for atomic deletion
-     * - All keys are validated before deletion attempt
      * - Non-existent keys are silently ignored (not treated as errors)
      * - Returns true if Redis operation succeeds (even if some keys didn't exist)
      *
@@ -455,6 +434,10 @@ class RedisEnhancedCache extends RedisCache
         $redisResponse = -1;
 
         if ($expirationTime > 0) {
+            /**
+             * <b>CRITICAL WARNING:</b>
+             * Expiration applies to the ENTIRE pool !
+             */
             $redisResponse = $this->getRedis()->expire($pool, $expirationTime);
         }
 

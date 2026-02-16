@@ -38,6 +38,8 @@ use Psr\SimpleCache\CacheInterface;
  *
  * @package RedisCache
  * @author Laurent LEGAZ <laurent@legaz.eu>
+ * @version 1.0
+ * @see https://redis.io/docs/latest/develop/data-types/#strings Redis Strings documentation
  */
 class RedisCache extends RedisAdapter implements CacheInterface
 {
@@ -462,9 +464,9 @@ class RedisCache extends RedisAdapter implements CacheInterface
         }
 
         /**
-         *filter also common forbidden characters between URL RFC and PSR-6/16 key definition
-         * that is those 3: <code>\{}</code>, backslash and curly brackets
-         * we use square brackets in IPv6 based URLs...
+         * We filter also common forbidden characters between URL RFC and PSR-6/16 key definition,
+         * that is those 3 chars: <code>\{}</code>, backslash and curly brackets.
+         * We keep square brackets for use in IPv6 based URLs...
          *
          */
         if (preg_match('/[\\\\{}]/', $key)) {
