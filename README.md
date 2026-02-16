@@ -99,7 +99,8 @@ $cache = new LLegaz\Cache\RedisCache('localhost', 6379, null, 'tcp', 0, true);
 
 ## Contributing
 
-We welcome contributions! This project follows **Git Flow** workflow.
+We welcome contributions! This project follows  **a [Git Flow with rebasing](https://gist.github.com/llegaz/16058d04895d02dd1857b260f2399c2c)** workflow.
+
 
 ### Quick Start
 ```bash
@@ -126,13 +127,11 @@ For complete guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md) which covers:
 composer install
 
 # Run tests
-composer test:integration
+composer test
 
 # Code quality
-composer cs:check    # Check style
-composer cs:fix      # Fix style
+composer cs      # Fix style
 composer stan        # Static analysis
-composer quality     # Run all checks
 ```
 
 ### CI/CD Status
