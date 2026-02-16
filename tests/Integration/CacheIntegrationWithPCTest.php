@@ -7,6 +7,8 @@ namespace LLegaz\Cache\Tests\Integration;
 use Cache\IntegrationTests\SimpleCacheTest;
 use LLegaz\Cache\RedisCache as SUT;
 use LLegaz\Cache\Tests\TestState;
+use PHPUnit\Framework\Attributes\Before;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Psr\SimpleCache\CacheInterface;
 use TypeError;
 

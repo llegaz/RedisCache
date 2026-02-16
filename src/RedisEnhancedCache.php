@@ -362,7 +362,7 @@ class RedisEnhancedCache extends RedisCache
 
         try {
             $redisResponse = call_user_func_array([$this->getRedis(), 'hdel'], $params);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $redisResponse = false;
             $this->formatException($e);
         }
