@@ -16,11 +16,24 @@ if (!defined('SKIP_INTEGRATION_TESTS')) {
 
 /**
  * Test PSR-6 implementation
+ * 
+ * @todo Template those very similar <b>integration</b> tests !
  *
  * check @link https://github.com/php-cache/integration-tests
  */
 class PoolIntegrationTest extends CachePoolTest
 {
+    private static string $bigKey = '';
+
+    public static function setUpBeforeClass(): void
+    {
+        //36 KB
+        for ($i = 36864; $i > 0; $i--) {
+            self::$bigKey .= 'a';
+        }
+        parent::setUpBeforeClass();
+    }
+
     /**
      * @before
      */
@@ -45,36 +58,39 @@ class PoolIntegrationTest extends CachePoolTest
 
     public static function invalidKeys()
     {
-        $bigKey = '';
-        //36 KB
-        for ($i = 36864; $i > 0; $i--) {
-            $bigKey .= 'a';
-        }
-
         return array_merge(
             self::invalidArrayKeys(),
             [
                 [''],
                 ['key with withespace'],
-                [$bigKey]
+                [self::$bigKey]
             ]
         );
     }
 
+
     /**
-     * Yup this isn't optimal but I've only 2 restricted key scenario when keys
-     * are forced into strings type
-     * (which is the case thanks to PSR-6 v3 from <b>psr/cache</b> repository).
+     * Less restricted key scenarios whth keys forced into strings type
+     * (which is the case thanks to PSR-16 v3 from <b>psr/simple-cache</b> repository).
      *
-     * @link https://github.com/php-fig/cache The <b>psr/cache</b> repository.
+     * @link https://github.com/php-fig/simple-cache The <b>psr/simple-cache</b> repository.
      *
      * @return array
      */
     public static function invalidArrayKeys()
     {
         return [
-            ['key with withespace'],
             [''],
+            ['{str'],
+            ['rand{'],
+            ['rand{str'],
+            ['rand}str'],
+            ['rand\\str'],
+            ['key with withespace'],
+            ['key   with    tabs'],
+            ['key' . PHP_EOL .'with' . PHP_EOL .'CRLF'],
+            ['key\nFLUSHALL'], // insecure key
+            [self::$bigKey],
         ];
     }
 
