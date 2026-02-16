@@ -16,7 +16,7 @@ if (!defined('SKIP_INTEGRATION_TESTS')) {
 
 /**
  * Test PSR-6 implementation
- * 
+ *
  * @todo Template those very similar <b>integration</b> tests !
  *
  * check @link https://github.com/php-cache/integration-tests
@@ -70,7 +70,7 @@ class PoolIntegrationTest extends CachePoolTest
 
 
     /**
-     * Less restricted key scenarios whth keys forced into strings type
+     * We have less restricted key scenarios with keys forced into strings type
      * (which is the case thanks to PSR-16 v3 from <b>psr/simple-cache</b> repository).
      *
      * @link https://github.com/php-fig/simple-cache The <b>psr/simple-cache</b> repository.
@@ -88,7 +88,7 @@ class PoolIntegrationTest extends CachePoolTest
             ['rand\\str'],
             ['key with withespace'],
             ['key   with    tabs'],
-            ['key' . PHP_EOL .'with' . PHP_EOL .'CRLF'],
+            ['key' . PHP_EOL . 'with' . PHP_EOL . 'CRLF'],
             ['key\nFLUSHALL'], // insecure key
             [self::$bigKey],
         ];

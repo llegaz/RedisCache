@@ -29,7 +29,7 @@ use Psr\SimpleCache\CacheInterface;
  *
  * @todo refactor to hide those predis Status and logic bound either to predis and php-redis
  *      (use adapter project client classes like mset => multipleSet method)
- * 
+ *
  * @todo also clean and harmonize all those <code>$redisResponse</code>
  *
  *
@@ -465,7 +465,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
          *filter also common forbidden characters between URL RFC and PSR-6/16 key definition
          * that is those 3: <code>\{}</code>, backslash and curly brackets
          * we use square brackets in IPv6 based URLs...
-         *  
+         *
          */
         if (preg_match('/[\\\\{}]/', $key)) {
             throw new InvalidKeyException('Cache key cannot contain backslash or curly bracket');
