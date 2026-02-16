@@ -67,8 +67,9 @@ class CacheIntegrationWithPCTest extends SimpleCacheTest
         );
     }
 
+
     /**
-     * Less restricted key scenarios whth keys forced into strings type
+     * We have less restricted key scenarios with keys forced into strings type
      * (which is the case thanks to PSR-16 v3 from <b>psr/simple-cache</b> repository).
      *
      * @link https://github.com/php-fig/simple-cache The <b>psr/simple-cache</b> repository.
@@ -86,11 +87,12 @@ class CacheIntegrationWithPCTest extends SimpleCacheTest
             ['rand\\str'],
             ['key with withespace'],
             ['key   with    tabs'],
-            ['key' . PHP_EOL .'with' . PHP_EOL .'CRLF'],
+            ['key' . PHP_EOL . 'with' . PHP_EOL . 'CRLF'],
             ['key\nFLUSHALL'], // insecure key
             [self::$bigKey],
         ];
     }
+
 
     /**
      *  more TypeError on single operation method (declared with string arguments)
