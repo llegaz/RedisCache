@@ -67,9 +67,9 @@ class CacheIntegrationTest extends SimpleCacheTest
         );
     }
 
+
     /**
-     * Yup this isn't optimal but I've only 2 restricted key scenario when keys
-     * are forced into strings type
+     * Less restricted key scenarios whth keys forced into strings type
      * (which is the case thanks to PSR-16 v3 from <b>psr/simple-cache</b> repository).
      *
      * @link https://github.com/php-fig/simple-cache The <b>psr/simple-cache</b> repository.
