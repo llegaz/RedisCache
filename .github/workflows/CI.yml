@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ develop ]
+    branches: [ dev ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, dev ]
   workflow_dispatch:
 
 jobs:
@@ -19,10 +19,6 @@ jobs:
         adapter: ['predis', 'phpredis']
 
     services:
-        
-        
-        
-        
       redis:
         image: redis:7.2-alpine
         ports:
@@ -61,7 +57,7 @@ jobs:
 
       # Step 4: Install project dependencies via Composer
       - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --no-interaction
+        run: composer install --prefer-dist --no-progress --no-interaction || composer update --prefer-dist --no-progress --no-interaction
 
       # Step 5: Validate composer.json and composer.lock structure
       - name: Validate composer files
