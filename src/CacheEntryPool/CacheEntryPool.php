@@ -83,7 +83,7 @@ class CacheEntryPool implements CacheItemPoolInterface
             $this->cache->delete($this->poolName);
             unset($this->deferredItems);
             $this->deferredItems = [];
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return false;
         }
 

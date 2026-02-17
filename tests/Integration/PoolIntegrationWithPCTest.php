@@ -8,6 +8,7 @@ use Cache\IntegrationTests\CachePoolTest;
 use LLegaz\Cache\Pool\CacheEntryPool as SUT;
 use LLegaz\Cache\RedisEnhancedCache;
 use LLegaz\Cache\Tests\TestState;
+use PHPUnit\Framework\Attributes\Before;
 use Psr\Cache\CacheItemPoolInterface;
 
 if (!defined('SKIP_INTEGRATION_TESTS')) {
