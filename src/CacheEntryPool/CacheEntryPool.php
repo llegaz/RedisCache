@@ -35,10 +35,7 @@ use Psr\Cache\CacheItemPoolInterface;
  */
 class CacheEntryPool implements CacheItemPoolInterface
 {
-    /**
-     *
-     * @var Psr\SimpleCache\CacheInterface
-     */
+    /** @var RedisEnhancedCache&\Psr\SimpleCache\CacheInterface */
     private RedisEnhancedCache $cache;
 
     /**
@@ -48,15 +45,12 @@ class CacheEntryPool implements CacheItemPoolInterface
      */
     private ?string $poolName = null;
 
-    /**
-     *
-     * @var array
-     */
+    /** @var array */
     private array $deferredItems = [];
 
     /**
      *
-     * @param Psr\SimpleCache\CacheInterface $cache
+     * @param RedisEnhancedCache&\Psr\SimpleCache\CacheInterface $cache
      * @param string|null $pool
      */
     public function __construct(RedisEnhancedCache $cache, ?string $pool = null)
@@ -96,7 +90,7 @@ class CacheEntryPool implements CacheItemPoolInterface
      * @param string $key
      *   The key to delete.
      *
-     * @throws InvalidArgumentException
+     * @throws \Psr\Cache\InvalidArgumentException
      *   If the $key string is not a legal value a \Psr\Cache\InvalidArgumentException
      *   MUST be thrown.
      *
@@ -139,7 +133,7 @@ class CacheEntryPool implements CacheItemPoolInterface
      * @param string $key
      *   The key for which to return the corresponding Cache Item.
      *
-     * @throws InvalidArgumentException
+     * @throws \Psr\Cache\InvalidArgumentException
      *   If the $key string is not a legal value a \Psr\Cache\InvalidArgumentException
      *   MUST be thrown.
      *
