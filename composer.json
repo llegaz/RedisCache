@@ -47,13 +47,14 @@
         }
     },
     "scripts": {
+        "cs":"@phpcsfixer",
         "pu":"@phpunit",
         "puv":"@phpunit-verbose",
         "pui":"@phpunit-int-suite",
         "puiv":"@phpunit-int-verbose",
         "puf":"@phpunit-func-suite",
         "pufv":"@phpunit-func-verbose",
-        "cs":"@phpcsfixer",
+        "stan":"vendor/bin/phpstan analyse -l 6 src tests",
         "test": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full",
         "test-only": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full --filter SecurityTest::testSpecialCharactersDoNotCauseInjection",
         "test-psr16": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full --filter CacheIntegrationTest",
