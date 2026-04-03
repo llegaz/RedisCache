@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace LLegaz\Cache;
 
-use LLegaz\Cache\Exception\InvalidKeyException;
 use LLegaz\Cache\Exception\InvalidArgumentException;
+use LLegaz\Cache\Exception\InvalidKeyException;
 
 /**
  * ------------------------------------------------------------------------------------------------------------
@@ -162,12 +162,12 @@ class RedisEnhancedCache extends RedisCache
             return $this->getRedis()->hmset($pool, $values) == 'OK';
         } elseif ($cnt === 1) {
             $key = array_keys($values)[0];
-            $value =$values[$key];
+            $value = $values[$key];
             if (!$this->exist($value)) {
                 /**
                  * @todo test this specific scenario (maybe apply it to hmset ?)
                  * @todo and maybe refactor that exception handling system inherited from previous project (redis-adapter)
-                 * 
+                 *
                  * because all values are authorized except this predefined value to sort actual existing values internally...
                  */
                 $e = new InvalidArgumentException('The value: ' . $value . ' isn\'t accepted');
@@ -244,10 +244,8 @@ class RedisEnhancedCache extends RedisCache
                             $data[$key] = self::DOES_NOT_EXIST;
                         }
                     }
-                    if (count($data)) {
 
-                        return $data;
-                    }
+                    return $data;
                 }
 
                 break;

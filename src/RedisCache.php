@@ -524,7 +524,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
 
             return self::DOES_NOT_EXIST;
         } finally {
-            // @phpstan-ignore variable.undefined 
+            // @phpstan-ignore variable.undefined
             if ($tmp !== false || ($tmp === false && $value === 'b:0;')) {
                 $value = $tmp; // if value var wasn't a string affect its original value type to it
             }
