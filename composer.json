@@ -27,7 +27,8 @@
         "phpunit/phpunit": "^10.5",
         "symfony/var-dumper": "~6.4",
         "friendsofphp/php-cs-fixer": "~3.3",
-        "cache/integration-tests": "dev-master"
+        "cache/integration-tests": "dev-master",
+        "phpstan/phpstan": "^2.1"
     },
     "suggest": {
         "ext-redis": "^5.3"
@@ -46,13 +47,14 @@
         }
     },
     "scripts": {
+        "cs":"@phpcsfixer",
         "pu":"@phpunit",
         "puv":"@phpunit-verbose",
         "pui":"@phpunit-int-suite",
         "puiv":"@phpunit-int-verbose",
         "puf":"@phpunit-func-suite",
         "pufv":"@phpunit-func-verbose",
-        "cs":"@phpcsfixer",
+        "stan":"vendor/bin/phpstan analyse -c phpstan.neon.dist",
         "test": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full",
         "test-only": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full --filter SecurityTest::testSpecialCharactersDoNotCauseInjection",
         "test-psr16": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full --filter CacheIntegrationTest",
