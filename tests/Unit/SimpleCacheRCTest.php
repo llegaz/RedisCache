@@ -379,11 +379,10 @@ class SimpleCacheRCTest extends RedisAdapterTestBase
 
     /**
      *
-     * @return type
+     * @return RedisClientInterface
      */
     protected function getSelfClient(): RedisClientInterface
     {
         return $this->redisClient;
     }
-
 }

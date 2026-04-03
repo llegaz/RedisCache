@@ -124,7 +124,7 @@ class CacheIntegrationTest extends SimpleCacheTest
     /**
      * Type Error keys (psr/cache version 3)
      *
-     * @return type
+     * @return array
      */
     public static function invalidTEKeys()
     {
