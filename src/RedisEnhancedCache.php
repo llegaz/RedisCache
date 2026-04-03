@@ -229,7 +229,11 @@ class RedisEnhancedCache extends RedisCache
 
                 break;
             case 'array':
-                if (count($key)) {
+                if (count($key) === 1) {
+                    // redirect to string's or integer's case
+                    return $this->fetchFromPool(reset($key), $pool);
+                }
+                if (count($key) > 1) {
                     $this->checkKeysValidity($key);
                     $this->begin();
                     $data = array_combine(
