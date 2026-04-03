@@ -54,7 +54,7 @@
         "puiv":"@phpunit-int-verbose",
         "puf":"@phpunit-func-suite",
         "pufv":"@phpunit-func-verbose",
-        "stan":"vendor/bin/phpstan analyse -l 6 src tests",
+        "stan":"vendor/bin/phpstan analyse -c phpstan.neon.dist",
         "test": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full",
         "test-only": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full --filter SecurityTest::testSpecialCharactersDoNotCauseInjection",
         "test-psr16": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full --filter CacheIntegrationTest",

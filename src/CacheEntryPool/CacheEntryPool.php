@@ -353,6 +353,7 @@ class CacheEntryPool implements CacheItemPoolInterface
             return true;
         }
 
+        $deferred= [];
         foreach ($this->deferredItems as $key => $item) {
             if (!$this->isExpired($item)) {
                 $deferred[$key] = $item->get();
