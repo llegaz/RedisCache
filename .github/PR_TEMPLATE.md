@@ -7,7 +7,6 @@
 -Please check the relevant option(s):
 
 - [ ] 🐛 Bug fix
-- [ ] ✨ New feature
 - [ ] 💥 Breaking change
 - [ ] 📝 Documentation
 - [ ] 🧪 Tests
@@ -19,6 +18,7 @@
 
 - [ ] Unit tests
 - [ ] Integration tests
+- [ ] Functional tests
 - [ ] Manual testing
 
 Code style and test suite exectuion.

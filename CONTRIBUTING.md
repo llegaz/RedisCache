@@ -23,9 +23,9 @@ main
   ├─ Production-ready code
   ├─ Protected branch (no direct push allowed)
   ├─ Updated only via Pull Requests
-  └─ Tagged with semantic versions (v1.0.0, v1.1.0, etc.)
+  └─ Tagged with semantic versions (1.0.0, 1.1.0, etc.)
 
-develop
+dev
   ├─ Integration branch for ongoing development
   ├─ Latest development code
   ├─ Base branch for all new features
@@ -33,18 +33,18 @@ develop
 
 feature/*
   ├─ New features and improvements
-  ├─ Created from: develop
-  └─ Merged into: develop
+  ├─ Created from: dev
+  └─ Merged into: dev
 
 hotfix/*
   ├─ Urgent production fixes
   ├─ Created from: main
-  └─ Merged into: both main AND develop
+  └─ Merged into: both main AND dev
 
 release/*
   ├─ Release preparation and version bumps
-  ├─ Created from: develop
-  └─ Merged into: both main AND develop
+  ├─ Created from: dev
+  └─ Merged into: both main AND dev
 ```
 
 ### Visual Workflow
@@ -55,15 +55,15 @@ feature/awesome-feature
        ↓
     [GitHub Actions runs tests] 🧪
        ↓
-    [Create Pull Request → develop]
+    [Create Pull Request → dev]
        ↓
     [Tests run on PR] 🧪
        ↓
     [Code Review] 👀
+       ↓history | grep tag
+    [Merge to dev] ✅
        ↓
-    [Merge to develop] ✅
-       ↓
-    develop (stable integration branch)
+    dev (stable integration branch)
        ↓
     [Create Pull Request → main]
        ↓
@@ -71,7 +71,7 @@ feature/awesome-feature
        ↓
     [Merge to main] ✅
        ↓
-    [Tag release] 🏷️ v1.2.0
+    [Tag release] 🏷️ 1.2.0
 ```
 
 ---
@@ -80,9 +80,9 @@ feature/awesome-feature
 
 ### Starting a New Feature
 ```bash
-# 1. Ensure you have the latest develop branch
-git checkout develop
-git pull origin develop
+# 1. Ensure you have the latest dev branch
+git checkout dev
+git pull origin dev
 
 # 2. Create a new feature branch
 git checkout -b feature/my-awesome-feature
@@ -99,16 +99,16 @@ git push origin feature/my-awesome-feature
 
 # 6. Open a Pull Request on GitHub
 #    Source branch: feature/my-awesome-feature
-#    Target branch: develop
+#    Target branch: dev
 #
 # GitHub Actions will automatically run tests on your PR! ✅
 ```
 
 ### Release Process
 ```bash
-# 1. Ensure develop branch is stable and ready for release
-git checkout develop
-git pull origin develop
+# 1. Ensure dev branch is stable and ready for release
+git checkout dev
+git pull origin dev
 
 # 2. Create a release branch
 git checkout -b release/1.2.0
@@ -125,13 +125,13 @@ git push origin release/1.2.0
 # 5. After PR approval and merge to main, tag the release
 git checkout main
 git pull origin main
-git tag -a v1.2.0 -m "Release version 1.2.0"
-git push origin v1.2.0
+git tag -a 1.2.0 -m "Release version 1.2.0"
+git push origin 1.2.0
 
-# 6. Merge main back to develop to keep branches in sync
-git checkout develop
+# 6. Merge main back to dev to keep branches in sync
+git checkout dev
 git merge main
-git push origin develop
+git push origin dev
 ```
 
 ### Hotfix Process (Urgent Production Bug)
@@ -150,16 +150,16 @@ git commit -m "fix: resolve critical security vulnerability"
 git push origin hotfix/critical-security-fix
 # Open PR on GitHub: hotfix/critical-security-fix → main
 
-# 4. After merge to main, also merge to develop to keep in sync
-git checkout develop
+# 4. After merge to main, also merge to dev to keep in sync
+git checkout dev
 git merge main
-git push origin develop
+git push origin dev
 
 # 5. Tag the hotfix release
 git checkout main
 git pull origin main
-git tag -a v1.2.1 -m "Hotfix version 1.2.1"
-git push origin v1.2.1
+git tag -a 1.2.1 -m "Hotfix version 1.2.1"
+git push origin 1.2.1
 ```
 
 ---
@@ -172,11 +172,6 @@ git push origin v1.2.1
 - **Redis:** 7.0 or higher
 - **Composer:** 2.x
 - **PHP Extensions:** `redis`, `json`, `mbstring`
-
-**PHP 8.5 Information:**
-- Released: November 20, 2024
-- Current stable: 8.5.x
-- New features: Pipe operator (`|>`), URI extension, performance improvements
 
 ### Local Installation
 ```bash
@@ -191,24 +186,7 @@ composer install
 docker run -d -p 6379:6379 redis:7.2-alpine
 
 # 4. Verify setup by running tests
-composer test:integration
-```
-
-### Environment Variables
-
-Configure these environment variables for local testing:
-```bash
-# Redis host (default: 127.0.0.1)
-export REDIS_HOST=localhost
-
-# Redis port (default: 6379)
-export REDIS_PORT=6379
-
-# Redis adapter: 'predis' or 'phpredis'
-export REDIS_ADAPTER=phpredis
-
-# Enable persistent connection: 'true' or 'false'
-export REDIS_PERSISTENT=false
+composer test
 ```
 
 ---
@@ -216,26 +194,33 @@ export REDIS_PERSISTENT=false
 ## Running Tests
 
 ### Available Test Commands
+Please check `composer.json` for more commands (verbose or test-only utilitary)
 ```bash
+# Run the PSR-6 integration tests suite
+composer test-psr6
+
+# Run the PSR-16 integration tests suite
+composer test-psr16
+
 # Run integration tests (requires Redis server running)
-composer test:integration
+composer pui
+
+# Run functionnal tests (requires Redis server running)
+composer puf
 
 # Run unit tests (no Redis required)
-composer test:unit
+composer pu
 
-# Run all tests
+# Run the full tests suite
 composer test
-
-# Generate HTML coverage report (opens in browser)
-composer test:coverage
 ```
 
 ### Continuous Integration
 
 Tests run automatically on GitHub Actions for:
-- ✅ Every push to `develop` branch
-- ✅ Every Pull Request to `main` or `develop`
-- ✅ PHP versions: 8.4.x and 8.5.x (latest patches)
+- ✅ Every push to `dev` branch
+- ✅ Every Pull Request to `main` or `dev`
+- ✅ PHP versions: 8.2.x, 8.3.x, 8.4.x and 8.5.x (latest patches)
 - ✅ Redis version: 7.2
 
 View test results and build status: [GitHub Actions](https://github.com/llegaz/RedisCache/actions)
@@ -253,68 +238,31 @@ View test results and build status: [GitHub Actions](https://github.com/llegaz/R
 
 ### Quality Check Commands
 ```bash
-# Check code style (dry run - doesn't modify files)
-composer cs:check
-
 # Automatically fix code style issues
-composer cs:fix
+composer cs
 
 # Run static analysis with PHPStan
 composer stan
-
-# Run all quality checks at once
-composer quality
 ```
 
 ### Commit Message Format
 
-This project follows [Conventional Commits](https://www.conventionalcommits.org/) specification:
+Ideally follwing those requirements but this not mandatory.
 
 **Format:**
 ```
-<type>(<scope>): <description>
-
-[optional body]
-
-[optional footer]
+<type>: <description>
 ```
 
 **Types:**
-- `feat`: New feature
+- `feature`: New feature
 - `fix`: Bug fix
-- `docs`: Documentation changes
+- `documentation`: Documentation changes
 - `test`: Test additions or modifications
 - `chore`: Maintenance tasks (dependencies, build, etc.)
 - `refactor`: Code refactoring without behavior changes
-- `perf`: Performance improvements
+- `performance`: Performance improvements
 - `style`: Code style changes (formatting, naming)
-
-**Examples:**
-```bash
-# Feature addition
-git commit -m "feat: add support for 8KB key length limit"
-
-# Bug fix
-git commit -m "fix: handle whitespace correctly in cache keys"
-
-# Documentation
-git commit -m "docs: add contributing guidelines and CI setup"
-
-# Performance improvement
-git commit -m "perf: optimize serialization in storeToPool method"
-```
-
-**Bad examples (avoid these):**
-```bash
-# ❌ Too vague
-git commit -m "updates"
-
-# ❌ Not descriptive
-git commit -m "fixed stuff"
-
-# ❌ Work in progress (don't commit WIP to shared branches)
-git commit -m "WIP"
-```
 
 ---
 
@@ -329,7 +277,6 @@ Before submitting a Pull Request, ensure:
 - [ ] New tests added for new features or bug fixes
 - [ ] Code coverage maintained or improved
 - [ ] Documentation updated if API changes
-- [ ] CHANGELOG.md updated for user-facing changes
 - [ ] Commits follow Conventional Commits format
 - [ ] `composer validate --strict` passes without errors
 - [ ] PHPStan analysis passes (`composer stan`)
@@ -345,7 +292,7 @@ git push origin feature/my-feature
 - Navigate to: https://github.com/llegaz/RedisCache/pulls
 - Click "New Pull Request"
 - Select your branch as source
-- Select `develop` as target (or `main` for hotfixes)
+- Select `dev` as target (or `main` for hotfixes)
 - Fill in the Pull Request template
 
 **Step 3: Automated Checks**
@@ -364,12 +311,6 @@ git push origin feature/my-feature
 - Merge strategy: usually squash and merge
 - Source branch will be automatically deleted after merge
 
-### Review Timeline
-
-- **Initial review:** Within 2-3 business days
-- **Follow-up reviews:** Within 1-2 business days after updates
-- **Emergency hotfixes:** Within 24 hours
-
 ---
 
 ## Pre-commit Hooks (Optional but Recommended)
@@ -384,7 +325,7 @@ echo "🔍 Running pre-commit quality checks..."
 
 # Check code style
 echo "→ Checking code style (PSR-12)..."
-composer cs:check
+composer cs
 if [ $? -ne 0 ]; then
     echo "❌ Code style check failed."
     echo "   Run 'composer cs:fix' to automatically fix issues."
@@ -481,7 +422,7 @@ Your contributions, whether code, documentation, bug reports, or feature ideas, 
 2. Open PR on GitHub
 3. CI runs automatically
 4. Address review feedback
-5. Rebase again if develop changed
+5. Rebase adequately if dev or main changed
 6. Maintainer rebases and merges (no merge commits)
 
 ## Questions
