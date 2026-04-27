@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LLegaz\Cache;
 
+use LLegaz\Cache\Exception\InvalidArgumentException;
 use LLegaz\Cache\Exception\InvalidKeyException;
 
 /**
@@ -161,12 +162,17 @@ class RedisEnhancedCache extends RedisCache
             return $this->getRedis()->hmset($pool, $values) == 'OK';
         } elseif ($cnt === 1) {
             $key = array_keys($values)[0];
-            $value = isset($key) ? $values[$key] : (isset($values[0]) ? $values[0] : null);
+            $value = $values[$key];
             if (!$this->exist($value)) {
                 /**
                  * @todo test this specific scenario (maybe apply it to hmset ?)
+                 * @todo and maybe refactor that exception handling system inherited from previous project (redis-adapter)
+                 *
+                 * because all values are authorized except this predefined value to sort actual existing values internally...
                  */
-                $this->throwUEx('The value: ' . $value . ' isn\'t accepted'); // because all values are authorized except this predefined value to sort actual exisiting values internally...
+                $e = new InvalidArgumentException('The value: ' . $value . ' isn\'t accepted');
+                $this->formatException($e);
+                $this->throwUEx();
             }
             if ($value) {
                 //hset should returns the number of fields stored for a single key (always one here)
@@ -223,7 +229,11 @@ class RedisEnhancedCache extends RedisCache
 
                 break;
             case 'array':
-                if (count($key)) {
+                if (count($key) === 1) {
+                    // redirect to string's or integer's case
+                    return $this->fetchFromPool(reset($key), $pool);
+                }
+                if (count($key) > 1) {
                     $this->checkKeysValidity($key);
                     $this->begin();
                     $data = array_combine(
@@ -238,10 +248,8 @@ class RedisEnhancedCache extends RedisCache
                             $data[$key] = self::DOES_NOT_EXIST;
                         }
                     }
-                    if (count($data)) {
 
-                        return $data;
-                    }
+                    return $data;
                 }
 
                 break;
@@ -362,7 +370,7 @@ class RedisEnhancedCache extends RedisCache
 
         try {
             $redisResponse = call_user_func_array([$this->getRedis(), 'hdel'], $params);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $redisResponse = false;
             $this->formatException($e);
         }

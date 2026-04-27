@@ -236,6 +236,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
      */
     private function getWithNonStrKey(mixed $key, mixed $default = null): mixed
     {
+        // @phpstan-ignore method.void
         return $this->get($this->checkKeyValidity($key), $default);
     }
 
@@ -405,7 +406,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
             $this->formatException($t);
             $redisResponse = false;
         } finally {
-            return $redisResponse;
+            return $redisResponse; // @phpstan-ignore variable.undefined
         }
     }
 
@@ -523,6 +524,7 @@ class RedisCache extends RedisAdapter implements CacheInterface
 
             return self::DOES_NOT_EXIST;
         } finally {
+            // @phpstan-ignore variable.undefined
             if ($tmp !== false || ($tmp === false && $value === 'b:0;')) {
                 $value = $tmp; // if value var wasn't a string affect its original value type to it
             }

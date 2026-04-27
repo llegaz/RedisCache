@@ -28,6 +28,7 @@ class SimpleCacheTest extends RedisAdapterTestBase
 {
     protected SUT $cache;
 
+    /** @var \PHPUnit\Framework\MockObject\MockObject&RedisClientInterface */
     protected RedisClientInterface $predisClient;
 
     public static function setUpBeforeClass(): void
@@ -360,11 +361,10 @@ class SimpleCacheTest extends RedisAdapterTestBase
 
     /**
      *
-     * @return type
+     * @return RedisClientInterface
      */
     protected function getSelfClient(): RedisClientInterface
     {
         return $this->predisClient;
     }
-
 }
