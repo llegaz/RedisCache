@@ -1,8 +1,5 @@
 parameters:
-    level: 2
+    level: 6
     paths:
         - src
         - tests
-    excludePaths:
-        - src/redisTestCLI.php
-        - src/redis.php

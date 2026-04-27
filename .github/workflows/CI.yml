@@ -71,8 +71,12 @@ jobs:
 
       # Step 7
       - name: Check code style (PSR-12)
-        run: composer cs
+        run: composer cs:check
 
       # Step 8: Run entire tests suite
       - name: Run all tests
         run: composer test
+
+      # Step 9: Static code analysis
+      - name: Run static code analysis
+        run: composer stan-dist
