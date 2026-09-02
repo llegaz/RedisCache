@@ -54,7 +54,13 @@ class PoolIntegrationWithPCTest extends CachePoolTest
         parent::setUp();
     }
 
-    public static function invalidKeys()
+    /**
+     *
+     * Data provider for invalid array keys.
+     *
+     * @return list<array{string}>
+     */
+    public static function invalidKeys(): array
     {
         $bigKey = '';
         //36 KB
@@ -81,7 +87,7 @@ class PoolIntegrationWithPCTest extends CachePoolTest
      *
      * @return array
      */
-    public static function invalidArrayKeys()
+    public static function invalidArrayKeys(): array
     {
         return [
             [''],

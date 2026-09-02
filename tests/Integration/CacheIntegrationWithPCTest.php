@@ -55,7 +55,13 @@ class CacheIntegrationWithPCTest extends SimpleCacheTest
         parent::setUp();
     }
 
-    public static function invalidKeys()
+    /**
+     *
+     * Data provider for invalid array keys.
+     *
+     * @return list<array{string}>
+     */
+    public static function invalidKeys(): array
     {
         return array_merge(
             self::invalidArrayKeys(),
@@ -76,7 +82,7 @@ class CacheIntegrationWithPCTest extends SimpleCacheTest
      *
      * @return array
      */
-    public static function invalidArrayKeys()
+    public static function invalidArrayKeys(): array
     {
         return [
             [''],
@@ -100,7 +106,7 @@ class CacheIntegrationWithPCTest extends SimpleCacheTest
      *
      * @return array
      */
-    public static function invalidTEKeysSingle()
+    public static function invalidTEKeysSingle(): array
     {
         $closure = function ($a) {
             return $a;
@@ -118,7 +124,7 @@ class CacheIntegrationWithPCTest extends SimpleCacheTest
         );
     }
 
-    public static function invalidTEKeys()
+    public static function invalidTEKeys(): array
     {
         return [
             [['array']],
@@ -130,7 +136,7 @@ class CacheIntegrationWithPCTest extends SimpleCacheTest
     /**
      * @return array
      */
-    public static function invalidTtl()
+    public static function invalidTtl(): array
     {
         $closure = function ($a) {
             return $a;
