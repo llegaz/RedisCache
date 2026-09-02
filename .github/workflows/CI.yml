@@ -11,6 +11,7 @@ jobs:
   tests:
     name: Tests (PHP ${{ matrix.php }} - ${{ matrix.adapter }})
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     strategy:
       fail-fast: false
@@ -32,7 +33,7 @@ jobs:
     steps:
         # Step 1: Checkout repository code
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # Step 2: Setup PHP with required extensions
       - name: Setup PHP ${{ matrix.php }}
@@ -45,7 +46,7 @@ jobs:
 
       # Step 3: Cache Composer dependencies (speeds up subsequent builds)
       - name: Cache Composer dependencies
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             vendor
