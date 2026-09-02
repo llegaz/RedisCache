@@ -11,6 +11,7 @@ jobs:
   tests:
     name: Tests (PHP ${{ matrix.php }} - ${{ matrix.adapter }})
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     strategy:
       fail-fast: false
