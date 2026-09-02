@@ -68,6 +68,7 @@ jobs:
         run: |
           php -v
           composer --version
+          composer show
 
       # Step 7
       - name: Check code style (PSR-12)
