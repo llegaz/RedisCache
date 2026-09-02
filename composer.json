@@ -27,7 +27,7 @@
         "phpunit/phpunit": "^10.5",
         "symfony/var-dumper": "~6.4",
         "friendsofphp/php-cs-fixer": "~3.3",
-        "cache/integration-tests": "~1.0.5"
+        "cache/integration-tests": "dev-master#fb7d78718f1e5bbfd7c63e5c5734000999ac7366"
     },
     "suggest": {
         "ext-redis": "^5.3"
