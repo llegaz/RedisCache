@@ -56,7 +56,13 @@ class PoolIntegrationTest extends CachePoolTest
         parent::setUp();
     }
 
-    public static function invalidKeys()
+    /**
+     *
+     * Data provider for invalid array keys.
+     *
+     * @return list<array{string}>
+     */
+    public static function invalidKeys(): array
     {
         return array_merge(
             self::invalidArrayKeys(),
@@ -77,7 +83,7 @@ class PoolIntegrationTest extends CachePoolTest
      *
      * @return array
      */
-    public static function invalidArrayKeys()
+    public static function invalidArrayKeys(): array
     {
         return [
             [''],

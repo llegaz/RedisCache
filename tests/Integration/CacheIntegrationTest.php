@@ -55,7 +55,12 @@ class CacheIntegrationTest extends SimpleCacheTest
         parent::setUp();
     }
 
-    public static function invalidKeys()
+    /**
+     * Data provider for invalid cache keys.
+     *
+     * @return list<array{string}>
+     */
+    public static function invalidKeys(): array
     {
         return array_merge(
             self::invalidArrayKeys(),
@@ -75,9 +80,12 @@ class CacheIntegrationTest extends SimpleCacheTest
      *
      * @link https://github.com/php-fig/simple-cache The <b>psr/simple-cache</b> repository.
      *
-     * @return array
+     *
+     * Data provider for invalid array keys.
+     *
+     * @return list<array{string}>
      */
-    public static function invalidArrayKeys()
+    public static function invalidArrayKeys(): array
     {
         return [
             [''],
@@ -101,7 +109,7 @@ class CacheIntegrationTest extends SimpleCacheTest
      *
      * @return array
      */
-    public static function invalidTEKeysSingle()
+    public static function invalidTEKeysSingle(): array
     {
         $closure = function ($a) {
             return $a;
@@ -122,9 +130,9 @@ class CacheIntegrationTest extends SimpleCacheTest
     /**
      * Type Error keys (psr/cache version 3)
      *
-     * @return type
+     * @return array
      */
-    public static function invalidTEKeys()
+    public static function invalidTEKeys(): array
     {
         return [
             [['array']],
@@ -138,7 +146,7 @@ class CacheIntegrationTest extends SimpleCacheTest
      *
      * @return array
      */
-    public static function invalidTtl()
+    public static function invalidTtl(): array
     {
         $closure = function ($a) {
             return $a;
